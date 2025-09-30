@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Создание группы{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/manage.css' %}" />
+    {% endblock %}
+
+{% block content %}   
+
+    <div class="group-container">
+
+        <h2 class="highlighted-header">Создание группы</h2>
+
+        <form method="post" class="add-group-form">
+            {% csrf_token %}
+        
+            <div class="add-group-fields">               
+
+                {{ form.groupname.label_tag }}
+                {{ form.groupname }}
+        
+                {{ form.studycourse.label_tag }}
+                {{ form.studycourse }}
+
+                <label for="start-year">Год обучения</label>
+                <div class="academic-year">
+                    <input type="number" id="start-year" name="start_year" min="2000" max="2100" step="1" value="2024" class="form-control">
+                    <input type="text" id="end-year" class="form-control" readonly>
+                </div>
+                <!-- Скрытое поле, в котором формируется строка 2024/2025 для отправки на сервер -->
+                <input type="hidden" name="idayear" id="idayear-hidden">
+
+                {{ form.copy_from_group.label_tag }}
+                {{ form.copy_from_group }}
+            </div>
+        
+            <div class="form-buttons">
+                <button type="submit" class="button">Создать группу</button>
+                <a href="{% url 'show_groups' %}" class="button grey-button">Назад</a>
+            </div>
+        </form>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Логика расчёта конца учебного года
+        const startYearInput = document.getElementById('start-year');
+        const endYearInput = document.getElementById('end-year');
+        const hiddenInput = document.getElementById('idayear-hidden');
+
+        function updateAcademicYear() {
+            const startYear = parseInt(startYearInput.value);
+            if (!isNaN(startYear)) {
+                const endYear = startYear + 1;
+                endYearInput.value = endYear;
+                hiddenInput.value = startYear; // Подправила тут (Саша)
+            }
+        }
+
+        // Сразу вызвать для установки дефолтных значений
+        updateAcademicYear();
+
+        // Обновлять при изменении года начала
+        startYearInput.addEventListener('input', updateAcademicYear);
+    });
+</script>
+
+{% endblock %}

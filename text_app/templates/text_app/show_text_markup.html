@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Разметка текста</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
+</head>
+<body>
+    <!--<div id="header-container"></div>-->
+    <!-- Всплывающее окно с информацией об ошибке -->
+    <div class="error-popup" id="error-popup">
+        <span class="close-btn" id="close-popup">&#x2715;</span>
+        <h3>
+            <span id="error-tag"></span>
+            <span id="error-tag-abbrev"></span>
+        </h3>
+        <p><strong>Степень грубости:</strong> <span id="error-level"></span></p>
+        <p><strong>Причина ошибки:</strong> <span id="error-reason"></span></p>
+        <p><strong>Исправление:</strong> <span id="error-correct"></span></p>
+        <p><strong>Комментарий:</strong> <span id="error-comment"></span></p>
+    </div>
+
+    <div class="text-app-container">
+
+        <div class="menu-container">
+            <!-- Блоки меню -->
+            <div class="menu-block" data-target="view-content">
+                <span>
+                    Вид
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                    </svg>         
+                </span>
+            </div>
+            <div class="menu-block" data-target="text-content">
+                <span>
+                    Текст
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                    </svg>                           
+                </span>
+            </div>
+            <div class="menu-block" data-target="author-content">
+                <span>
+                    Автор
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                    </svg>     
+                </span>
+            </div>
+            <div class="menu-block" data-target="grade-content">
+                <span>
+                    Оценка
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                    </svg>      
+                </span>
+            </div>
+            <div class="menu-block menu-block-last" data-target="metadata-content">
+                <span>
+                    Метаданные
+                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round"/>
+                    </svg>   
+                </span>
+            </div>
+        </div>
+
+
+            <!-- Контентные блоки -->
+            <div class="menu-content" id="view-content">
+                <div class="menu-content-view">
+
+                    <div class="option-group">
+                        <p>Язык разметки</p>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="language" value="deutsche" checked>
+                                <span class="radio-custom"></span>
+                                <span>Deutsche</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="language" value="russian">
+                                <span class="radio-custom"></span>
+                                <span>Русский</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <p>Компактный вид</p>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="option-group">
+                        <p>Части речи</p>
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+            
+                    <div class="option-group">
+                        <p>Ошибки</p>
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                </div>
+            </div>
+            <div class="menu-content" id="text-content">
+                <div class="menu-content-data">
+                    <p>Курс создания:</p>
+                    <p class="p-dark"> {{ year_study_language }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Дата создания:</p>
+                    <p class="p-dark"> {{ create_date|default:"Нет данных" }} </p>
+                </div>
+            </div>
+            <div class="menu-content" id="author-content">
+
+                <div class="menu-content-data">
+                    <p>Имя:</p>
+                    <p class="p-dark"> {{ author|default:"Нет данных" }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Группа:</p>
+                    <p class="p-dark"> {{ group|default:"Нет данных" }} ({{ academic_year|default:"Нет данных" }}) </p>
+                </div>
+            </div>
+            <div class="menu-content" id="grade-content">
+                <div class="menu-content-grade">
+                    <div class="menu-content-grade-col ">
+                        <p>Оценка работы</p>
+                        <div class="menu-content-data">
+                            <p>Оценка:</p>
+                            <p class="p-dark"> {{ textgrade }} </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Полнота:</p>
+                            <p class="p-dark"> {{ completeness }} </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Структура:</p>
+                            <p class="p-dark"> {{ structure }} </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Связность:</p>
+                            <p class="p-dark"> {{ coherence }} </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Проверяющий:</p>
+                            <p class="p-dark"> {{userteacher}} </p>
+                        </div>
+    
+                        <p>Частеречная разметка</p>
+                        <div class="menu-content-data">
+                            <p>Статус:</p>
+                            {% if poscheckflag %}
+                            <p class="p-green"> Проверено </p>
+                            {% else %}
+                            <p class="p-red"> Не проверено </p>
+                            {% endif %}
+                        </div>
+                        <p>Разметка ошибок</p>
+                        <div class="menu-content-data">
+                            <p>Статус:</p>
+                            {% if errorcheckflag %}
+                            <p class="p-green"> Проверено </p>
+                            {% else %}
+                            <p class="p-red"> Не проверено </p>
+                            {% endif %}
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Проверяющий:</p>
+                            <p class="p-dark">  {{usererrorcheck}} </p>
+                        </div>
+                    </div>
+
+                    <div class="menu-content-grade-col ">
+                        <p>Автооценка: Грамматика</p>
+                        <div class="menu-content-data">
+                            <p>Степень 1:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Степень 2:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Степень 3:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Оценка:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+
+                        <p>Автооценка: Лексика</p>
+                        <div class="menu-content-data">
+                            <p>Степень 1:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Степень 2:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Степень 3:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Оценка:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+
+                        <p>Автооценка: Орфография и пунктуация</p>
+                        <div class="menu-content-data">
+                            <p>Степень 1:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Степень 2:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Степень 3:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Оценка:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+
+                        <p>Автооценка: Подсчет ошибок</p>
+                        <div class="menu-content-data">
+                            <p>Дискурс:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Пропуски:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                        <div class="menu-content-data">
+                            <p>Лишние элементы:</p>
+                            <p class="p-dark">  </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-content" id="metadata-content">
+                <div class="menu-content-data">
+                    <p>Эмоционально-физиологическое состояние:</p>
+                    <p class="p-dark"> {{ emotion }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Место написания:</p>
+                    <p class="p-dark"> {{ write_place }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Год изучения языка:</p>
+                    <p class="p-dark"> {{ year_study_language }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Самооценивание:</p>
+                    <p class="p-dark"> {{ self_rating }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Оценка задания студентом:</p>
+                    <p class="p-dark"> {{ self_assesment }} </p>
+                </div>
+            </div>
+
+        <div class="text-header">
+            <h1 class="text-title">{{ text.header }}</h1>
+        </div>
+        
+        <div class="watch-text">          
+
+            {% for sentence in sentence_data %}
+                <div class="sentence">
+                    <div class="tokens-container">
+                        <p class="sentence-number">{{ sentence.sentence.ordernumber|add:1 }}:</p>
+                        {% for token in sentence.tokens %}                        
+                            
+                        <span class="token" 
+                                data-pos-tag="{{ token.pos_tag }}"
+                                data-pos-tag-russian="{{ token.pos_tag_russian }}"
+                                data-pos-tag-abbrev="{{ token.pos_tag_abbrev }}"
+                                data-pos-color="{{ token.pos_tag_color }}"
+                                {% if token.error_tag %}
+                                    data-error-tag="{{ token.error_tag }}"
+                                    data-error-tag-russian="{{ token.error_tag_russian }}"
+                                    data-error-tag-abbrev="{{ token.error_tag_abbrev }}"
+                                    data-error-level="{{ token.error_level }}"
+                                    data-error-color="{{ token.error_color }}"
+                                {% endif %}>                            
+                                
+                                <!-- Ошибки (изначально скрыты) -->
+                                {% if token.all_errors %}
+                                    {% for error in token.all_errors %}
+                                    <span class="error-tag" 
+                                        style="background-color: {{ error.error_color }}; display: none;"
+                                        data-error-tag="{{ error.error_tag }}"
+                                        data-error-tag-russian="{{ error.error_tag_russian }}"
+                                        data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
+                                        data-error-level="{{ token.error_level }}"
+                                        data-error-correct="{{ token.error_correct }}"
+                                        data-error-comment="{{ token.error_comment }}"
+                                        data-all-errors="{{ token.all_errors|safe|escapejs }}">
+                                    {{ error.error_tag }}
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+
+                                <!-- Часть речи (изначально скрыта) -->
+                                {% if token.pos_tag %}
+                                <span class="abbr" 
+                                        style="background-color: {{ token.pos_tag_color }}; display: none;"
+                                        data-pos-tag="{{ token.pos_tag }}"
+                                        data-pos-tag-russian="{{ token.pos_tag_russian }}"
+                                        data-pos-tag-abbrev="{{ token.pos_tag_abbrev }}">
+                                    {{ token.pos_tag }}
+                                    
+                                </span>
+                                {% endif %}
+                                
+                                <!-- Само слово -->
+                                {% if token.token == '-EMPTY-' %}
+                                    <span class="static_word">&loz;</span>
+                                {% else %}
+                                    <span class="static_word">{{ token.token }}</span>
+                                {% endif %}
+                            </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Шапка убрать коммент, если нужна
+    <script> 
+        document.addEventListener('DOMContentLoaded', function() {
+        fetch('/static/templates/base.html')
+            .then(response => response.text())
+            .then(data => {
+            document.getElementById('header-container').innerHTML = data;
+            let user_fio = "{{ fio|escapejs }}"; 
+            document.getElementById('user-link').textContent = user_fio;
+            });
+        });
+    
+    </script>-->
+    <script>
+        // Скрипт для отображения разметки (НЕ ДЫШАТЬ НА НЕГО!!!)
+        document.addEventListener('DOMContentLoaded', function() {
+            const languageRadios = document.querySelectorAll('input[name="language"]');
+            const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
+            const posCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
+            const errorsCheckbox = document.querySelector('.option-group:nth-child(4) input[type="checkbox"]');
+            const tokens = document.querySelectorAll('.token');
+
+            // Функция обновления отображения
+            function updateDisplay() {
+                const language = document.querySelector('input[name="language"]:checked').value;
+                const isCompact = compactViewCheckbox.checked;
+                const showPOS = posCheckbox.checked;
+                const showErrors = errorsCheckbox.checked;
+
+                tokens.forEach(token => {
+                    token.querySelectorAll('.abbr, .error-tag, .static_word').forEach(el => {
+                        el.style.display = 'none';
+                    });
+
+                    const static_word = token.querySelector('.static_word');
+                    if (static_word) static_word.style.display = 'inline';
+
+                    if (showPOS) {
+                        const posTag = token.querySelector('.abbr');
+                        if (posTag) {
+                            posTag.style.display = 'inline';
+                            if (isCompact) {
+                                posTag.textContent = posTag.dataset.posTagAbbrev || 
+                                    (language === 'russian' ? posTag.dataset.posTagRussian : posTag.dataset.posTagAbbrev);
+                            } else {
+                                posTag.textContent = language === 'russian' ? 
+                                    posTag.dataset.posTagRussian : posTag.dataset.posTag;
+                            }
+                        }
+                    }
+
+                    // Обработка ошибок
+                    if (showErrors) {
+                        const errorTags = token.querySelectorAll('.error-tag');
+                        if (errorTags.length > 0) {
+                            errorTags.forEach(tag => {
+                                tag.style.display = 'inline';
+                                if (isCompact) {
+                                    tag.textContent = tag.dataset.errorTagAbbrev;
+                                } else {
+                                    tag.textContent = language === 'russian' ? 
+                                        tag.dataset.errorTagRussian : tag.dataset.errorTag;
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Обработчики событий
+            languageRadios.forEach(radio => {
+                radio.addEventListener('change', updateDisplay);
+            });
+
+            [compactViewCheckbox, posCheckbox, errorsCheckbox].forEach(checkbox => {
+                checkbox.addEventListener('change', updateDisplay);
+            });
+
+            // Инициализация
+            updateDisplay();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const popup = document.getElementById('error-popup');
+            const closePopupBtn = document.getElementById('close-popup');
+    
+            // Функция для отображения всплывающего окна с информацией об ошибке
+            function showPopup(tokenElement) {
+
+                const errorTag = tokenElement.dataset.errorTag;
+                const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
+                const errorLevel = tokenElement.dataset.errorLevel;
+                const errorReason = tokenElement.dataset.errorReason;
+                const errorCorrect = tokenElement.dataset.errorCorrect;
+                const errorComment = tokenElement.dataset.errorComment;
+
+                if (!errorTag) {
+                    return;
+                }
+
+                document.getElementById('error-tag').textContent = errorTag || 'Не указано';
+                document.getElementById('error-tag-abbrev').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
+                document.getElementById('error-level').textContent = errorLevel || 'Не указано';
+                document.getElementById('error-reason').textContent = errorReason || 'Не указано';
+                document.getElementById('error-correct').textContent = errorCorrect || 'Не указано';
+                document.getElementById('error-comment').textContent = errorComment || 'Не указано';
+
+                const rect = tokenElement.getBoundingClientRect();
+                const offsetLeft = rect.left + window.scrollX;
+                const offsetTop = rect.top + window.scrollY;
+                const height = rect.height;
+
+                const popup = document.getElementById('error-popup');
+                popup.style.display = 'block'; // Нужно, чтобы offsetHeight был доступен
+                popup.classList.add('show');
+
+                const popupHeight = popup.offsetHeight;
+                const spaceAbove = rect.top;
+                const spaceBelow = window.innerHeight - rect.bottom;
+
+                let top;
+                if (spaceAbove >= popupHeight + 10) {
+                    // Есть место сверху — показываем над токеном
+                    top = offsetTop - popupHeight - 6;
+                } else {
+                    // Места сверху нет — показываем под токеном
+                    top = offsetTop + height + 6;
+                }
+
+                popup.style.left = `${offsetLeft}px`;
+                popup.style.top = `${top}px`;
+            }
+
+
+            // Закрытие окна с анимацией
+            closePopupBtn.addEventListener('click', function() {
+                const popup = document.getElementById('error-popup');
+                popup.classList.remove('show'); // Убираем класс для анимации исчезновения
+                setTimeout(() => {
+                    popup.style.display = 'none'; // Скрываем окно после анимации
+                }, 300); // Задержка, соответствующая длительности перехода
+            });
+    
+            // Слушаем клик по токенам
+            document.querySelectorAll('.error-tag').forEach(function(errorTagElement) {
+                errorTagElement.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Чтобы не всплывало до .token
+                    showPopup(this);     
+                });
+            });
+        });
+
+
+        // Скрипт для меню
+        document.addEventListener('DOMContentLoaded', function() {
+            const rateBtn = document.querySelector('.rate-btn');
+            const modal = document.getElementById('modal');
+            const closeModal = document.querySelector('.close-modal');
+            const menuBlocks = document.querySelectorAll('.menu-block');
+            const backButton = document.querySelector('.button-grey');
+
+
+            menuBlocks.forEach(block => {
+            block.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const contentId = this.getAttribute('data-target');
+                const content = document.getElementById(contentId);
+                if (!content) return;
+
+                const isAlreadyOpen = content.style.display === 'block';
+                
+                // Скрываем все другие контенты
+                document.querySelectorAll('.menu-content').forEach(c => {
+                    if (c !== content) {
+                        c.style.display = 'none';
+                    }
+                });
+                
+                if (isAlreadyOpen) {
+                    content.style.display = 'none';
+                }
+                else {
+                    // Позиционируем текущий контент
+                    const rect = this.getBoundingClientRect();
+                    content.style.display = 'block';
+                    content.style.position = 'fixed';
+                    content.style.left = `${rect.left}px`;
+                    content.style.top = `${rect.bottom}px`;
+                    content.style.zIndex = '1001'; // Выше чем у меню
+                } 
+                  
+                });
+            });
+
+            // Обновление позиции при прокрутке
+            window.addEventListener('scroll', function() {
+                document.querySelectorAll('.menu-content').forEach(content => {
+                    if (content.style.display === 'block') {
+                        const targetId = content.id.replace('-content', '');
+                        const menuItem = document.querySelector(`[data-target="${content.id}"]`);
+                        if (menuItem) {
+                            const rect = menuItem.getBoundingClientRect();
+                            content.style.left = `${rect.left}px`;
+                            content.style.top = `${rect.bottom}px`;
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.menu-content').forEach(content => {
+                content.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                // Проверяем, был ли клик вне всех .menu-content и .menu-block
+                const isClickInsideContent = Array.from(document.querySelectorAll('.menu-content, .menu-block')).some(
+                    element => element.contains(e.target)
+                );
+                
+                if (!isClickInsideContent) {
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        c.style.display = 'none';
+                    });
+                }
+            });
+           
+            });
+    </script>
+
+</body>
+</html>

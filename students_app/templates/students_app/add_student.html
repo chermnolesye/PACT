@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Добавление студента{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/manage.css' %}" />
+    {% endblock %}
+
+{% block content %}   
+
+    <div class="group-container">
+        <h2 class="highlighted-header">Добавление студента</h2>
+        <form method="post" class="add-group-form">
+            {% csrf_token %}
+            <div class="add-group-fields">
+                {{ form.user.label_tag }}
+                {{ form.user }}
+
+                {{ form.group.label_tag }}
+                {{ form.group }}
+            </div>
+            <div class="form-buttons">
+                <button type="submit" class="button">Добавить студента</button>
+                <a href="{% url 'show_students' %}" class="button grey-button">Назад</a>
+            </div>            
+        </form>
+    </div>
+{% endblock %}

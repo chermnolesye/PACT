@@ -1,0 +1,541 @@
+
+.students-container, .show-groups-container, .edit-group-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  margin: 40px 50px;
+  margin-top: 60px;
+}
+
+.group-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 10px 50px;
+  margin-top: 60px;
+}
+
+.form-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 800px;
+  margin: 20px 0px;
+}
+
+.form-buttons .button {
+  margin: 0px;
+}
+
+.form-buttons .grey-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+.add-group-fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-group-fields label{
+  color: var(--grey-color);
+  margin-bottom: 5px;
+}
+
+.add-group-fields input{
+  margin: 10px 0px;
+}
+
+.students-form, .add-group-form  {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 400px;
+  width: 100%;
+}
+
+.edit-group-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 400px;
+}
+
+.vertical-level {
+  margin: 0px 10px;
+}
+
+.edit-group-form button {
+  margin: 0px;
+  max-width: 200px;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 50px;
+  max-width: 800px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 20px 0px;
+}
+
+.search-bar input,
+.search-bar select {
+    flex: 1;
+    height: 100%;
+    width: 100%;
+    border: none;
+    padding: 15px;
+    font-size: 16px;
+    outline: none;
+    background: transparent;
+}
+
+.search-bar select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230d6efd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 30px;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--primary-color);
+}
+
+.search-bar button.search {
+  width: 60px;
+  height: 100%;
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.search-bar button.search:hover {
+  background: var(--primary-color);
+}
+
+.students-result, .texts-result, .groups-result, .students-in-group  {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  width: 100%;
+  margin: 20px 0px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+.students-result > .student-card:last-child, 
+.texts-result > .student-card:last-child,
+.groups-result > .group-card:last-child {
+  border-bottom-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+}
+
+.header-card {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  gap: 60px;
+  padding: 15px;
+  border-top-right-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+}
+
+.header-card * {
+  font-weight: 600;
+}
+
+.g-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 15px;
+  border: 1px solid var(--secondary-grey-color);
+  border-top-right-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+  border-bottom: none;
+}
+
+.g-header-card svg {
+  margin-right: 10px;
+}
+
+.g-body-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  border: 1px solid var(--secondary-grey-color);
+  border-bottom-left-radius: var(--border-radius);
+  border-bottom-right-radius: var(--border-radius);
+}
+
+.g-body-card label {
+  color: var(--grey-color);
+  margin: 10px 0px;
+}
+
+.student-card {
+  display: flex;
+  gap: 60px;
+  padding: 15px;
+  background-color: white;  
+}
+
+.student-card:hover { 
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.student-inf {
+  flex: 1;
+  text-align: center;
+}
+
+.student-name {
+  flex: 2;
+  text-align: left;
+}
+
+.student-login {
+  flex: 2;
+  text-align: left;
+  margin-left: 0;
+  color: black;
+}
+
+.student-name a {
+  color: #0d6efd;
+  text-decoration: none;
+  font-weight: 400;
+}
+
+.student-name a:hover {
+  text-decoration: none;
+}
+
+.no-results {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+ .text-date {
+  flex: 1;
+  text-align: left;
+}
+
+.text-name, .text-type {
+  flex: 2;
+  text-align: left;
+}
+
+.text-check, .text-grade, .text-errors {
+  flex: 1;
+  text-align: center;
+}
+
+.group-header-card {
+  display: flex;
+  background-color: #f8f9fa;
+  gap: 40px;
+  padding: 15px;
+  border-top-right-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+}
+
+.group-card {
+  display: flex;
+  gap: 40px;
+  padding: 15px;
+  background-color: white;  
+}
+
+.group-card:hover {
+  background-color: #f8f9fa;  
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.groups-result {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: var(--border-radius);
+  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+
+.group-header-card * {
+  font-weight: 600;
+}
+
+.group-id {
+  color: var(--grey-color);
+  flex: 1;
+  text-align: left;
+}
+
+.group-course {
+  flex: 1;
+  text-align: center;
+}
+
+.group-name, .group-year {
+  flex: 2;
+  text-align: left;
+  margin-left: 20px;
+}
+
+.group-settings {
+  display: flex;
+  gap: 5px;
+  flex: 3;
+  color: var(--primary-color);
+  text-align: center;
+  justify-content: center;
+}
+
+.academic-year {
+  display: flex;
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  margin: 10px 0px;
+}
+
+.academic-year input {
+  all: unset;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: inherit;
+  font-size: 16px;
+  min-height: 35px;
+  border: 1px solid var(--secondary-grey-color);
+  padding: 5px;
+  max-width: 100px;
+  width: auto;
+}
+
+#start-year {
+  border-bottom-left-radius: var(--border-radius);
+  border-top-left-radius: var(--border-radius);
+  border-right: none;
+}
+
+#end-year {
+  border-bottom-right-radius: var(--border-radius);
+  border-top-right-radius: var(--border-radius);
+  background-color: #e6e7e8;
+}
+
+.remove-student,
+.remove-group,
+.transfer-student {
+  all: unset;
+  border: none;
+  background-color: none;
+  cursor: pointer;
+}
+
+#transferGroupForm .horizontal-level {
+  margin-top: 15px;
+}
+
+.add-student {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 15px;
+}
+
+.add-student-button {
+  margin: 0px;
+}
+
+.delete-group {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, .125);
+  background-color: #fff;
+  border-radius: var(--border-radius);
+  box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+  padding: 15px;
+  color: var(--grey-color);
+  margin: 0px 0px 10px 0px;
+}
+
+.delete-group button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.student-info-header {
+  color: var(--grey-color);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  font-size: 20px;
+  font-size: 24px;
+}
+
+.edit-student-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0px 5px;
+  margin-left: 10px;
+  padding: 5px;
+  height: 30px;
+  width: 30px;
+  border-radius: var(--border-radius);
+  background-color: var(--grey-color);
+  border: none;
+  cursor: pointer;
+}
+
+.edit-student-button:hover {
+  background-color: var(--secondary-grey-color);
+}
+
+.edit-student-info {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 500px;
+  height: 350px;
+  margin: 10px 0px;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--secondary-grey-color);
+  font-size: 18px;
+}
+
+.edit-student-info .horizontal-wrap {
+  width: 100%;
+}
+
+.edit-student-info .vertical-level {
+  width: 100%;
+  max-width: 250px;
+}
+
+.view-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0px;
+  padding: 10px;
+}
+
+#edit-student-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0px;
+  padding: 10px;
+  display: none;
+}
+
+#edit-student-form div,
+.view-mode div {
+  margin: 5px 10px;
+}
+
+#edit-student-form label,
+.view-mode label {
+  color: var(--grey-color);
+  margin: 5px 0px;  
+}
+
+.view-mode p {
+  height: 35px;
+  width: 100%;
+}
+
+.edit-mode input,
+.edit-mode select {
+  width: 100%;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.toggle-container-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  transition: transform 0.2s ease;
+}
+
+.toggle-container-button:hover {
+  transform: scale(1.1);
+}
+
+.toggle-icon {
+  transition: transform 0.3s ease;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.new-text-button button {
+  width: 200px;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center; 
+}
+
+.new-text-button button:hover {
+  background-color: var(--secondary-color);
+}
+
+.new-text-button button svg {
+  margin-right: 8px; 
+}
+
+.modal-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.modal-message p {
+  margin-bottom: 10px;
+}
