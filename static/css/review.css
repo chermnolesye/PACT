@@ -1,0 +1,145 @@
+
+:root {
+    --e-green: #CCFFCC;
+    --e-red: #FFCCCC;
+	--e-grey: #DAE0E4;
+    --e-grey2: #D9D9D9;
+    --e-purple: #EACFFF;
+}
+
+.selection {
+    background-color: var(--e-grey2);
+    cursor: pointer;
+}
+
+.selection:hover {
+    background-color: var(--e-purple);
+}
+
+.add-annotation-tooltip{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    width: 180px;
+    padding: 0px;
+}
+
+.triangle {
+    rotate: 45deg;
+    border-left: 1px solid #000;
+    border-top: 1px solid #0a0707;
+    width: 20px;
+    height: 20px;
+    margin: 0px;
+    margin: -10px 0;
+    background: white;
+    z-index: 1;
+}
+
+.content {
+    border: 1px solid black;
+    width: 100%;
+    margin: 0px;
+    padding: 10px 5px;
+}
+
+
+
+.comment {
+    border:2px solid black;
+	height:45px;
+	width:200px;
+	padding:20px;
+	position:relative;
+}
+
+.comment:before {
+	border:20px solid transparent;
+	border-bottom-color:black;
+	position:absolute;
+	bottom:100%;
+    left: 10px;
+	content:'';
+}
+.comment:after {
+	border:18px solid transparent;
+	border-bottom-color:white;
+	position:absolute;
+	bottom:100%;
+    left: 13px;
+	content:'';
+}
+
+.review-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: left;
+    align-items: center;
+}
+
+.underline {
+    padding: 5px;
+    border-bottom: 1px solid black;
+    margin-bottom: 20px;
+}
+
+.author {
+    color: var(--grey-color);
+    font-size: 18px;
+}
+
+.review-menu-block {
+    padding: 15px;
+    margin: 10px 5px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
+    background-color: var(--e-grey);
+}
+
+.review-menu-button {
+    border: 1px solid black;
+    padding: 15px;
+    margin: 10px 5px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
+    cursor: pointer;
+}
+.review-body {
+    display: flex;
+    margin: 10px;;
+}
+
+.review-text-container {
+    display: flex;
+    flex-direction: column;
+
+}
+
+.review-text p {
+    text-align: justify;
+}
+
+.review-container {
+    border-left: 2px solid black;
+    margin: 10px;
+    margin-left: 30px;
+    padding: 20px;
+}
+
+.review-buttons {
+    display: flex;
+}
+
+.review-buttons button {
+    border: 1px solid black;
+    background-color: white;
+    color: #000;
+    border-radius: 20px;
+    padding: 5px 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+.review-buttons button:hover {
+    background-color: black;
+    color: white;
+}

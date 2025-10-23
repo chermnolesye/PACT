@@ -2,15 +2,15 @@
     text-align: center;
     color: #0076ff;
     font-size: 40px;
-    margin: 70px 0 15px;
+    margin: 20px 0 15px;
   }
   
-  .page {
+  .page-container {
     display: block;
-    width: 80%;
     padding: 0 20px;
     box-sizing: border-box;
   }
+  
   .stats-block {
       width: 80%;
       max-width: 1100px;
@@ -72,9 +72,15 @@
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   }
   
-  .errors-table th,
-  .errors-table td {
+  .errors-table th {
     text-align: center;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+  }
+
+  .errors-table td {
+
     padding: 10px;
     border: 1px solid #dee2e6;
     vertical-align: middle;

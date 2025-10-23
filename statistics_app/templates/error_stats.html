@@ -10,7 +10,7 @@
 
 {% block content %}  
 
-    <main class="page">
+    <div class="page-container">
       <h2 class="title">Суммарная статистика ошибок</h2>
 
       <div class="stats-block">
@@ -51,7 +51,7 @@
                 font-weight: bold;
               "
             >
-              <td colspan="4">{{ parent_tag }}</td>
+            <td colspan="4" class="center">{{ parent_tag }}</td>
             </tr>
             {% for tag in child_tags %}
             <tr style="background-color: {{ tag.color }};">
@@ -68,5 +68,5 @@
           </tbody>
         </table>
       </div>
-    </main>
+    </div>
 {% endblock %}

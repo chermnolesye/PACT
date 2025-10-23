@@ -79,6 +79,10 @@ html, body {
     flex-direction: row;
   }
 
+.center {
+    text-align: center;
+}
+
 h2 {
 	font-size: calc(1.325rem + .9vw);
 }
@@ -226,14 +230,18 @@ textarea {
     z-index: 2;
 }
 
+.main-template-container {
+    margin-top: 50px;
+    width: 100%;
+    padding: 0px 20px;
+}
+
 .container {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
     padding: var(--primary-padding);
-    margin-top: 50px;
 	width: 100%;
-    max-width: 800px;
     align-items: center;
 }
 

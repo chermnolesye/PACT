@@ -1,14 +1,4 @@
 
-.container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 20px 10px;
-    max-width: 1200px;
-    margin-top: 60px;
-}
-
 .text-types-container,
 .search-results {
     box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
