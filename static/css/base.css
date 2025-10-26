@@ -84,7 +84,7 @@ html, body {
 }
 
 h2 {
-	font-size: calc(1.325rem + .9vw);
+	font-size: Calc(1.325rem + .9vw);
 }
 
 .button {
@@ -159,9 +159,13 @@ h2 {
 }
 
 .login-form {
-	max-width: 400px;
+	max-width: 100%;
     margin: 0 auto;
     padding: 20px;
+}
+
+#id_password, #id_login {
+    max-width: Calc(100% - 44px);
 }
 
 select,

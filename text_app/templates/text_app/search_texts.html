@@ -300,31 +300,5 @@
       const filterBlock = document.querySelector(".filter-block");
       filterBlock.classList.toggle("hidden");
     }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-    const toggleButton = document.getElementById('toggle-results');
-    const resultsContainer = document.querySelector('.search-results');
-    const toggleButtonContainer = document.querySelector('.toggle-results-button');
-
-    // Функция, которая активирует кнопку после загрузки результатов
-    function showToggleButton() {
-      toggleButtonContainer.style.display = 'block'; // Показываем кнопку
-    }
-
-    // Включаем кнопку, если результаты есть
-    if (resultsContainer && resultsContainer.children.length > 0) {
-      showToggleButton();
-    }
-
-    toggleButton.addEventListener('click', function() {
-      if (resultsContainer.classList.contains('hidden')) {
-        resultsContainer.classList.remove('hidden');
-        toggleButton.textContent = 'Скрыть результаты';
-      } else {
-        resultsContainer.classList.add('hidden');
-        toggleButton.textContent = 'Показать результаты';
-      }
-    });
-  });
   </script>
 {% endblock %}
