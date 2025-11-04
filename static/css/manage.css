@@ -151,6 +151,7 @@
 .header-card {
   display: flex;
   align-items: center;
+  vertical-align: middle;
   background-color: #f8f9fa;
   gap: 60px;
   padding: 15px;
@@ -534,4 +535,42 @@
 
 .modal-message p {
   margin-bottom: 10px;
+}
+
+
+@media (max-width: 600px){
+    .student-login {
+        width: calc(40%);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .student-name {
+        width: calc(50%);
+        overflow: hidden;
+    }
+    .student-card{
+        gap:10%;
+    }
+    .group-name, .group-course, .group-year, .group-settings a {
+        max-width: calc(25%);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .group-header-card, .group-card {
+        gap: 10px;
+    }
+    .group-settings svg {
+        display: none;
+    }
+}
+
+@media (max-width: 400px) {
+    .student-login,.student-name {
+        font-size: 14px;
+    }
+
+    .group-header-card, .group-card {
+        gap: 5px;
+    }
 }
