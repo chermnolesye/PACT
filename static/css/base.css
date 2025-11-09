@@ -269,7 +269,7 @@ a {
     top: 0; 
     left: 0;
     width: 100%; 
-    z-index: 100; 
+    z-index: 900; 
     display: flex;
     justify-content: space-between; 
     align-items: center; 
@@ -293,6 +293,10 @@ a {
     align-items: center;
   }
 
+.header__link svg {
+    margin-right:3px;
+}
+
   .header__link:last-child {
     margin-right: 0; 
   }
@@ -303,13 +307,8 @@ a {
     margin-right: 5px; 
   }
 
-  .header-svg{
-      margin-right: 5px;
-      margin-left: 5px; 
-      max-width: 25px;
-  }
 
-  nav{
+nav {
     background-color: #fff;
     color: #0d6efd;
     text-align: center;

@@ -181,7 +181,7 @@ form {
     padding: 10px;
     position: sticky;
     top: 0px;
-    z-index: 1000;
+    z-index: 800;
 }
 
   .menu-block {
@@ -656,4 +656,60 @@ label[for="id_iderrortag"] {
 .text-header, .menu-container {
     margin-left: 0;
     margin-right: 0;
+}
+
+@media (max-width: 660px) {
+    .main-template-container .menu-container > .menu-block:first-child {
+        border-top-left-radius: unset;
+        border-bottom-left-radius: unset;
+    }
+    .menu-container > .rate-btn {
+        border-radius: 10px;
+        width:90%;
+        max-width: 200px;
+        font-size: 16px;
+        margin-top: 10px;
+    }
+    .main-template-container .menu-container {
+        display: block;
+        position:relative;
+    }
+    .main-template-container .menu-content {
+        margin-right: 10px
+    }
+    #grade-content .menu-content-grade {
+        display: block;
+    }
+}
+@media (max-width: 980px) {
+
+    #button-add-annotation, #button-delete-tokens, #button-remove-highlight {
+        max-width: 22%;
+        margin-left: 2%;
+        padding: 5px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    #button-remove-highlight {
+        margin-right: 2%;
+    }
+}
+@media (max-width: 610px) {
+    .annotation-wrap {
+        display:block;
+    }
+    .modal-content, .modal-content form {
+        min-width: unset;
+        width: 90%;
+    }
+    .grade-buttons{
+        gap:10px;
+    }
+    #save-annotation, #delete-annotation {
+        min-width: unset;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }

@@ -6,6 +6,10 @@
   width: 100%;
 }
 
+.show-groups-container{
+    margin-top:20px;
+}
+
 .group-container {
   display: flex;
   flex-direction: column;
@@ -249,9 +253,9 @@
   text-align: left;
 }
 
-.text-check, .text-grade, .text-errors {
-  flex: 1;
-  text-align: center;
+.text-check, .text-grade, .text-group, .text-errors {
+    flex: 1;
+    text-align: center;
 }
 
 .group-header-card {
@@ -537,6 +541,12 @@
   margin-bottom: 10px;
 }
 
+@media (max-width: 850px) {
+    .add-student select {
+        min-width: unset;
+        width: 100%;
+    }
+}
 
 @media (max-width: 600px){
     .student-login {
@@ -563,8 +573,14 @@
     .group-settings svg {
         display: none;
     }
+    .students-container .text-group, .students-container .text-check, .students-container .text-errors, .show-groups-container .student-patronimic-name {
+        display: none;
+    }
+    .show-groups-container form {
+        min-width: unset;
+        width: 100%;
+    }
 }
-
 @media (max-width: 400px) {
     .student-login,.student-name {
         font-size: 14px;
@@ -572,5 +588,33 @@
 
     .group-header-card, .group-card {
         gap: 5px;
+    }
+
+    .student-info-header{
+        font-size:20px;
+    }
+
+    .students-container .text-type, .show-groups-container .student-first-name {
+        display: none;
+    }
+
+    .show-groups-container form .horizontal-wrap, .add-student {
+        display: block;
+    }
+    .add-student-button{
+        margin-top:10px;
+    }
+}
+
+@media (max-width: 1015px) {
+    .texts-result{
+    }
+    .header-card, .student-card {
+        gap: 10px;
+    }
+    .header-card div, .student-card div {
+        width: 10%;
+        overflow:hidden;
+        text-overflow:ellipsis;
     }
 }
