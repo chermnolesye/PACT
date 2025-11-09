@@ -58,7 +58,7 @@ class TeacherLoadTextForm(forms.ModelForm):
         if 'group' in self.data:
             try:
                 group_id = int(self.data.get('group'))
-                self.fields['student'].queryset = Student.objects.filter(idgroup=group_id)
+                self.fields['student'].queryset = Student.objects.filter(idgroup=group_id).order_by('iduser__lastname')
                 group = Group.objects.get(idgroup=group_id)
                 self.initial['educationlevel'] = group.studycourse  
             except (ValueError, TypeError, Group.DoesNotExist):

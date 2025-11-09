@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Добавление текста для рецензирования{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div>
+        <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
+        {% for exercise in exercises %}
+        <div id="{{ exercise.idexercise }}">
+            <span>{{ exercise.idstudent.iduser.get_full_name }}</span>
+            <span>{{ exercise.idstudent.idgroup }}</span>
+            <span>{{ exercise.idexercisetype.exerciseabbr }}</span>
+            <span>{{ exercise.creationdate }}</span>
+            <span>{{ exercise.deadline }}</span>
+            <span>{{ exercise.completiondate }}</span>
+            <span>{{ exercise.exercisemark }}</span>
+            <button>Редактировать</button>
+            <button onclick="confirmDelete(this)">Удалить</button>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Подтверждение удаления</h3>
+        <p>Вы уверены, что хотите удалить это упражнение?</p>
+        <div class="modal-actions">
+            <button id="confirmDelete" class="btn btn-danger">Удалить</button>
+            <button id="cancelDelete" class="btn btn-secondary">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let exerciseToDelete = null;
+
+    function confirmDelete(el) {
+        // exerciseToDelete = exerciseId;
+        exerciseToDelete = el.parentElement.id;
+        document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    // AJAX удаление
+    function deleteExercise() {
+        if (exerciseToDelete) {
+            fetch(`/exercise/teacher_exercises/delete/${exerciseToDelete}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById(exerciseToDelete).remove();
+                    alert('Упражнение успешно удалено');
+                } else {
+                    alert('Ошибка при удалении');
+                }
+                closeModal();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                console.log('Ошибка при удалении', 'error');
+                closeModal();
+            });
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('deleteModal').style.display = 'none';
+        exerciseToDelete = null;
+    }
+
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('confirmDelete').addEventListener('click', deleteExercise);
+        document.getElementById('cancelDelete').addEventListener('click', closeModal);
+        
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+{% endblock %}    

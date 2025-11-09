@@ -362,7 +362,7 @@ class Exercise(models.Model):
         db_table = 'tblexercise'
         
     def __str__(self):
-        return f"Задание {self.idexercise} - {self.idexercisetype.idexercisename}"
+        return f"Задание {self.idexercise} - {self.idexercisetype.exercisename}"
     
 class ExerciseGrading(models.Model):
     idexercisegrading = models.AutoField(primary_key=True)
