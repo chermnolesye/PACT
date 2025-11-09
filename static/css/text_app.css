@@ -59,3 +59,16 @@
     margin-top: 20px;
     min-width: 250px;
 }
+
+@media (max-width:970px) {
+    .horizontal-wrap{
+        display:block;
+    }
+    form {
+        width: 100%;
+    }
+    #id_text, form input, form > div,form select {
+        min-width: 90% !important;
+        max-width: 100%;
+    }
+}

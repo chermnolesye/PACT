@@ -84,7 +84,7 @@ html, body {
 }
 
 h2 {
-	font-size: calc(1.325rem + .9vw);
+	font-size: Calc(1.325rem + .9vw);
 }
 
 .button {
@@ -159,9 +159,13 @@ h2 {
 }
 
 .login-form {
-	max-width: 400px;
+	max-width: 100%;
     margin: 0 auto;
     padding: 20px;
+}
+
+#id_password, #id_login {
+    max-width: Calc(100% - 44px);
 }
 
 select,
@@ -265,7 +269,7 @@ a {
     top: 0; 
     left: 0;
     width: 100%; 
-    z-index: 100; 
+    z-index: 900; 
     display: flex;
     justify-content: space-between; 
     align-items: center; 
@@ -289,6 +293,10 @@ a {
     align-items: center;
   }
 
+.header__link svg {
+    margin-right:3px;
+}
+
   .header__link:last-child {
     margin-right: 0; 
   }
@@ -299,13 +307,8 @@ a {
     margin-right: 5px; 
   }
 
-  .header-svg{
-      margin-right: 5px;
-      margin-left: 5px; 
-      max-width: 25px;
-  }
 
-  nav{
+nav {
     background-color: #fff;
     color: #0d6efd;
     text-align: center;
