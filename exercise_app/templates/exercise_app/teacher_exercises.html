@@ -9,33 +9,76 @@
 
 {% block content %}
 <div class="container">
-
-    <div>
-        <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
+    <h2 class="highlighted-header">Список упражнений</h2>
+    <div style="width:100%;height:45px;position:relative;">
+        <a href="{% url 'add_exercise' %}" class="button new_exercise_btn">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.456 15.9085H15.9085M15.9085 15.9085H11.3609M15.9085 15.9085V11.3609M15.9085 15.9085V20.456M8.32924 2.77822C10.6326 1.44564 13.2474 0.745918 15.9085 0.750018C24.2805 0.750018 31.067 7.53646 31.067 15.9085C31.067 24.2805 24.2805 31.067 15.9085 31.067C7.53645 31.067 0.75 24.2805 0.75 15.9085C0.75 13.1481 1.48822 10.5575 2.7782 8.32925" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            Новое задание
+        </a>
+    </div>
+    <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
+    <div class="exercises">
+        <div class="header-card">
+            <div>ФИО</div>
+            <div>Группа</div>
+            <div class="type">Тип упражнения</div>
+            <div class="out_date">Дата выдачи</div>
+            <div class="deadline">Дата сдачи</div>
+            <div class="completion_date">Дата завершения</div>
+            <div>Оценка</div>
+            <div class="edit_card">Редактировать задание</div>
+            <div class="delete_card">Удалить задание</div>
+            <div class="edit_delete_card">Управление</div>
+        </div>
         {% for exercise in exercises %}
-        <div id="{{ exercise.idexercise }}">
+        <div id="{{ exercise.idexercise }}" class="exercise-card">
             <span>{{ exercise.idstudent.iduser.get_full_name }}</span>
             <span>{{ exercise.idstudent.idgroup }}</span>
-            <span>{{ exercise.idexercisetype.exerciseabbr }}</span>
-            <span>{{ exercise.creationdate }}</span>
-            <span>{{ exercise.deadline }}</span>
-            <span>{{ exercise.completiondate }}</span>
+            <span class="type">{{ exercise.idexercisetype.exerciseabbr }}</span>
+            <span class="out_date">{{ exercise.creationdate }}</span>
+            <span class="deadline">{{ exercise.deadline }}</span>
+            <span class="completion_date">{{ exercise.completiondate }}</span>
+            {% if exercise.exercisemark %}
             <span>{{ exercise.exercisemark }}</span>
-            <button>Редактировать</button>
-            <button onclick="confirmDelete(this)">Удалить</button>
+            {% else %}
+            <span>-</span>
+            {% endif %}
+            <button class="edit_card">
+                <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </button>
+            <button onclick="confirmDelete(this)" class=" delete_card">
+                <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </button>
+            <span class="edit_delete_card">
+                <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
+                </svg>
+                <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
         </div>
-        {% endfor %}
+    {% endfor %}
     </div>
-
 </div>
 
-<div id="deleteModal" class="modal" style="display: none;">
+<div id="deleteModal" class="modal modal-overlay" style="display: none;">
     <div class="modal-content">
-        <h3>Подтверждение удаления</h3>
-        <p>Вы уверены, что хотите удалить это упражнение?</p>
-        <div class="modal-actions">
-            <button id="confirmDelete" class="btn btn-danger">Удалить</button>
-            <button id="cancelDelete" class="btn btn-secondary">Отмена</button>
+        <div class="modal-head">
+            <h3>Подтверждение удаления</h3>
+        </div>
+        <div class="modal-inner">
+            <p>Вы уверены, что хотите удалить упражнение?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn button btn-danger">Удалить</button>
+                <button id="cancelDelete" class="btn button btn-secondary">Отмена</button>
+            </div>
         </div>
     </div>
 </div>

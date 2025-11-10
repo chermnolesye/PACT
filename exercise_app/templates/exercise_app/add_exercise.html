@@ -11,8 +11,8 @@
 {% block content %}   
 
 <div class="container">
-
-    <form method="post">
+    <h2 class="highlighted-header">Добавление упражнения</h2>
+    <form method="post" class="add_exercise_form">
         {% csrf_token %}
 
         <div class="form-group">
@@ -35,14 +35,16 @@
             {{ form.deadline }}
         </div>
 
-        <div>
+        <div class="grouping-wrapper">
             <label>Тип упражнения:</label>
-            {% for choice in form.idexercisetype %}
+            <div class="grouping-options">
+                {% for choice in form.idexercisetype %}
                 <div>
                     {{ choice.tag }}
                     <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
         
         <div id="grading-fields" style="display: none;">
@@ -60,7 +62,7 @@
             {{ form.review_exercisetext }}
         </div> -->
 
-        <button type="submit">Создать упражнение</button>
+        <button type="submit" class="button">Создать упражнение</button>
     </form>
     
 </div>
@@ -98,10 +100,10 @@
 
                 gradingFields.style.display = 'none';
                 reviewFields.style.display = 'none';
-                if (this.value === '2') {  // ID для grading
-                    gradingFields.style.display = 'block';
-                } else if (this.value === '3') {  // ID для review  
-                    reviewFields.style.display = 'block';
+                if (this.value === '1') {  // ID для grading
+                    gradingFields.style.display = 'flex';
+                } else if (this.value === '2') {  // ID для review  
+                    reviewFields.style.display = 'flex';
                 }
             });
         });

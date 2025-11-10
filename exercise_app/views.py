@@ -83,7 +83,7 @@ def add_exercise(request):
                             idexercisetext=form.cleaned_data['review_exercisetext']
                         )
                 
-                return redirect('add_exercise')
+                return redirect('teacher_exercises')
                 
             except Exception as e:
                 print(f'Ошибка: {str(e)}')
