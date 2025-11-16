@@ -6,7 +6,6 @@ from django.db.models import F
 import json
 from django.http import JsonResponse
 from django.db import transaction
-from django.db.models import F
 from django.http import JsonResponse
 from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm
 from nltk.tokenize import sent_tokenize, word_tokenize
@@ -642,7 +641,6 @@ def home_view(request):
 
 def get_teacher_fio(request):
     return request.session.get("teacher_fio", "")
-
 
 def get_tags(request):
     # Получаем все теги из базы данных

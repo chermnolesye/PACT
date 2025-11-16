@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Аннотирование{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/review.css' %}" />
+{% endblock %}
+
+{% block content %}   
+
+<div class="main-container">
+
+    <div class="review-menu">
+
+         <div class="review-menu-block">
+            Дата загрузки: {{ text.loaddate }}
+         </div>
+
+         <div class="review-menu-block">
+            Используется в {{ exercises_count }} упражнениях
+         </div>
+
+         <div class="review-menu-button">
+            Редактировать метаданные
+         </div>
+
+         <div class="review-menu-button">
+            Удалить текст
+         </div>
+
+    </div>
+
+    <div class="review-body">
+        <div class="review-text-container">
+            <div class="text-header underline">
+                <h2> {{text.exercisetextname }} </h2>
+
+                <p class="author"> {{ text.author }} </p>
+            </div>
+
+            <div class="review-text">
+                <p>
+                    {{ text.exercisetext }}
+                </p>
+            </div>
+        </div>
+
+        <div class="tasks-container">
+            <h2 class="underline">Задания к тексту</h2>
+             <form id="create-exercise-form">
+                <div class="student-review">
+
+                </div>
+                <div class="review-buttons">
+                    <button>Сохранить</button>
+
+                    <button>Отмена</button>                    
+                </div>
+            </form>
+
+            <form id="update-exercise-form">
+                <div class="student-review">
+
+                </div>
+                <div class="review-buttons">
+                    <button>Изменить</button>
+
+                    <button>Удалить</button>                    
+                </div>
+            </form>
+        </div>
+    </div> 
+
+    <div class="modal-window">
+        
+    </div>
+
+</div>
+
+{% endblock %}

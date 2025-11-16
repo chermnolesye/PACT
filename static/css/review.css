@@ -44,6 +44,14 @@
     padding: 10px 5px;
 }
 
+.tasks-container {
+    width: 70%;
+    border-left: 2px solid black;
+    margin: 10px;
+    margin-left: 30px;
+    padding: 20px;
+}
+
 .comment {
     border:2px solid black;
 	height:45px;
@@ -92,6 +100,7 @@
     margin: 10px 5px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
     background-color: var(--e-grey);
+    border-radius: var(--border-radius);
 }
 
 .review-menu-button {
@@ -100,6 +109,7 @@
     margin: 10px 5px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
     cursor: pointer;
+    border-radius: var(--border-radius);
 }
 .review-body {
     display: flex;
@@ -109,7 +119,7 @@
 .review-text-container {
     display: flex;
     flex-direction: column;
-
+    width: 100%;
 }
 
 .review-text p {
@@ -138,6 +148,6 @@
 }
 
 .review-buttons button:hover {
-    background-color: black;
+    background-color: #000;
     color: white;
 }

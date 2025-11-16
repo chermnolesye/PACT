@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render,  redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db import transaction
+from django.db.models import F
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -19,7 +20,10 @@ from core_app.models import (
     ExerciseType,
     Text,
     Student,
-    User
+    User,
+    Token,
+    Error,
+    ErrorToken
 )
 
 from .forms import (
@@ -117,7 +121,7 @@ def load_students(request):
     return JsonResponse({'students': []})
 
 
-def add_exercise_text(request):
+def add_review_text(request):
     if request.method == 'POST':
         form = AddExerciseTextForm(request.POST)
         print("POST data:", request.POST) 
@@ -134,17 +138,122 @@ def add_exercise_text(request):
                 exercise_text.save()
                 
                 print('Текст добавлен')
-                return redirect('add_exercise_text')
+                return redirect('add_review_text')
                 
             except Exception as e:
                 print("Form errors:", {str(e)}) 
     else:
         form = AddExerciseTextForm()
     
-    return render(request, 'add_exercise_text.html', {'form': form})
+    return render(request, 'add_review_text.html', {'form': form})
 
 def grading_student(request):
     return render(request, "grading_student.html")
 
 def review_student(request):
     return render(request, "review_student.html")
+
+def review_text(request, idexercisetext=2):
+    texts = ExerciseText.objects.all()
+
+    text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
+
+    exercises_count = ExerciseReview.objects.filter(idexercisetext=idexercisetext).count()
+
+    context = {
+        'text': text,
+        'exercises_count': exercises_count,
+    }
+
+    return render(request, "review_text.html", context)
+
+
+def grade_text(request, text_id=2379):
+    text_id = request.GET.get("text_id")
+    if text_id:
+        text = get_object_or_404(Text, idtext=text_id)
+    else:
+        text = Text.objects.first()
+
+    sentences = text.sentence_set.all()
+    sentence_data = []
+    selected_markup = request.GET.get("markup", "tagtext")
+
+    for sentence in sentences:
+        tokens = Token.objects.filter(idsentence=sentence).select_related("idpostag").order_by('tokenordernumber')
+        tokens_data = []
+        for token in tokens:
+            pos_tag = token.idpostag.tagtext if token.idpostag else None
+            pos_tag_russian = token.idpostag.tagtextrussian if token.idpostag else None
+            pos_tag_abbrev = token.idpostag.tagtextabbrev if token.idpostag else None
+            pos_tag_color = token.idpostag.tagcolor if token.idpostag else None
+
+            error_tokens = token.errortoken_set.select_related(
+                "iderror__iderrortag", "iderror__iderrorlevel", "iderror__idreason", "iderror"
+            ).all()
+
+            errors_list = []
+            for et in error_tokens:
+                error = et.iderror
+                if error and error.iderrortag:
+                    errors_list.append({
+                        "error_tag_id": error.iderrortag,
+                        "error_id": error.iderror,
+                        "error_tag": error.iderrortag.tagtext,
+                        "error_tag_russian": error.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": error.iderrortag.tagtextabbrev,
+                        "error_color": error.iderrortag.tagcolor,
+                        "error_level": error.iderrorlevel.errorlevelname if error.iderrorlevel else "Не указано",
+                        "error_correct": error.correct or "Не указано",
+                        "error_comment": error.comment or "Не указано",
+                        "error_reason": error.idreason.reasonname if error.idreason else "Не указано",
+                        "idtagparent": error.iderrortag.idtagparent,
+                    })
+
+            tokens_data.append({
+                "token_id": token.idtoken,
+                "token": token.tokentext,
+                "pos_tag": pos_tag,
+                "pos_tag_russian": pos_tag_russian,
+                "pos_tag_abbrev": pos_tag_abbrev,
+                "pos_tag_color": pos_tag_color,
+                "token_order_number": token.tokenordernumber,
+                "errors": errors_list,
+            })
+
+        sentence_data.append({
+            "id_sentence": sentence.idsentence,
+            "sentence": sentence,
+            "tokens": tokens_data,
+        })
+    
+    # Контекст
+    student = text.idstudent
+    user = student.iduser
+    group = student.idgroup
+    text_type = text.idtexttype
+
+    context = {
+        "text": text,
+        "sentence_data": sentence_data,
+        "selected_markup": selected_markup,
+        "author": f"{user.lastname} {user.firstname}",
+        "group": group.groupname,
+        "create_date": text.createdate,
+        "text_type": text_type.texttypename if text_type else "Не указано",
+        "self_rating": text.get_selfrating_display() if text.selfrating else "Нет данных",
+        "self_assesment": text.get_selfassesment_display() if text.selfassesment else "Нет данных",
+        "fio": get_teacher_fio(request),
+        "textgrade": text.get_textgrade_display() if text.textgrade else "Нет данных",
+        "completeness": text.get_completeness_display() if text.completeness else "Нет данных",
+        "structure": text.get_structure_display() if text.structure else "Нет данных",
+        "coherence": text.get_coherence_display() if text.coherence else "Нет данных",
+        "poscheckflag": text.poscheckflag,
+        "errorcheckflag": text.errorcheckflag,
+        "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано", 
+        "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
+    }
+    return render(request, "grade_text.html", context)
+
+def get_teacher_fio(request):
+    return request.session.get("teacher_fio", "")
