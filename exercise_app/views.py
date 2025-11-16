@@ -28,9 +28,16 @@ from core_app.models import (
 
 from .forms import (
     AddExerciseForm,
-    AddExerciseTextForm
+    AddExerciseTextForm,
+    EditTextForm
 )
 
+'''
+    ОБЩИЙ БЕК
+'''
+
+def get_teacher_fio(request):
+    return request.session.get("teacher_fio", "")
 
 def teacher_exercises(request):
     # if request.method == 'POST':
@@ -121,6 +128,10 @@ def load_students(request):
     return JsonResponse({'students': []})
 
 
+'''
+    БЕК КАТИ
+'''
+
 def add_review_text(request):
     if request.method == 'POST':
         form = AddExerciseTextForm(request.POST)
@@ -147,26 +158,73 @@ def add_review_text(request):
     
     return render(request, 'add_review_text.html', {'form': form})
 
-def grading_student(request):
-    return render(request, "grading_student.html")
-
 def review_student(request):
     return render(request, "review_student.html")
 
-def review_text(request, idexercisetext=2):
+def review_text_list(request):
+
     texts = ExerciseText.objects.all()
 
-    text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
+    context = {'texts' : texts}
+    return render(request, 'review_text_list.html', context)
 
+def review_text(request, idexercisetext=2):
+    text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
     exercises_count = ExerciseReview.objects.filter(idexercisetext=idexercisetext).count()
+    edit_form = EditTextForm(initial={
+        'author': text.author,
+        'idexercisetexttype': text.idexercisetexttype,
+        'exercisetextname': text.exercisetextname,
+    })
+
+    if request.method == "POST":
+        if 'delete_text' in request.POST:
+            text.delete()
+            print("текст удален")
+            return redirect('review_text_list')     
+
+        elif 'edit_text' in request.POST:
+                edit_form = EditTextForm(request.POST)
+                if edit_form.is_valid():
+                    text.author = edit_form.cleaned_data['author']
+                    text.idexercisetexttype = edit_form.cleaned_data['idexercisetexttype']
+                    text.exercisetextname = edit_form.cleaned_data['exercisetextname']
+                    text.save()
+
+                    # messages.success(request, 'Метаданные успешно обновлены')
+                    return redirect('review_text', idexercisetext=idexercisetext)
+                else:
+                    edit_form = EditTextForm(request.POST)
+                    print('ФОРМА НЕ ВАЛИДНА')
+        
+    text_using = f"Текст используется в {exercises_count} упражнени" + get_count_end(exercises_count)
+
+    show_del_btn = True if exercises_count == 0 else False
 
     context = {
         'text': text,
-        'exercises_count': exercises_count,
+        'exercises_count': exercises_count, # По сути уже не надо это передавать но пока пусть будет
+        'show_del_btn': show_del_btn,
+        'text_using': text_using,
+        'edit_form': edit_form
     }
 
     return render(request, "review_text.html", context)
 
+def get_count_end(count):
+    if 11 <= count % 100 <= 14:
+        return 'ях'
+    
+    last_digit = count % 10
+    
+    if last_digit == 1:
+        return 'и'
+    else:
+        return 'ях'
+
+'''
+    БЕК ДАШИ
+'''
 
 def grade_text(request, text_id=2379):
     text_id = request.GET.get("text_id")
@@ -227,7 +285,6 @@ def grade_text(request, text_id=2379):
             "tokens": tokens_data,
         })
     
-    # Контекст
     student = text.idstudent
     user = student.iduser
     group = student.idgroup
@@ -255,5 +312,6 @@ def grade_text(request, text_id=2379):
     }
     return render(request, "grade_text.html", context)
 
-def get_teacher_fio(request):
-    return request.session.get("teacher_fio", "")
+def grading_student(request):
+    return render(request, "grading_student.html")
+

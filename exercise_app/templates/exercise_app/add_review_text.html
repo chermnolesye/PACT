@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Добавление текста для рецензирования{% endblock %}
+{% block title %}Добавление текста для аннотирования{% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1>Добавление нового текста для рецензирования</h1>
+    <h1>Добавление нового текста для аннотирования</h1>
     
+    <button type="button"
+            onclick="window.history.back()">
+            Назад
+    </button>
+
     <form method="post">
         {% csrf_token %}
         

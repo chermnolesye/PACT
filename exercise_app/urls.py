@@ -10,7 +10,13 @@ urlpatterns = [
     path('review_student/', views.review_student, name='review_student'),
     path('add_review_text/', views.add_review_text, name='add_review_text'),
     path('teacher_exercises/', views.teacher_exercises, name='teacher_exercises'),
+
+    path('review_text_list/', views.review_text_list, name='review_text_list'),
+
+    # Тут надо будет одно убрать позже
     path('review_text/', views.review_text, name='review_text'),
+    path('review_text/<int:idexercisetext>/', views.review_text, name='review_text'),
+
     path('grade_text/', views.grade_text, name='grade_text'),
    
 ]

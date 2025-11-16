@@ -22,11 +22,13 @@ class AddExerciseTextForm(forms.Form):
         label='Тип текста',
         required=True,
     )
+
     exercisetextname = forms.CharField(
         max_length=255,
         label='Название текста',
         required=True,
     )
+
     exercisetext = forms.CharField(
         label='Текст для рецензии',
         required=True,
@@ -129,3 +131,22 @@ class AddExerciseForm(forms.Form):
                 self.add_error('review_exercisetext', 'Для типа "Рецензирование" необходимо выбрать текст')
         
         return cleaned_data
+    
+
+class EditTextForm(forms.Form):
+    author = forms.CharField(
+        label='Автор текста',
+        max_length=300,
+        required=True
+    )
+
+    idexercisetexttype = forms.ModelChoiceField(
+        queryset=ExerciseTextType.objects.all(),
+        label='Тип текста',
+        required=True,
+    )
+    exercisetextname = forms.CharField(
+        max_length=255,
+        label='Название текста',
+        required=True,
+    )

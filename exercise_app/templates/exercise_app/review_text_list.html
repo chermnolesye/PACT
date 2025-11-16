@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} Тексты для аннотирования {% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="highlighted-header">Список текстов для аннотирования</h2>
+    <div style="width:100%;height:45px;position:relative;">
+        <a href="{% url 'add_review_text' %}" class="button new_exercise_btn">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.456 15.9085H15.9085M15.9085 15.9085H11.3609M15.9085 15.9085V11.3609M15.9085 15.9085V20.456M8.32924 2.77822C10.6326 1.44564 13.2474 0.745918 15.9085 0.750018C24.2805 0.750018 31.067 7.53646 31.067 15.9085C31.067 24.2805 24.2805 31.067 15.9085 31.067C7.53645 31.067 0.75 24.2805 0.75 15.9085C0.75 13.1481 1.48822 10.5575 2.7782 8.32925" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            Новый текст
+        </a>
+    </div>
+    <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
+    <div class="exercises">
+        <div class="header-card">
+            <div>Название</div>
+            <div>Автор</div>
+            <div class="type">Тип</div>
+            <div class="out_date">Дата загрузки</div>
+        </div>
+        {% for text in texts %}
+        <div id="{{ text.idexercisetext }}" class="exercise-card"
+            onclick="window.location.href='{% url 'review_text' text.idexercisetext %}'"
+            style="cursor: pointer;">
+            <span>{{ text.exercisetextname }}</span>
+            <span>{{ text.author }}</span>
+            <span class="type">{{ text.idexercisetexttype.exercisetexttypename }}</span>
+            <span class="out_date">{{ text.loaddate }}</span>
+            <span></span>            
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div id="deleteModal" class="modal modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-head">
+            <h3>Подтверждение удаления</h3>
+        </div>
+        <div class="modal-inner">
+            <p>Вы уверены, что хотите удалить этот текст?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn button btn-danger">Удалить</button>
+                <button id="cancelDelete" class="btn button btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}    

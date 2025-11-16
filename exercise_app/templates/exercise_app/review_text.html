@@ -2,11 +2,12 @@
 
 {% load static %}
 
-{% block title %}Аннотирование{% endblock %}
+{% block title %}Текст для аннотирования{% endblock %}
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
     <link rel="stylesheet" href="{% static 'css/review.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/manage.css' %}" />
 {% endblock %}
 
 {% block content %}   
@@ -14,22 +15,28 @@
 <div class="main-container">
 
     <div class="review-menu">
+        <button type="button" class="review-menu-button"
+            onclick="window.history.back()">
+            Назад
+        </button>
 
          <div class="review-menu-block">
             Дата загрузки: {{ text.loaddate }}
          </div>
 
          <div class="review-menu-block">
-            Используется в {{ exercises_count }} упражнениях
+            {{ text_using }}
          </div>
 
-         <div class="review-menu-button">
+         <button type="button" class="review-menu-button" id="editTextButton">
             Редактировать метаданные
-         </div>
-
-         <div class="review-menu-button">
-            Удалить текст
-         </div>
+         </button>
+      
+        {% if show_del_btn %}
+            <button type="button" class="review-menu-button" id="deleteTextButton">
+                Удалить текст
+            </button>
+        {% endif %}
 
     </div>
 
@@ -74,10 +81,184 @@
         </div>
     </div> 
 
-    <div class="modal-window">
-        
+
+    <div id="editTextModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Редактировать метаданные</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <form method="post" id="editTextForm">
+                {% csrf_token %}
+
+                <div class="vertical-level">
+                    {{ edit_form.exercisetextname.label }}
+                    {{ edit_form.exercisetextname }}
+                </div>
+
+                <div class="vertical-level">
+                    {{ edit_form.author.label }}
+                    {{ edit_form.author }}
+                </div>
+                
+                <div class="vertical-level">
+                    {{ edit_form.idexercisetexttype.label }}
+                    {{ edit_form.idexercisetexttype }}
+                </div>
+
+                <div class="horizontal-level">
+                    <button type="submit" name="edit_text" id="confirmEditText" class="button">Сохранить</button>
+                    <button type="button" id="cancelEditText" class="button grey-button">Отмена</button>
+                </div>
+            </form>
+        </div>
     </div>
 
+
+
+    {% if show_del_btn %}
+
+    <div id="confirmDeleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Подтвердите действие</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <p class="modal-message">Вы уверены, что хотите удалить этот текст?</p>
+            <form method="post" id="deleteTextForm">
+                {% csrf_token %}
+                <div class="horizontal-level">
+                    <button type="submit" name="delete_text" id="confirmDeleteText" class="button">Да</button>
+                    <button type="button" id="cancelDeleteText" class="button grey-button">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+
+<script>
+    // --- СКРИПТ ДЛЯ МОДАЛЬНОГО ОКНА С ПОДВЕРЖДЕНИЕМ УДАЛЕНИЯ ГРУППЫ ---
+    // ФОРМА ДЛЯ УДАЛЕНИЯ ГУРППЫ В МОДАЛЬНОМ ОКНЕ!!!!
+
+    // document.addEventListener('DOMContentLoaded', function() {
+    //     const deleteBtn = document.getElementById('deleteTextButton');
+    //     const confirmModal = document.getElementById('confirmDeleteModal');
+    //     const confirmDelete = document.getElementById('confirmDeleteText');
+    //     const cancelDelete = document.getElementById('cancelDeleteText');
+    //     const closeModal = document.querySelector('.close-modal');
+        
+    //     if (deleteBtn && confirmModal) {
+    //         deleteBtn.addEventListener('click', function() {
+    //             confirmModal.style.display = 'flex';
+    //         });
+            
+    //         confirmDelete.addEventListener('click', function() {
+    //             confirmModal.style.display = 'none';
+    //         });
+    //         cancelDelete.addEventListener('click', function() {
+    //             confirmModal.style.display = 'none';
+    //         });
+    //         closeModal.addEventListener('click', function() {
+    //             confirmModal.style.display = 'none';
+    //         });
+    //     }
+    // });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteBtn = document.getElementById('deleteTextButton');
+        const deleteModal = document.getElementById('confirmDeleteModal');
+        const editBtn = document.getElementById('editTextButton');
+        const editModal = document.getElementById('editTextModal');
+        
+        function closeModal(modal) {
+            if (modal) {
+                console.log('Closing modal:', modal.id);
+                modal.style.display = 'none';
+            }
+        }
+        
+        function openModal(modal) {
+            if (modal) {
+                console.log('Opening modal:', modal.id);
+                modal.style.display = 'flex';
+            }
+        }
+    
+        if (deleteBtn && deleteModal) {
+            console.log('Delete button found, setting up handlers');
+            deleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal(deleteModal);
+            });
+            
+            const confirmDeleteBtn = document.getElementById('confirmDeleteText');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteText');
+            const closeDeleteBtn = deleteModal.querySelector('.close-modal');
+            
+            // if (confirmDeleteBtn) {
+            //     confirmDeleteBtn.addEventListener('click', function(e) {
+            //         e.preventDefault();
+            //         closeModal(deleteModal);
+            //     });
+            // }
+            
+            if (cancelDeleteBtn) {
+                cancelDeleteBtn.addEventListener('click', function() {
+                    closeModal(deleteModal);
+                });
+            }
+            
+            if (closeDeleteBtn) {
+                closeDeleteBtn.addEventListener('click', function() {
+                    closeModal(deleteModal);
+                });
+            }
+        } else {
+            console.log('Delete button not found or no delete modal');
+        }
+        
+        if (editBtn && editModal) {
+            editBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal(editModal);
+            });
+            
+            const cancelEditBtn = document.getElementById('cancelEditText');
+            const closeEditBtn = editModal.querySelector('.close-modal');
+            
+            if (cancelEditBtn) {
+                cancelEditBtn.addEventListener('click', function() {
+                    closeModal(editModal);
+                });
+            }
+            
+            if (closeEditBtn) {
+                closeEditBtn.addEventListener('click', function() {
+                    closeModal(editModal);
+                });
+            }
+        }
+        
+        [deleteModal, editModal].forEach(modal => {
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeModal(modal);
+                    }
+                });
+            }
+        });
+    });
+</script>
 
 {% endblock %}
