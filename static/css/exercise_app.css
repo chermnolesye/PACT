@@ -67,7 +67,7 @@
 }
 
 .header-card div, .exercise-card span, .exercise-card button {
-    width: 10%;
+    width: 12%;
     overflow: hidden;
     text-overflow: ellipsis;
 }
