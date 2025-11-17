@@ -113,6 +113,11 @@
     cursor: pointer;
     border-radius: var(--border-radius);
 }
+
+.review-menu-button:hover {
+    box-shadow: 0 0.25rem 0.5rem #3886fbc6;
+}
+
 .review-body {
     display: flex;
     margin: 10px;;
@@ -152,4 +157,82 @@
 .review-buttons button:hover {
     background-color: #000;
     color: white;
+}
+
+.task {
+    border-bottom: 1px solid var(--e-grey2);
+    padding: var(--primary-padding);
+}
+
+.task-header {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+.task-name {
+    align-content: left;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.toggle-btn::after {
+    content: '▼';
+    font-size: 16px;
+    color: var(--grey-color);
+    display: inline-block;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.toggle-btn.active::after {
+    transform: rotate(180deg);
+    color: var(--e-purple);
+}
+
+.toggle-btn:hover::after {
+    color: var(--e-purple);
+}
+
+
+.task-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    opacity: 0;
+    max-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.task-content::-webkit-scrollbar {
+    display: none;
+}
+
+.task-content.active {
+    max-height: 100vh;
+    opacity: 1;
+    transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+}
+
+.task-text {
+    margin: 15px 0;
+}
+
+#editTextForm {
+    padding: var(--primary-padding);
+}
+
+#editTextForm label {
+    padding: 5px 0px;
+}
+
+#editTextForm .horizontal-level {
+    margin-top: 20px;
 }

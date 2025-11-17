@@ -16,7 +16,7 @@
 
     <div class="review-menu">
         <button type="button" class="review-menu-button"
-            onclick="window.history.back()">
+            onclick="window.location.href = '{% url 'review_text_list' %}'">
             Назад
         </button>
 
@@ -56,28 +56,36 @@
         </div>
 
         <div class="tasks-container">
-            <h2 class="underline">Задания к тексту</h2>
-             <form id="create-exercise-form">
-                <div class="student-review">
+            <h2 class="underline">Задания к тексту</h2>             
+                <div class="task">
+                    <form id="create-task-form">
 
+
+                        <div class="review-buttons">
+                            <button type="submit">Сохранить</button>
+                            <button>Отмена</button>                    
+                        </div>
+                    </form>
+                </div>          
+   
+                <div class="task">
+                    <form id="update-task-form">
+                        <div class="task-header">
+                            <button type="button" class="toggle-btn"><span class="icon"></span></button>
+                            <span class="task-name"> Task Name </span>                            
+                        </div>                        
+
+                        <div class="task-content">
+                            <p class="task-text"> text for task. text for task. text for task.</p>
+
+                            <div class="review-buttons">
+                                <button type="submit">Изменить</button>
+                                <button>Удалить</button>                    
+                            </div>
+                        </div>
+                    </form>
                 </div>
-                <div class="review-buttons">
-                    <button>Сохранить</button>
-
-                    <button>Отмена</button>                    
-                </div>
-            </form>
-
-            <form id="update-exercise-form">
-                <div class="student-review">
-
-                </div>
-                <div class="review-buttons">
-                    <button>Изменить</button>
-
-                    <button>Удалить</button>                    
-                </div>
-            </form>
+            
         </div>
     </div> 
 
@@ -96,17 +104,23 @@
                 {% csrf_token %}
 
                 <div class="vertical-level">
-                    {{ edit_form.exercisetextname.label }}
+                    <label for="{{ edit_form.exercisetextname.id_for_label }}" class="no-highlight">
+                        {{ edit_form.exercisetextname.label }}
+                    </label>
                     {{ edit_form.exercisetextname }}
                 </div>
 
                 <div class="vertical-level">
-                    {{ edit_form.author.label }}
+                    <label for="{{ edit_form.author.id_for_label }}" class="no-highlight">
+                        {{ edit_form.author.label }}
+                    </label>
                     {{ edit_form.author }}
                 </div>
-                
+
                 <div class="vertical-level">
-                    {{ edit_form.idexercisetexttype.label }}
+                    <label for="{{ edit_form.idexercisetexttype.id_for_label }}" class="no-highlight">
+                        {{ edit_form.idexercisetexttype.label }}
+                    </label>
                     {{ edit_form.idexercisetexttype }}
                 </div>
 
@@ -118,10 +132,7 @@
         </div>
     </div>
 
-
-
     {% if show_del_btn %}
-
     <div id="confirmDeleteModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-head">
@@ -147,6 +158,28 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-btn');
+        
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const taskContent = this.closest('.task-header').nextElementSibling;
+                const icon = this.querySelector('.icon');
+                
+                taskContent.classList.toggle('active');
+                this.classList.toggle('active');
+
+                // button.classList.toggle('active');
+
+                // if (taskContent.classList.contains('active')) {
+                //     icon.textContent = '&#9650;';
+                // } else {
+                //     icon.textContent = '&#9660;';
+                // }
+            });
+        });
+    });
+
     // --- СКРИПТ ДЛЯ МОДАЛЬНОГО ОКНА С ПОДВЕРЖДЕНИЕМ УДАЛЕНИЯ ГРУППЫ ---
     // ФОРМА ДЛЯ УДАЛЕНИЯ ГУРППЫ В МОДАЛЬНОМ ОКНЕ!!!!
 
