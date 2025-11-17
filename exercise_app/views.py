@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render,  redirect, get_object_or_404
 from django.http import JsonResponse
 from django.db import transaction
+import json
+from django.utils import timezone
 from django.db.models import F
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
@@ -23,13 +25,15 @@ from core_app.models import (
     User,
     Token,
     Error,
-    ErrorToken
+    ErrorToken,
+    Sentence
 )
 
 from .forms import (
     AddExerciseForm,
     AddExerciseTextForm,
-    EditTextForm
+    EditTextForm,
+    AddErrorAnnotationForm
 )
 
 '''
@@ -285,6 +289,12 @@ def grade_text(request, text_id=2379):
             "tokens": tokens_data,
         })
     
+    if request.method == "POST" and "annotation-form" in request.POST:
+        print("Мы в функции добавления")
+        annotation_form = AddErrorAnnotationForm(request.POST, user=request.user)
+    else:
+        annotation_form = AddErrorAnnotationForm()
+
     student = text.idstudent
     user = student.iduser
     group = student.idgroup
@@ -292,6 +302,7 @@ def grade_text(request, text_id=2379):
 
     context = {
         "text": text,
+        "annotation_form": annotation_form,
         "sentence_data": sentence_data,
         "selected_markup": selected_markup,
         "author": f"{user.lastname} {user.firstname}",

@@ -1,5 +1,5 @@
 from django import forms
-from core_app.models import Student, User, Group, ExerciseGrading, ExerciseReview, Text, ExerciseText, ExerciseType, ExerciseTextType
+from core_app.models import Error, ErrorTag, ErrorLevel, Reason, Student, User, Group, ExerciseGrading, ExerciseReview, Text, ExerciseText, ExerciseType, ExerciseTextType
 import datetime
 from django.forms import formset_factory
 
@@ -132,7 +132,6 @@ class AddExerciseForm(forms.Form):
         
         return cleaned_data
     
-
 class EditTextForm(forms.Form):
     author = forms.CharField(
         label='Автор текста',
@@ -150,3 +149,54 @@ class EditTextForm(forms.Form):
         label='Название текста',
         required=True,
     )
+
+class AddErrorAnnotationForm(forms.ModelForm):
+    iderrortag = forms.ModelChoiceField(
+        queryset=ErrorTag.objects.all(),
+        label="Выберите тег",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    idreason = forms.ModelChoiceField(
+        queryset=Reason.objects.all(),
+        label="Причина ошибки",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    iderrorlevel = forms.ModelChoiceField(
+        queryset=ErrorLevel.objects.all(),
+        label="Степень грубости",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    correct = forms.CharField(
+        label="Исправление",
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        required=False
+    )
+
+    comment = forms.CharField(
+        label="Комментарий",
+        widget=forms.Textarea(attrs={'class': 'form-control', "style": "height:50px; min-height:10px;"}),
+        required=False
+    )
+
+    class Meta:
+        model = Error
+        fields = ['iderrortag', 'idreason', 'iderrorlevel', 'comment', 'correct']
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+
+    def get_display_info(self):
+        selected_tag = self.cleaned_data.get('iderrortag')
+        creator_name = (
+            f"{self.user.firstname} {self.user.lastname}"
+            if self.user and hasattr(self.user, 'firstname') and hasattr(self.user, 'lastname')
+            else "Неизвестный пользователь"
+        )
+        return {
+            'selected_tag': selected_tag.tagtext if selected_tag else '',
+            'creator': creator_name
+        }
