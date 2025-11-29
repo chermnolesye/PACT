@@ -3,51 +3,55 @@
 
 {% block title %}Добавление текста для аннотирования{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+{% endblock %}
+
 {% block content %}
 <div class="container">
-    <h1>Добавление нового текста для аннотирования</h1>
-    
-    <button type="button"
-            onclick="window.location.href = '{% url 'review_text_list' %}'">
-            Назад
-    </button>
+    <h2 class="highlighted-header">Добавление нового текста для аннотирования</h2>
 
-    <form method="post">
+    <form method="post" class="add_exercise_form">
         {% csrf_token %}
-        
+
         <div class="form-group">
             {{ form.author.label_tag }}
             {{ form.author }}
             {% if form.author.errors %}
-                <div class="text-danger">{{ form.author.errors }}</div>
+            <div class="text-danger">{{ form.author.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             {{ form.idexercisetexttype.label_tag }}
             {{ form.idexercisetexttype }}
             {% if form.idexercisetexttype.errors %}
-                <div class="text-danger">{{ form.idexercisetexttype.errors }}</div>
+            <div class="text-danger">{{ form.idexercisetexttype.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             {{ form.exercisetextname.label_tag }}
             {{ form.exercisetextname }}
             {% if form.exercisetextname.errors %}
-                <div class="text-danger">{{ form.exercisetextname.errors }}</div>
+            <div class="text-danger">{{ form.exercisetextname.errors }}</div>
             {% endif %}
         </div>
-        
+
         <div class="form-group">
             {{ form.exercisetext.label_tag }}
             {{ form.exercisetext }}
             {% if form.exercisetext.errors %}
-                <div class="text-danger">{{ form.exercisetext.errors }}</div>
+            <div class="text-danger">{{ form.exercisetext.errors }}</div>
             {% endif %}
         </div>
-        
-        <button type="submit">Добавить текст</button>
+
+        <button type="submit" class="button add_button">Добавить текст</button>
+
+        <button type="button" class="button go_back_button"
+                onclick="window.location.href = '{% url 'review_text_list' %}'">
+            Назад
+        </button>
     </form>
 </div>
 

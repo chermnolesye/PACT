@@ -111,6 +111,39 @@
     margin-right: 5px;
 }
 
+.exercise-card .full_name, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
+.exercise-card .deadline, .exercise-card .completion_date, .exercise-card .mark {
+    text-align: left;
+}
+
+.exercise-card .text_name, .exercise-card .author, .exercise-card .out_date, .exercise-card .text_type {
+    width: 100% !important;
+    text-align: left;
+}
+.text_name, .author, .out_date, .text_type {
+    width: 100% !important;
+}
+
+.green_background {
+    background: #DEFFD6
+}
+
+.red_background {
+    background: #FFD6D6
+}
+
+.go_back_button, .add_button {
+    width: 150px;
+}
+
+.go_back_button {
+    background: var(--grey-color);
+}
+
+#id_exercisetext {
+    width: 100% !important;
+}
+
 @media (max-width:680px) {
     .edit_delete_card {
         display: block;
@@ -171,5 +204,9 @@
     }
     .header-card div, .exercise-card span, .exercise-card button {
         width: 25%;
+    }
+    #id_exercisetext {
+        min-width: 90% !important;
+        max-width: 100%;
     }
 }

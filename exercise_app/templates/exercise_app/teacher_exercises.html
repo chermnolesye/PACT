@@ -21,21 +21,21 @@
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
         <div class="header-card">
-            <div>ФИО</div>
-            <div>Группа</div>
+            <div class="full_name">ФИО</div>
+            <div class="group">Группа</div>
             <div class="type">Тип упражнения</div>
             <div class="out_date">Дата выдачи</div>
             <div class="deadline">Дата сдачи</div>
             <div class="completion_date">Дата завершения</div>
-            <div>Оценка</div>
+            <div class="mark">Оценка</div>
             <div class="edit_card">Редактировать задание</div>
             <div class="delete_card">Удалить задание</div>
             <div class="edit_delete_card">Управление</div>
         </div>
         {% for exercise in exercises %}
         <div id="{{ exercise.idexercise }}" class="exercise-card">
-            <span>{{ exercise.idstudent.iduser.get_full_name }}</span>
-            <span>{{ exercise.idstudent.idgroup }}</span>
+            <span class="full_name">{{ exercise.idstudent.iduser.get_full_name }}</span>
+            <span class="group">{{ exercise.idstudent.idgroup }}</span>
             {% if exercise.idexercisetype.exerciseabbr == "grading" %}
             <span class="type">Поиск ошибок</span>
             {% else %}
@@ -49,9 +49,9 @@
             <span class="completion_date">-</span>
             {% endif %}
             {% if exercise.exercisemark %}
-            <span>{{ exercise.exercisemark }}</span>
+            <span class="mark">{{ exercise.exercisemark }}</span>
             {% else %}
-            <span>-</span>
+            <span class="mark">-</span>
             {% endif %}
             <button class="edit_card">
                 <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -72,7 +72,7 @@
                 </svg>
             </span>
         </div>
-    {% endfor %}
+        {% endfor %}
     </div>
 </div>
 
@@ -146,6 +146,21 @@
                 closeModal();
             }
         });
+
+        const exerciseCard = document.getElementsByClassName('exercise-card');
+        for (let i = 0; i < exerciseCard.length; i++) {
+            const deadline = exerciseCard[i].querySelectorAll('.deadline')[0];
+            const completionDate = exerciseCard[i].querySelectorAll('.completion_date')[0];
+            const deadlineDate = (new Date()).toLocaleDateString('ru-Ru', { day: 'numeric', month: 'long', year: 'numeric' });
+            if (deadline.textContent < deadlineDate && (completionDate.textContent == "-" || completionDate.textContent < deadline.textContent)) {
+                exerciseCard[i].classList.add('red_background');
+            }
+            else{
+                if (deadline.textContent < deadlineDate) {
+                    exerciseCard[i].classList.add('green_background');
+                }
+            }
+        }
     });
 </script>
 

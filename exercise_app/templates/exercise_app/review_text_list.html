@@ -21,20 +21,19 @@
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
         <div class="header-card">
-            <div>Название</div>
-            <div>Автор</div>
-            <div class="type">Тип</div>
+            <div class="text_name">Название</div>
+            <div class="author">Автор</div>
+            <div class="text_type">Тип</div>
             <div class="out_date">Дата загрузки</div>
         </div>
         {% for text in texts %}
         <div id="{{ text.idexercisetext }}" class="exercise-card"
             onclick="window.location.href='{% url 'review_text' text.idexercisetext %}'"
             style="cursor: pointer;">
-            <span>{{ text.exercisetextname }}</span>
-            <span>{{ text.author }}</span>
-            <span class="type">{{ text.idexercisetexttype.exercisetexttypename }}</span>
-            <span class="out_date">{{ text.loaddate }}</span>
-            <span></span>            
+            <span class="text_name">{{ text.exercisetextname }}</span>
+            <span class="author">{{ text.author }}</span>
+            <span class="text_type">{{ text.idexercisetexttype.exercisetexttypename }}</span>
+            <span class="out_date">{{ text.loaddate }}</span>       
         </div>
         {% endfor %}
     </div>
