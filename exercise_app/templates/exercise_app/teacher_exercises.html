@@ -148,16 +148,45 @@
         });
 
         const exerciseCard = document.getElementsByClassName('exercise-card');
+        const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+
         for (let i = 0; i < exerciseCard.length; i++) {
             const deadline = exerciseCard[i].querySelectorAll('.deadline')[0];
-            const completionDate = exerciseCard[i].querySelectorAll('.completion_date')[0];
-            const deadlineDate = (new Date()).toLocaleDateString('ru-Ru', { day: 'numeric', month: 'long', year: 'numeric' });
-            if (deadline.textContent < deadlineDate && (completionDate.textContent == "-" || completionDate.textContent < deadline.textContent)) {
-                exerciseCard[i].classList.add('red_background');
-            }
-            else{
-                if (deadline.textContent < deadlineDate) {
-                    exerciseCard[i].classList.add('green_background');
+            const deadlineData = deadline.textContent.split(" ")
+            const deadlineDay = deadlineData[0]
+            const deadlineMonth = months.indexOf(deadlineData[1])
+            const deadlineDate = new Date(parseInt(deadlineData[2]) + 1, deadlineMonth, deadlineDay)
+
+            const completion = exerciseCard[i].querySelectorAll('.completion_date')[0];
+            const completionData = completion.textContent.split(" ")
+            const completionDay = completionData[0]
+            const completionMonth = months.indexOf(completionData[1])
+            const completionDate = new Date(parseInt(completionData[2]) + 1, completionMonth, completionDay)
+
+            const today = new Date()
+            if (parseInt(deadlineData[2]) < today.getFullYear() ||
+                (deadlineMonth < today.getMonth() && parseInt(deadlineData[2]) <= today.getFullYear()) ||
+                (parseInt(deadlineDay) < today.getDate() && deadlineMonth <= today.getMonth() && parseInt(deadlineData[2]) <= today.getFullYear())) {
+                //console.log('red');
+                if (completion.textContent == "-" ||
+                    (parseInt(completionData[2]) > parseInt(deadlineData[2]) ||
+                    (completionMonth > deadlineMonth && parseInt(completionData[2]) > parseInt(deadlineData[2])) ||
+                    (parseInt(completionDay) > parseInt(deadlineDay) && completionMonth >= deadlineMonth && parseInt(completionData[2]) >= parseInt(deadlineData[2])))
+                ) {
+                    exerciseCard[i].classList.add('red_background');
+                }
+                else {
+                   exerciseCard[i].classList.add('green_background');
+                }
+            } else {
+                //console.log('green');
+                if (completion.textContent != "-") {
+                    if (parseInt(completionData[2]) < parseInt(deadlineData[2])||
+                        (completionMonth < deadlineMonth && parseInt(completionData[2]) <= parseInt(deadlineData[2])) ||
+                        (parseInt(completionDay) < parseInt(deadlineDay) && completionMonth <= deadlineMonth && parseInt(completionData[2]) <= parseInt(deadlineData[2]))) {
+                        exerciseCard[i].classList.add('green_background');
+                    }
+                    console.log(deadlineData, completionData)
                 }
             }
         }

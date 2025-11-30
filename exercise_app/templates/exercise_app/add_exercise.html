@@ -16,20 +16,25 @@
         {% csrf_token %}
 
         <div class="form-group">
+            {{ form.year.label_tag }}
+            {{ form.year }}
+        </div>
+
+        <div class="form-group">
             {{ form.group.label_tag }}
             {{ form.group }}
         </div>
-        
+
         <div class="form-group">
             {{ form.idstudent.label_tag }}
             {{ form.idstudent }}
         </div>
-                
-        <!-- <div class="form-group">
+
+        <div class="form-group">
             {{ form.creationdate.label_tag }}
             {{ form.creationdate }}
-        </div> -->
-        
+        </div>
+
         <div class="form-group">
             {{ form.deadline.label_tag }}
             {{ form.deadline }}
@@ -46,21 +51,21 @@
                 {% endfor %}
             </div>
         </div>
-        
+
         <div id="grading-fields" style="display: none;">
             {{ form.grading_text.label_tag }}
             {{ form.grading_text }}
         </div>
-        
+
         <div id="review-fields" style="display: none;">
             {{ form.review_exercisetext.label_tag }}
             {{ form.review_exercisetext }}
         </div>
 
-         <!-- <div style="display: none;">
-            {{ form.grading_text }}
-            {{ form.review_exercisetext }}
-        </div> -->
+        <!-- <div style="display: none;">
+        {{ form.grading_text }}
+        {{ form.review_exercisetext }}
+    </div> -->
 
         <button type="submit" class="button">Создать упражнение</button>
     </form>
@@ -69,6 +74,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
         const groupSelect = document.getElementById("id_group");
+        const yearSelect = document.getElementById("id_year");
         const studentSelect = document.getElementById("id_idstudent");
         const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
 
@@ -87,6 +93,21 @@
                     studentSelect.appendChild(option);
                 });
             });
+        });
+        yearSelect.addEventListener("change", function () {
+            const yearId = this.value;
+            fetch("{% url 'load_groups' %}?yearId=" + yearId)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    groupSelect.innerHTML = '<option value="">Выберите группу</option>';
+                    data.groups.forEach(group => {
+                        const option = document.createElement("option");
+                        option.value = group.id;
+                        option.textContent = group.groupname;
+                        groupSelect.appendChild(option);
+                    });
+                });
         });
         
         // Показ полей по типу упражнения

@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('teacher_exercises/delete/<int:exercise_id>/', views.delete_exercise_ajax, name='delete_exercise'),
     path('load_students/', views.load_students, name='load_students'),
+    path('load_groups/', views.load_groups, name='load_groups'),
 
     path('add_exercise/', views.add_exercise, name='add_exercise'),
     path('grading_student/', views.grading_student, name='grading_student'),    

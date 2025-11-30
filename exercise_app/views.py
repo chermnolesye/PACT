@@ -35,7 +35,8 @@ from .forms import (
     AddExerciseTextForm,
     EditTextForm,
     AddErrorAnnotationForm,
-    ExerciseTextTaskForm
+    ExerciseTextTaskForm,
+    Group
 )
 
 '''
@@ -78,8 +79,8 @@ def add_exercise(request):
                         idexercisetype=form.cleaned_data['idexercisetype'],
                         idstudent=form.cleaned_data['idstudent'],
                         iduserteacher=request.user,
-                        # creationdate=form.cleaned_data['creationdate'],
-                        creationdate=datetime.date.today(),
+                        creationdate=form.cleaned_data['creationdate'],
+                        #creationdate=datetime.date.today(),
                         deadline=form.cleaned_data['deadline'],
                         exercisestatus=False
                     )
@@ -133,6 +134,18 @@ def load_students(request):
         return JsonResponse({'students': students_data})    
     return JsonResponse({'students': []})
 
+def load_groups(request):
+    year_id = request.GET.get('yearId')
+    if year_id:
+        groups = Group.objects.filter(idayear=year_id).order_by('groupname')
+        groups_data = []
+        for group in groups:
+            groups_data.append({
+                'id': group.idgroup,
+                'groupname': group.groupname
+            })
+        return JsonResponse({'groups': groups_data})    
+    return JsonResponse({'groups': []})
 
 '''
     БЕК КАТИ

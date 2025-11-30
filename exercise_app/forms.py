@@ -1,5 +1,5 @@
 from django import forms
-from core_app.models import (Error, ErrorTag, ErrorLevel, Reason, 
+from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, Reason, 
                              Student, User, Group, ExerciseGrading, ExerciseReview, 
                              Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask
                             )
@@ -46,16 +46,21 @@ class AddExerciseForm(forms.Form):
         label='Тип упражнения',
         widget=forms.RadioSelect
     )
+    year = forms.ModelChoiceField(
+        queryset=AcademicYear.objects.all(),
+        label='Учебный год',
+        required=True
+    ) 
 
     group = forms.ModelChoiceField(
-        queryset=Group.objects.all(),
+        queryset=Group.objects.none(),
         label='Группа',
         required=True
     )   
 
     idstudent = forms.ModelChoiceField(
         queryset=Student.objects.none(),
-        label='Студент',
+        label='Студент, выполняющий упражнение',
         required=True
     )
     
@@ -74,11 +79,11 @@ class AddExerciseForm(forms.Form):
     # я поланаю нужно использовать это:
     # но надо в шаблоне добавить это поле чтоб ошибок не было
 
-    # creationdate = forms.DateField(
-    #     initial=datetime.date.today,
-    #     label='Дата создания',
-    #     widget=forms.DateInput(attrs={'type': 'date'})
-    # )
+    creationdate = forms.DateField(
+        initial=datetime.date.today,
+         label='Дата создания',
+         widget=forms.DateInput(attrs={'type': 'date'})
+    )
     
     deadline = forms.DateField(
         label='Срок сдачи',
@@ -103,9 +108,15 @@ class AddExerciseForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         if self.data:
                 # Для студентов
+                if 'year' in self.data:
+                    try:
+                        year_id = int(self.data.get('year'))
+                        self.fields['group'].queryset = Group.objects.filter(idayear=year_id)
+                    except (ValueError, TypeError):
+                        self.fields['group'].queryset = Group.objects.all()
+                
                 if 'group' in self.data:
                     try:
                         group_id = int(self.data.get('group'))
