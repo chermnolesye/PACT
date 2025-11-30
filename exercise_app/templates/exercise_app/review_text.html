@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %}Текст для аннотирования{% endblock %}
+{% block title %}Текст для рецензирования{% endblock %}
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
@@ -46,49 +46,126 @@
                 <h2> {{text.exercisetextname }} </h2>
 
                 <p class="author"> {{ text.author }} </p>
+                <p class="author"> {{ text.idexercisetexttype.exercisetexttypename }} </p>
             </div>
 
             <div class="review-text">
-                <p>
-                    {{ text.exercisetext }}
-                </p>
+                {{ text.exercisetext }}
             </div>
         </div>
 
         <div class="tasks-container">
-            <h2 class="underline">Задания к тексту</h2>             
-                <div class="task">
-                    <form id="create-task-form">
+            <h2 class="underline">Задания к тексту</h2>           
 
-
-                        <div class="review-buttons">
-                            <button type="submit">Сохранить</button>
-                            <button>Отмена</button>                    
-                        </div>
-                    </form>
-                </div>          
-   
+                 <!-- Форма создания нового задания -->
                 <div class="task">
-                    <form id="update-task-form">
+                    <div class="task-header">
+                            <button type="button" class="toggle-btn">
+                                <span class="icon">
+                                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="14" cy="14" r="12" fill="white" stroke="#e0e0e0" stroke-width="3"/>
+                                        <path d="M14 9V19M9 14H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                </span>
+                            </button>
+                        <span class="task-name">Добавить задание</span>
+                    </div>
+                    <div class="task-content">
+                        <form id="create-task-form" method="post" class="create-task-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="create_task">
+                            
+                            <div class="task-header">
+                                {{ add_task_form.tasktitle }}
+                            </div>
+                            
+                            <div class="task-content active">
+                                {{ add_task_form.tasktext }}
+                                
+                                <div class="review-buttons">
+                                    <button type="submit">Сохранить</button>
+                                    <button type="button" class="cancel-create">Отмена</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Список существующих заданий -->
+                {% for task in tasks %}
+                <div class="task" data-task-id="{{ task.idexercisetexttask }}">
+                    <!-- Режим просмотра -->
+                    <div class="task-view">
                         <div class="task-header">
-                            <button type="button" class="toggle-btn"><span class="icon"></span></button>
-                            <span class="task-name"> Task Name </span>                            
-                        </div>                        
-
+                            <button type="button" class="toggle-btn">
+                                <span class="icon">
+                                    <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor">
+                                        <path d="M8 12L4 6H12L8 12Z"/>
+                                    </svg>
+                                </span>
+                            </button>
+                            <span class="task-name">{{ task.tasktitle }}</span>
+                        </div>
+                        
                         <div class="task-content">
-                            <p class="task-text"> text for task. text for task. text for task.</p>
-
+                            <p class="task-text">{{ task.tasktext }}</p>
+                            
                             <div class="review-buttons">
-                                <button type="submit">Изменить</button>
-                                <button>Удалить</button>                    
+                                <button type="button" class="edit-task" data-task-id="{{ task.idexercisetexttask }}">Изменить</button>
+                                <button type="button" class="delete-task" data-task-id="{{ task.idexercisetexttask }}">Удалить</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Режим редактирования (скрыт по умолчанию) -->
+                    <form class="task-edit-form" method="post" style="display: none;" data-task-id="{{ task.idexercisetexttask }}">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="update_task">
+                        <input type="hidden" name="task_id" value="{{ task.idexercisetexttask }}">
+                        
+                        <div class="task-header">
+                            <input type="text" name="tasktitle" value="{{ task.tasktitle }}" required class="form-control">
+                        </div>
+                        
+                        <div class="task-content active">
+                            <textarea name="tasktext" required class="form-control">{{ task.tasktext }}</textarea>
+                            
+                            <div class="review-buttons">
+                                <button type="submit">Сохранить</button>
+                                <button type="button" class="cancel-edit">Отмена</button>
                             </div>
                         </div>
                     </form>
                 </div>
-            
+                {% endfor %}
         </div>
     </div> 
 
+    <!-- Модальное окно удаления задания -->
+    <div id="confirmDeleteTaskModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Подтвердите действие</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <p class="modal-message">Вы уверены, что хотите удалить это задание?</p>
+            <form method="post" id="deleteTaskForm">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="delete_task">
+                <input type="hidden" name="task_id" id="deleteTaskId">
+                <div class="horizontal-level">
+                    <button type="submit" name="delete_task" class="button">Да</button>
+                    <button type="button" id="cancelDeleteTask" class="button grey-button">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- модальные окна для текста -->
 
     <div id="editTextModal" class="modal-overlay">
         <div class="modal-content">
@@ -133,7 +210,7 @@
     </div>
 
     {% if show_del_btn %}
-    <div id="confirmDeleteModal" class="modal-overlay">
+    <div id="confirmDeleteTextModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-head">
                 <p>Подтвердите действие</p>
@@ -154,81 +231,117 @@
         </div>
     </div>
     {% endif %}
-
 </div>
 
 <script>
+
     document.addEventListener('DOMContentLoaded', function() {
-        const toggleButtons = document.querySelectorAll('.toggle-btn');
-        
-        toggleButtons.forEach(button => {
+        // Переключение видимости задания
+        document.querySelectorAll('.toggle-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const taskContent = this.closest('.task-header').nextElementSibling;
                 const icon = this.querySelector('.icon');
                 
                 taskContent.classList.toggle('active');
                 this.classList.toggle('active');
-
-                // button.classList.toggle('active');
-
-                // if (taskContent.classList.contains('active')) {
-                //     icon.textContent = '&#9650;';
-                // } else {
-                //     icon.textContent = '&#9660;';
-                // }
             });
+        });
+        
+        // Редактирование задания
+        document.querySelectorAll('.edit-task').forEach(button => {
+            button.addEventListener('click', function() {
+                const task = this.closest('.task');
+                const taskView = task.querySelector('.task-view');
+                const taskEdit = task.querySelector('.task-edit-form');
+                
+                taskView.style.display = 'none';
+                taskEdit.style.display = 'block';
+            });
+        });
+        
+        // Отмена редактирования
+        document.querySelectorAll('.cancel-edit').forEach(button => {
+            button.addEventListener('click', function() {
+                const task = this.closest('.task');
+                const taskView = task.querySelector('.task-view');
+                const taskEdit = task.querySelector('.task-edit-form');
+                
+                taskEdit.style.display = 'none';
+                taskView.style.display = 'block';
+            });
+        });
+        
+        // Отмена создания
+        document.querySelectorAll('.cancel-create').forEach(button => {
+            button.addEventListener('click', function() {
+                const form = this.closest('form');
+                form.reset();
+            });
+        });
+        
+        // Удаление задания - открытие модального окна
+        let currentDeleteTaskId = null;
+        
+        document.querySelectorAll('.delete-task').forEach(button => {
+            button.addEventListener('click', function() {
+                currentDeleteTaskId = this.getAttribute('data-task-id');
+                document.getElementById('deleteTaskId').value = currentDeleteTaskId;
+                document.getElementById('confirmDeleteTaskModal').style.display = 'flex';
+            });
+        });
+        
+        // Закрытие модального окна
+        document.querySelector('.close-modal').addEventListener('click', function() {
+            document.getElementById('confirmDeleteTaskModal').style.display = 'none';
+        });
+        
+        document.getElementById('cancelDeleteTask').addEventListener('click', function() {
+            document.getElementById('confirmDeleteTaskModal').style.display = 'none';
+        });
+        
+        document.getElementById('confirmDeleteTaskModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
         });
     });
 
-    // --- СКРИПТ ДЛЯ МОДАЛЬНОГО ОКНА С ПОДВЕРЖДЕНИЕМ УДАЛЕНИЯ ГРУППЫ ---
-    // ФОРМА ДЛЯ УДАЛЕНИЯ ГУРППЫ В МОДАЛЬНОМ ОКНЕ!!!!
-
     // document.addEventListener('DOMContentLoaded', function() {
-    //     const deleteBtn = document.getElementById('deleteTextButton');
-    //     const confirmModal = document.getElementById('confirmDeleteModal');
-    //     const confirmDelete = document.getElementById('confirmDeleteText');
-    //     const cancelDelete = document.getElementById('cancelDeleteText');
-    //     const closeModal = document.querySelector('.close-modal');
+    //     const toggleButtons = document.querySelectorAll('.toggle-btn');
         
-    //     if (deleteBtn && confirmModal) {
-    //         deleteBtn.addEventListener('click', function() {
-    //             confirmModal.style.display = 'flex';
+    //     toggleButtons.forEach(button => {
+    //         button.addEventListener('click', function() {
+    //             const taskContent = this.closest('.task-header').nextElementSibling;
+    //             const icon = this.querySelector('.icon');
+                
+    //             taskContent.classList.toggle('active');
+    //             this.classList.toggle('active');
     //         });
-            
-    //         confirmDelete.addEventListener('click', function() {
-    //             confirmModal.style.display = 'none';
-    //         });
-    //         cancelDelete.addEventListener('click', function() {
-    //             confirmModal.style.display = 'none';
-    //         });
-    //         closeModal.addEventListener('click', function() {
-    //             confirmModal.style.display = 'none';
-    //         });
-    //     }
+    //     });
     // });
+
+    // --- СКРИПТ ДЛЯ МОДАЛЬНОГО ОКНА С ПОДВЕРЖДЕНИЕМ УДАЛЕНИЯ ТЕКСТА ---
+    // ФОРМА ДЛЯ УДАЛЕНИЯ ТЕКСТА В МОДАЛЬНОМ ОКНЕ!!!!
 
     document.addEventListener('DOMContentLoaded', function() {
         const deleteBtn = document.getElementById('deleteTextButton');
-        const deleteModal = document.getElementById('confirmDeleteModal');
+        const deleteModal = document.getElementById('confirmDeleteTextModal');
         const editBtn = document.getElementById('editTextButton');
         const editModal = document.getElementById('editTextModal');
         
         function closeModal(modal) {
             if (modal) {
-                console.log('Closing modal:', modal.id);
                 modal.style.display = 'none';
             }
         }
         
         function openModal(modal) {
             if (modal) {
-                console.log('Opening modal:', modal.id);
                 modal.style.display = 'flex';
             }
         }
     
         if (deleteBtn && deleteModal) {
-            console.log('Delete button found, setting up handlers');
             deleteBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 openModal(deleteModal);
@@ -237,13 +350,6 @@
             const confirmDeleteBtn = document.getElementById('confirmDeleteText');
             const cancelDeleteBtn = document.getElementById('cancelDeleteText');
             const closeDeleteBtn = deleteModal.querySelector('.close-modal');
-            
-            // if (confirmDeleteBtn) {
-            //     confirmDeleteBtn.addEventListener('click', function(e) {
-            //         e.preventDefault();
-            //         closeModal(deleteModal);
-            //     });
-            // }
             
             if (cancelDeleteBtn) {
                 cancelDeleteBtn.addEventListener('click', function() {
@@ -256,8 +362,6 @@
                     closeModal(deleteModal);
                 });
             }
-        } else {
-            console.log('Delete button not found or no delete modal');
         }
         
         if (editBtn && editModal) {

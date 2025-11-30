@@ -45,11 +45,15 @@
 }
 
 .tasks-container {
-    width: 70%;
+    flex: 2; /* 40% */
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    overflow: hidden;
     border-left: 2px solid black;
-    margin: 10px;
-    margin-left: 30px;
     padding: 20px;
+    overflow-y: auto;
 }
 
 .comment {
@@ -82,6 +86,13 @@
     flex-wrap: wrap;
     justify-content: left;
     align-items: center;
+    width: 100%;
+    background-color: #ffffff;
+    flex-direction: row;
+    position: sticky;
+    top: 0px;
+    z-index: 1000;
+    margin: 0;
 }
 
 .underline {
@@ -101,6 +112,7 @@
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
     background-color: var(--e-grey);
     border-radius: var(--border-radius);
+    position: relative;
 }
 
 .review-menu-button {
@@ -112,6 +124,7 @@
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
     cursor: pointer;
     border-radius: var(--border-radius);
+    position: relative;
 }
 
 .review-menu-button:hover {
@@ -120,17 +133,28 @@
 
 .review-body {
     display: flex;
-    margin: 10px;;
+    margin: 10px;
+
+    height: calc(100vh - 100px);
+    gap: 20px;
 }
 
 .review-text-container {
+    flex: 3;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     width: 100%;
 }
 
-.review-text p {
+.review-text {
     text-align: justify;
+    white-space: normal; 
+    line-height: 1.5;
+
+    flex: 1;
+    padding: 10px;
+    max-height: 100%;
 }
 
 .review-container {
@@ -174,41 +198,35 @@
     align-content: left;
 }
 
+.icon {
+    display: inline-flex;
+    transition: transform 0.3s ease;
+}
+
+.toggle-btn.active .icon {
+    transform: rotate(180deg);
+}
+
 .toggle-btn {
     background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
-    font-size: 16px;
-}
-
-.toggle-btn::after {
-    content: '▼';
-    font-size: 16px;
     color: var(--grey-color);
-    display: inline-block;
-    transition: transform 0.3s ease, color 0.3s ease;
 }
 
-.toggle-btn.active::after {
-    transform: rotate(180deg);
-    color: var(--e-purple);
+.toggle-btn:hover {
+    color: var(--secondary-color);
 }
-
-.toggle-btn:hover::after {
-    color: var(--e-purple);
-}
-
 
 .task-content {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease-out;
     opacity: 0;
-    max-height: 0;
-    overflow-y: auto;
+    /* overflow-y: scroll;
     scrollbar-width: none;
-    -ms-overflow-style: none;
+    -ms-overflow-style: none; */
 }
 
 .task-content::-webkit-scrollbar {
@@ -218,7 +236,14 @@
 .task-content.active {
     max-height: 100vh;
     opacity: 1;
+    overflow-y: scroll;
     transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+    overflow-wrap: break-word; 
+}
+
+.task-content.active::-webkit-scrollbar {
+    width: 6px;
+    display: block;
 }
 
 .task-text {
@@ -235,4 +260,13 @@
 
 #editTextForm .horizontal-level {
     margin-top: 20px;
+}
+
+.task-edit-form input,
+.task-edit-form textarea,
+.create-task-form input,
+.create-task-form textarea {
+    margin: 5px 0px;
+    width: 100%;
+    box-sizing: border-box;
 }

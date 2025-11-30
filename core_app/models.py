@@ -316,6 +316,11 @@ class WriteTool(models.Model):
 
 class ExerciseType(models.Model):
     idexercisetype = models.AutoField(primary_key=True)
+
+    # ЭТО ПОЛЕ ДОЛЖНО БЫТЬ NOT NULL!!! нужно будет дополнить позже, сейчас nullable
+    # иначе будут ошибки, тк в бд уже есть записи в этой таблице
+
+    exercisecode = models.IntegerField(unique=True, null=True)
     exerciseabbr = models.CharField(max_length=100, unique=True)
     exercisename = models.TextField()
     exercisedescription = models.TextField()
@@ -405,6 +410,7 @@ class ExerciseReview(models.Model):
     idexercisereview = models.AutoField(primary_key=True)
     idexercise = models.ForeignKey('Exercise', on_delete=models.CASCADE, db_column='idexercise')
     idexercisetext = models.ForeignKey('ExerciseText', on_delete=models.CASCADE, db_column='idexercisetext')
+    idexercisetexttask = models.ForeignKey('ExerciseTextTask', on_delete=models.CASCADE, db_column='idexercisetexttask')
 
     class Meta:
         db_table = 'tblexercisereview'
@@ -449,3 +455,15 @@ class ExerciseTextType(models.Model):
 
     def __str__(self):
         return self.exercisetexttypename
+    
+class ExerciseTextTask(models.Model):
+    idexercisetexttask = models.AutoField(primary_key=True)
+    idexercisetext = models.ForeignKey(ExerciseText, on_delete=models.CASCADE, db_column='idexercisetext')
+    tasktitle = models.CharField(max_length=500)
+    tasktext = models.TextField()
+
+    class Meta:
+        db_table = 'tblexercisetexttask'
+
+    def __str__(self):
+        return self.tasktitle

@@ -1,5 +1,8 @@
 from django import forms
-from core_app.models import Error, ErrorTag, ErrorLevel, Reason, Student, User, Group, ExerciseGrading, ExerciseReview, Text, ExerciseText, ExerciseType, ExerciseTextType
+from core_app.models import (Error, ErrorTag, ErrorLevel, Reason, 
+                             Student, User, Group, ExerciseGrading, ExerciseReview, 
+                             Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask
+                            )
 import datetime
 from django.forms import formset_factory
 
@@ -67,6 +70,15 @@ class AddExerciseForm(forms.Form):
     #         'value': datetime.date.today().strftime('%d.%m.%Y')  # Явно устанавливаем значение
     #     })
     # )
+
+    # я поланаю нужно использовать это:
+    # но надо в шаблоне добавить это поле чтоб ошибок не было
+
+    # creationdate = forms.DateField(
+    #     initial=datetime.date.today,
+    #     label='Дата создания',
+    #     widget=forms.DateInput(attrs={'type': 'date'})
+    # )
     
     deadline = forms.DateField(
         label='Срок сдачи',
@@ -91,8 +103,6 @@ class AddExerciseForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print("Grading texts count:", self.fields['grading_text'].queryset.count())
-        print("Review texts count:", self.fields['review_exercisetext'].queryset.count())
 
         if self.data:
                 # Для студентов
@@ -102,7 +112,7 @@ class AddExerciseForm(forms.Form):
                         self.fields['idstudent'].queryset = Student.objects.filter(idgroup_id=group_id)
                     except (ValueError, TypeError):
                         self.fields['idstudent'].queryset = Student.objects.none()
-                
+                # вероятно то что ниже уже не нужно и надо поменять поля для текстов на инпут для айди
                 # Для текстов оценивания
                 if 'grading_text' in self.data:
                     try:
@@ -200,3 +210,19 @@ class AddErrorAnnotationForm(forms.ModelForm):
             'selected_tag': selected_tag.tagtext if selected_tag else '',
             'creator': creator_name
         }
+
+class ExerciseTextTaskForm(forms.ModelForm):
+    tasktitle = forms.CharField(
+        label='Заголовок задания',
+        max_length=300,
+        required=True
+    )
+    tasktext = forms.CharField(
+        label='Описание задания',
+        required=True,
+        widget=forms.Textarea()
+    )
+
+    class Meta:
+        model = ExerciseTextTask
+        fields = ['tasktitle', 'tasktext']

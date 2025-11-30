@@ -26,14 +26,16 @@ from core_app.models import (
     Token,
     Error,
     ErrorToken,
-    Sentence
+    Sentence,
+    ExerciseTextTask
 )
 
 from .forms import (
     AddExerciseForm,
     AddExerciseTextForm,
     EditTextForm,
-    AddErrorAnnotationForm
+    AddErrorAnnotationForm,
+    ExerciseTextTaskForm
 )
 
 '''
@@ -148,7 +150,7 @@ def add_review_text(request):
                     author=form.cleaned_data['author'],
                     idexercisetexttype=form.cleaned_data['idexercisetexttype'],
                     exercisetextname=form.cleaned_data['exercisetextname'],
-                    exercisetext=form.cleaned_data['exercisetext']
+                    exercisetext=form.cleaned_data['exercisetext'].strip()
                 )
                 exercise_text.save()
                 
@@ -174,43 +176,73 @@ def review_text_list(request):
 
 def review_text(request, idexercisetext=2):
     text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
+    tasks = ExerciseTextTask.objects.filter(idexercisetext=idexercisetext)
+    # text.exercisetext = text.exercisetext.strip()
     exercises_count = ExerciseReview.objects.filter(idexercisetext=idexercisetext).count()
     edit_form = EditTextForm(initial={
         'author': text.author,
         'idexercisetexttype': text.idexercisetexttype,
         'exercisetextname': text.exercisetextname,
     })
+    add_task_form = ExerciseTextTaskForm()
 
     if request.method == "POST":
-        if 'delete_text' in request.POST:
+        form_type = request.POST.get('form_type')
+        
+        if form_type == 'create_task':
+            create_form = ExerciseTextTaskForm(request.POST)
+            if create_form.is_valid():
+                task = create_form.save(commit=False)
+                task.idexercisetext = text
+                task.save()
+                return redirect('review_text', idexercisetext=idexercisetext)
+                
+        elif form_type == 'update_task':
+            task_id = request.POST.get('task_id')
+            task = get_object_or_404(ExerciseTextTask, pk=task_id)
+            form = ExerciseTextTaskForm(request.POST, instance=task)
+            if form.is_valid():
+                form.save()
+                return redirect('review_text', idexercisetext=idexercisetext)
+                
+        elif form_type == 'delete_task':
+                task_id = request.POST.get('task_id')
+                task = get_object_or_404(ExerciseTextTask, pk=task_id)
+                task.delete()
+                return redirect('review_text', idexercisetext=idexercisetext)        
+
+        elif 'delete_text' in request.POST:
             text.delete()
-            print("текст удален")
             return redirect('review_text_list')     
 
         elif 'edit_text' in request.POST:
+            edit_form = EditTextForm(request.POST)
+            if edit_form.is_valid():
+                text.author = edit_form.cleaned_data['author']
+                text.idexercisetexttype = edit_form.cleaned_data['idexercisetexttype']
+                text.exercisetextname = edit_form.cleaned_data['exercisetextname']
+                text.save()
+                return redirect('review_text', idexercisetext=idexercisetext)
+            else:
                 edit_form = EditTextForm(request.POST)
-                if edit_form.is_valid():
-                    text.author = edit_form.cleaned_data['author']
-                    text.idexercisetexttype = edit_form.cleaned_data['idexercisetexttype']
-                    text.exercisetextname = edit_form.cleaned_data['exercisetextname']
-                    text.save()
-
-                    # messages.success(request, 'Метаданные успешно обновлены')
-                    return redirect('review_text', idexercisetext=idexercisetext)
-                else:
-                    edit_form = EditTextForm(request.POST)
-                    print('ФОРМА НЕ ВАЛИДНА')
         
     text_using = f"Текст используется в {exercises_count} упражнени" + get_count_end(exercises_count)
 
     show_del_btn = True if exercises_count == 0 else False
 
+    task_forms = []
+    for task in tasks:
+        task_forms.append(ExerciseTextTaskForm(instance=task))
+
     context = {
         'text': text,
+        'tasks': tasks,
+        'task_forms': task_forms,
         'exercises_count': exercises_count, # По сути уже не надо это передавать но пока пусть будет
         'show_del_btn': show_del_btn,
         'text_using': text_using,
-        'edit_form': edit_form
+        'edit_form': edit_form,
+        'add_task_form': add_task_form
     }
 
     return render(request, "review_text.html", context)
