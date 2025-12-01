@@ -685,6 +685,10 @@ label[for="id_iderrortag"] {
     background: #FFD6D6
 }
 
+.mistakes {
+    color: black;
+}
+
 @media (max-width: 660px) {
     .main-template-container .menu-container > .menu-block:first-child {
         border-top-left-radius: unset;

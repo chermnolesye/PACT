@@ -327,6 +327,16 @@ nav a{
     border: 1px solid transparent;
     transition: 0.3s;
 }
+.drop_down_header {
+    background-color: #fff;
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    position: fixed;
+    top: 52px;
+    left: 0;
+    z-index: 1000;
+    display:none;
+}
 
 
 input[type="checkbox"] {

@@ -112,6 +112,52 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Оценить текст</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <form method="post" id="grade-form">
+                {% csrf_token %}
+                <div class="grade-form-selects" style="width:100%;">
+                    <div class="grade-group" style="width:90%;">
+                        <p class="mistakes">Количество верно найденных ошибок: 4</p>
+                        <p class="mistakes">Количество неверно найденных ошибок: 0</p>
+                        <p class="mistakes" style="margin-bottom:10px;">Количество пропущенных ошибок: 0</p>
+                        <label for="id_textgrade">Оценка:</label>
+                        <select name="textgrade" class="form-control" id="id_textgrade">
+                            <option value="1">1</option>
+                            <option value="2">2-</option>
+                            <option value="3">2</option>
+                            <option value="4">2+</option>
+                            <option value="5">3-</option>
+                            <option value="6">3</option>
+                            <option value="7">3+</option>
+                            <option value="8">4-</option>
+                            <option value="9">4</option>
+                            <option value="10">4+</option>
+                            <option value="11">5-</option>
+                            <option value="12" selected="">5</option>
+                        </select>
+                        <label for="id_firstname">Комментарий:</label>
+                        <input type="text" name="comment" maxlength="100" required="" id="id_comment">
+                    </div>
+                </div>
+
+                <div class="grade-buttons">
+                    <button type="submit" name="grade-form" class="button" onclick="addAnnotation()">Сохранить</button>
+                    <button type="submit" class="button grey-button">Назад</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 
     <div class="watch-text">
         {% for sentence in sentence_data %}
@@ -253,82 +299,7 @@
             const closePopupBtn = document.getElementById('close-popup');
             let list_tags = {};
 
-            function AddEllWithChildren(category_content, inner_tag, children) {
-                const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                const iconPath = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'path'
-                );
-
-                iconSvg.setAttribute('fill', 'none')
-                iconSvg.setAttribute('viewBox', '0 0 24 24');
-                iconSvg.setAttribute('stroke', 'black');
-                iconPath.setAttribute(
-                    'd',
-                    'M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5'
-                );
-                iconPath.setAttribute('stroke-linecap', 'round');
-                iconPath.setAttribute('stroke', '#768088');
-                iconPath.setAttribute('stroke-width', '1.5');
-
-                iconSvg.appendChild(iconPath);
-
-                const iconPath1 = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'path'
-                );
-
-                iconPath1.setAttribute(
-                    'd',
-                    'm10.5 9 3 3-3 3'
-                );
-                iconPath1.setAttribute('stroke-linecap', 'round');
-                iconPath1.setAttribute('stroke', '#768088');
-                iconPath1.setAttribute('stroke-width', '1.5');
-
-                iconSvg.appendChild(iconPath1);
-                iconSvg.style.height = "35px";
-                iconSvg.style.width = "35px";
-                iconSvg.style.display = 'inline-block';
-                iconSvg.style.paddingTop = '5px';
-                iconSvg.classList.add('tag-icon');
-                iconSvg.classList.add('tag-icon-close');
-
-                iconSvg.addEventListener('click', () => {
-                    //console.log(iconSvg.children);
-                    const path1 = iconSvg.children[0];
-                    const path2 = iconSvg.children[1];
-
-                    if (iconSvg.classList.contains('tag-icon-close')) {
-                        children.style.display = 'block';
-                        path1.setAttribute(
-                            'd',
-                            'm15 10.5-3 3-3-3'
-                        );
-                        path2.setAttribute(
-                            'd',
-                            'M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5'
-                        );
-                        iconSvg.classList.remove('tag-icon-close');
-                    }
-                    else {
-                        children.style.display = 'none';
-                        path1.setAttribute(
-                            'd',
-                            'M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5'
-                        );
-                        path2.setAttribute(
-                            'd',
-                            'm10.5 9 3 3-3 3'
-                        );
-                        iconSvg.classList.add('tag-icon-close');
-                    }
-                });
-                category_content.appendChild(iconSvg);
-                inner_tag.style.display = 'inline-block';
-                inner_tag.style.marginLeft = '10px';
-
-            }
+            
 
             async function fetchDataAsync(url, let_tags) {
                 const response = await fetch(url);
@@ -494,6 +465,24 @@
                     document.querySelectorAll('.menu-content').forEach(c => {
                         c.style.display = 'none';
                     });
+                }
+            });
+
+            rateBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.menu-content').forEach(c => {
+                    c.style.display = 'none';
+                });
+                modal.style.display = 'flex';
+            });
+
+            closeModal.addEventListener('click', function () {
+                modal.style.display = 'none';
+            });
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
                 }
             });
 

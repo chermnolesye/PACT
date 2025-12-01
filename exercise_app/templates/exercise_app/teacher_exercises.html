@@ -37,9 +37,9 @@
             <span class="full_name">{{ exercise.idstudent.iduser.get_full_name }}</span>
             <span class="group">{{ exercise.idstudent.idgroup }}</span>
             {% if exercise.idexercisetype.exerciseabbr == "grading" %}
-            <span class="type">Поиск ошибок</span>
+            <span class="type"><a href="{% url 'grade_text' %}">Поиск ошибок</a></span>
             {% else %}
-            <span class="type">Рецензирование</span>
+            <span class="type"><a href="{% url 'review_text' %}">Рецензирование</a></span>s
             {% endif %}
             <span class="out_date">{{ exercise.creationdate }}</span>
             <span class="deadline">{{ exercise.deadline }}</span>
@@ -137,7 +137,7 @@
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('confirmDelete').addEventListener('click', deleteExercise);
         document.getElementById('cancelDelete').addEventListener('click', closeModal);
         

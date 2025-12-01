@@ -51,7 +51,7 @@ def teacher_exercises(request):
         # if 'delete_exercise' in request.POST:
 
     exercises = Exercise.objects.all()
-
+    
     context = {'exercises' : exercises}
     return render(request, 'teacher_exercises.html', context)
 
