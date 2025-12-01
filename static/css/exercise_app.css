@@ -116,12 +116,31 @@
     text-align: left;
 }
 
+.exercise-card .full_name, .exercise-card .group, .exercise-card .type,
+.header-card .full_name, .header-card .group, .header-card .type {
+    text-align: left;
+    flex: 2;
+}
+
+.exercise-card .out_date, .exercise-card .deadline, 
+.exercise-card .completion_date, .exercise-card .mark,
+.header-card .out_date, .header-card .deadline, 
+.header-card .completion_date, .header-card .mark  {
+    text-align: left;
+    flex: 1;
+    width: 100%
+}
+
 .exercise-card .text_name, .exercise-card .author, .exercise-card .out_date, .exercise-card .text_type {
     width: 100% !important;
     text-align: left;
 }
 .text_name, .author, .out_date, .text_type {
     width: 100% !important;
+}
+
+.delete_card, .edit_card {
+    cursor: pointer;
 }
 
 .green_background {

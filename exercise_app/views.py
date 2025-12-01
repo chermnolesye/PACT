@@ -177,8 +177,62 @@ def add_review_text(request):
     
     return render(request, 'add_review_text.html', {'form': form})
 
-def review_student(request):
-    return render(request, "review_student.html")
+def review_teacher(request, idexercise=1):
+    exercise = get_object_or_404(Exercise, idexercise=idexercise)
+    exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
+    exercisetext = exercisereview.idexercisetext
+    text = get_object_or_404(ExerciseText, idexercisetext=exercisetext.idexercisetext)
+    print("айди текста", exercisetext.idexercisetext)
+
+    reviews = ExerciseFragmentReview.objects.filter(
+        idexercisereview=exercisereview
+    ).order_by('startposition')
+
+    processed_text = wrap_fragments_with_spans(text.exercisetext, reviews)
+
+    in_time = False
+    # if exercise.exercisestatus:
+    #     in_time = datetime.date(exercise.deadline) < datetime.date(exercise.completiondate)
+    if exercise.exercisestatus and exercise.completiondate:
+        in_time = exercise.completiondate <= exercise.deadline
+
+    # print("="*50)
+    # print(text.exercisetext)
+    # print("="*50)
+    context = {
+        'exercise': exercise,
+        'exercisereview': exercisereview,
+        'text_metadata': text,
+        'text': processed_text,
+        'reviews': reviews,
+        'in_time': in_time
+    }
+    return render(request, "review_teacher.html", context)
+
+def wrap_fragments_with_spans(text, reviews):
+    if not reviews:
+        return text
+    
+    fragments = sorted(reviews, key=lambda x: x.startposition)
+    result = text
+    offset = 0
+    
+    for fragment in fragments:
+        start = fragment.startposition + offset
+        end = fragment.endposition + offset
+        
+        span_tag = (
+            f'<span class="selection" '
+            f'data-fragment-id="{fragment.idexercisetextreview}" '
+            f'data-review="{fragment.review}" '
+            f'data-teacher-comment="{fragment.teachercomment}">'
+        )
+        print(f"offset before: {offset}")
+        result = result[:start] + span_tag + result[start:end] + '</span>' + result[end:]
+        offset += len(span_tag) + len('</span>')
+        # offset += end
+        print(f"offset after: {offset}, len span = {len(span_tag)}")
+    return result
 
 def review_text_list(request):
 

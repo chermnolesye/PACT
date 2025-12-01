@@ -7,16 +7,28 @@
     --e-purple: #EACFFF;
 }
 
+.grey-block {
+    background-color: var(--e-grey);
+}
+
+.green-block {
+    background-color: var(--e-green);
+}
+
+.red-block {
+    background-color: var(--e-red);
+}
+
 .selection {
     background-color: var(--e-grey2);
     cursor: pointer;
 }
 
-.selection:hover {
+.selection:hover, .selection.active {
     background-color: var(--e-purple);
 }
 
-.add-annotation-tooltip{
+.add-annotation-tooltip {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -45,7 +57,7 @@
 }
 
 .tasks-container {
-    flex: 2; /* 40% */
+    flex: 2;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -110,7 +122,6 @@
     padding: 15px;
     margin: 10px 5px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
-    background-color: var(--e-grey);
     border-radius: var(--border-radius);
     position: relative;
 }
@@ -137,6 +148,7 @@
 
     height: calc(100vh - 100px);
     gap: 20px;
+    transition: all 0.4s ease-in-out;
 }
 
 .review-text-container {
@@ -145,6 +157,16 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-height: 100%;
+    transition: all 0.4s ease-in-out;
+}
+
+.review-text-container-e {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    transition: all 0.4s ease-in-out;
 }
 
 .review-text {
@@ -155,13 +177,57 @@
     flex: 1;
     padding: 10px;
     max-height: 100%;
+    overflow-y: auto;
 }
 
 .review-container {
+    width: 38%;
+    display: flex;
+    flex-direction: column;
+ 
     border-left: 2px solid black;
-    margin: 10px;
-    margin-left: 30px;
-    padding: 20px;
+    background: white;
+    padding: var(--primary-padding);
+    /* max-height: 100%; */
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+    margin-top: 100px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* z-index: 1000; */
+    overflow-y: auto;
+}
+
+.review-container-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0px;
+}
+
+.close-review {
+    position: absolute;
+    top: 15px;
+    right: 50px;
+    /* margin-bottom: 20px; */
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: black;
+    z-index: 1001;
+}
+
+.review-container.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.review-text-container-e.with-sidebar {
+    width: 60%;
 }
 
 .review-buttons {
@@ -181,6 +247,35 @@
 .review-buttons button:hover {
     background-color: #000;
     color: white;
+}
+
+.student-review, .teacher-comment {
+    padding: var(--primary-padding);
+    text-align: justify;
+}
+
+.separator {
+    border-bottom: 1px solid var(--e-grey);
+    width: 100%;
+}
+
+#comment {
+    margin-top: 20px;
+}
+
+#create-comment-form, #edit-comment-form {
+    padding: var(--primary-padding);
+}
+
+.task-container {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    margin-bottom: 30px;
+}
+
+.task-container > * {
+    margin: 10px 0px;
 }
 
 .task {
