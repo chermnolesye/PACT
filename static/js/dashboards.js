@@ -267,6 +267,7 @@ async function post_request_text_type(group, enrollment_date, surname, name, pat
     var groups = []
     var courses = []
     var texts = []
+    var text_types = []  // Добавлено объявление
 
     await axios({
         method: 'post',
@@ -280,7 +281,6 @@ async function post_request_text_type(group, enrollment_date, surname, name, pat
             'course': course,
             'text': text,
             'text_type': text_type,
-            
             'flag_post': 'choice_text_type'
         },
         headers: {
@@ -291,7 +291,7 @@ async function post_request_text_type(group, enrollment_date, surname, name, pat
         groups = response.data.groups
         courses = response.data.courses
         texts = response.data.texts
-        text_types = response.text_types
+        text_types = response.data.text_types 
     })
 
     list_groups = groups
@@ -515,7 +515,7 @@ var filters = new Vue({
             }
         },
         async on_change_text() {
-            console.log("Groups data:", groups);
+            console.log("Groups data:", this.groups);  // ИСПРАВЛЕНО: this.groups
 
             this.selected_group = ''
             this.selected_date = ''
