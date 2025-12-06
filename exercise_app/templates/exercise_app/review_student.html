@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Аннотирование{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/review.css' %}" />
+{% endblock %}
+
+{% block content %}   
+
+<div class="main-container">
+
+    <div class="review-menu">
+
+        <!-- Тут будет if-else по дате - цвет срока, кнопка в зависимости от сдачи и проверки -->
+         <div class="review-menu-block">
+            Дата...
+         </div>
+
+         <div class="review-menu-block">
+            Дата...
+         </div>
+
+         <div class="review-menu-button">
+            .
+         </div>
+
+    </div>
+
+    <div class="review-body">
+        <div class="review-text-container">
+            <div class="text-header underline">
+                <h2>Tagesablauf</h2>
+
+                <p class="author">Автор</p>
+            </div>
+
+            <div class="review-text">
+                <p>
+                <span class="selection">steht am Samstag um 8.00 Uhr auf.</span> Sie duscht sich und putzt ihre Zähne. Zum Frühstück isst sie ein Butterbrot und trinkt Kaffee. Dann geht Anna einkaufen. Sie kauft Tomaten, Nudeln, Bananen, Milch und Orangensaft. Um 10.00 Uhr geht Anna mit ihrem Hund im Park spazieren.
+
+                Mittags kocht Anna Nudeln mit Tomatensoße. Zum Mittagessen trinkt sie Orangensaft.
+
+                Nachmittags trifft sich Anna mit ihren Freundinnen Maria und Monika. Sie gehen in der Stadt spazieren und trinken Tee in einem Café. Dann geht Anna nach Hause und liest ein Buch.
+
+                Am Abend isst sie ein Käsebrot und trinkt ein Glas Milch. Sie sieht sich im Fernsehen einen Film an. Um 22.00 Uhr ist Anna müde. Sie geht ins Bett und schläft sofort ein.
+                </p>
+            </div>
+        </div>
+
+        <div class="review-container">
+            <h2 class="underline">Аннотация</h2>
+            <!-- Если еще нет review то сделать форму, если уже есть - другую форму -->
+             <form id="create-form">
+                <div class="student-review">
+
+                </div>
+                <div class="review-buttons">
+                    <button>Сохранить</button>
+
+                    <button>Отмена</button>                    
+                </div>
+            </form>
+
+            <form id="update-form">
+                <div class="student-review">
+
+                </div>
+                <div class="review-buttons">
+                    <button>Изменить</button>
+
+                    <button>Удалить</button>                    
+                </div>
+            </form>
+
+            <!-- Тут будет опционально комментарий препода -->
+        </div>
+    </div> 
+
+    <div class="comment">
+        
+    </div>
+
+    <div class="add-annotation-tooltip">
+        <div class="triangle"></div>
+        <div class="content">
+            Добавить аннотацию
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

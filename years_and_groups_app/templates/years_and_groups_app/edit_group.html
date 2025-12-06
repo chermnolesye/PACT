@@ -63,13 +63,13 @@
 
             <div class="g-body-card">
                 <div class="header-card">
-                    <div class="student-name">
+                    <div class="student-name student-surname-name">
                         Фамилия
                     </div>
-                    <div class="student-name">
+                    <div class="student-name student-first-name">
                         Имя
                     </div>
-                    <div class="student-name">
+                    <div class="student-name student-patronimic-name">
                         Отчество
                     </div>
                     <div class="student-login">
@@ -84,13 +84,13 @@
                 </div>
                 {% for student in students %}
                 <div class="student-card">
-                    <div class="student-name">
-                        {{ student.iduser.firstname }}
-                    </div>
-                    <div class="student-name">
+                    <div class="student-name student-surname-name">
                         {{ student.iduser.lastname }}
                     </div>
-                    <div class="student-name">
+                    <div class="student-name student-first-name">
+                        {{ student.iduser.firstname }}
+                    </div>
+                    <div class="student-name student-patronimic-name">
                         {{ student.iduser.middlename|default_if_none:"" }}
                     </div>
                     <div class="student-login">

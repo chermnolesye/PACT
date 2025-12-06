@@ -10,7 +10,7 @@
 
 {% block content %}  
 
-    <main class="page">
+    <div class="page-container">
       <h2 class="title">Суммарная статистика ошибок</h2>
 
       <div class="stats-block">
@@ -30,11 +30,11 @@
         </div>
 
         <!-- Таблица -->
-        <table class="errors-table">
+        <table class="errors-table" style="width: 100%">
           <thead>
             <tr>
-              <th rowspan="2">Тег ошибки</th>
-              <th colspan="3">Степень грубости</th>
+              <th rowspan="2" style="width: 50%">Тег ошибки</th>
+              <th colspan="3" style="width: 50%">Степень грубости</th>
             </tr>
             <tr>
               <th>I</th>
@@ -51,11 +51,11 @@
                 font-weight: bold;
               "
             >
-              <td colspan="4">{{ parent_tag }}</td>
+            <td colspan="4" class="center">{{ parent_tag }}</td>
             </tr>
             {% for tag in child_tags %}
             <tr style="background-color: {{ tag.color }};">
-              <td style="padding-left: 20px">{{ tag.nametag }}</td>
+              <td style="padding-left: 20px" class="nametag">{{ tag.nametag }}</td>
               <td>{{ tag.level1 }}</td>
               <td>{{ tag.level2 }}</td>
               <td>{{ tag.level3 }}</td>
@@ -68,5 +68,5 @@
           </tbody>
         </table>
       </div>
-    </main>
+    </div>
 {% endblock %}

@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'text_app',
     'students_app',
     'years_and_groups_app',
-    'statistics_app'
+    'statistics_app',
+    'exercise_app'
 ]
 
 AUTH_USER_MODEL = 'core_app.User'
@@ -71,7 +72,8 @@ TEMPLATES = [
             BASE_DIR / 'templates',  
             BASE_DIR / 'text_app/templates/text_app', 
             BASE_DIR / 'students_app/templates/students_app',
-            BASE_DIR / 'years_and_groups_app/templates/years_and_groups_app',   
+            BASE_DIR / 'years_and_groups_app/templates/years_and_groups_app', 
+            BASE_DIR / 'exercise_app/templates/exercise_app'  
         ],
         'APP_DIRS': True,
         'OPTIONS': {

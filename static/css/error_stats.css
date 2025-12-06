@@ -2,23 +2,20 @@
     text-align: center;
     color: #0076ff;
     font-size: 40px;
-    margin: 70px 0 15px;
+    margin: 20px 0 15px;
   }
   
-  .page {
+  .page-container {
     display: block;
-    width: 80%;
-    padding: 0 20px;
     box-sizing: border-box;
   }
+  
   .stats-block {
       width: 80%;
       max-width: 1100px;
       margin: 0 auto; 
   }
-  .errors-table {
-      width: 80%;
-  }
+  
 
   .legend {
     display: flex;
@@ -66,15 +63,19 @@
   }
 
   .errors-table {
-    width: 100%;
     border-collapse: collapse;
     background-color: #fff;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
   }
   
-  .errors-table th,
-  .errors-table td {
+  .errors-table th {
     text-align: center;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+  }
+
+  .errors-table td {
     padding: 10px;
     border: 1px solid #dee2e6;
     vertical-align: middle;
@@ -103,5 +104,34 @@
   
   .errors-table a:hover {
     text-decoration: underline;
+  }
+
+.errors-table tbody tr > *:not(:first-child) {
+    text-align: center;
+}
+
+  @media (max-width:535px) {
+    .legend-box{
+        width:20px;
+    }
+    .legend-item span {
+        width: calc(100% - 20px);
+    }
+    .nametag {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+        font-size:14px;
+    }
+
+    .errors-table tbody tr > *:not(:first-child) {
+        max-width: 10%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+    }
+    .errors-table {
+        table-layout: fixed;
+    }
   }
   

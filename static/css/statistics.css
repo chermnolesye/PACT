@@ -2,7 +2,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: auto;
+    margin: 0 auto;
+    width: 80%;
 }
 
 .dashboards,
@@ -86,4 +87,29 @@
 
 .dashboards-button:hover {
     background-color: var(--secondary-color);
+}
+
+@media (max-width: 510px) {
+    .horizontal-level label, .horizontal-level select {
+        display: block;
+        margin-bottom: 5px;
+    }
+    .horizontal-level select {
+        width:100%;
+    }
+    .horizontal-level button {
+        border: solid green 2px;
+        display: block;
+        margin: 10px auto 0;
+        width:50%;
+    }
+    .horizontal-level {
+        display: block;
+    }
+    .dashboards-button svg, .stat-header svg {
+        width: 10%;
+    }
+    .dashboards-button p, .stat-header p {
+        width: calc(90% - 10px);
+    }
 }

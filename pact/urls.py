@@ -13,5 +13,6 @@ urlpatterns = [
     path('years_groups/', include('years_and_groups_app.urls')),
     path('statistics/', include('statistics_app.urls')),
     path('', user_login, name='user_login'),
-    path('home/', home_view, name='home_view')
+    path('home/', home_view, name='home_view'),
+    path('exercise/', include('exercise_app.urls'))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
