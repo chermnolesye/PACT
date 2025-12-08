@@ -33,27 +33,37 @@
             <div class="edit_delete_card">Управление</div>
         </div>
         {% for exercise in exercises %}
-        <div id="{{ exercise.idexercise }}" class="exercise-card">
-            <span class="full_name">{{ exercise.idstudent.iduser.get_full_name }}</span>
-            <span class="group">{{ exercise.idstudent.idgroup }}</span>
-            {% if exercise.idexercisetype.exerciseabbr == "grading" %}
-            <span class="type"><a href="{% url 'grade_text' %}">Поиск ошибок</a></span>
+        <div id="{{ exercise.exercise_data.idexercise }}" class="exercise-card
+             {% if exercise.exercise_data.exercisestatus %}{% if exercise.in_time %}green_background{% else %}red_background{% endif %}{% endif %}
+             ">
+            <span class="full_name">
+                {% if exercise.exercise_data.exercisestatus %}
+                {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
+                <a href="{% url 'grade_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                {% else %}
+                <a href="{% url 'review_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                {% endif %}
+                {% else %}{{ exercise.exercise_data.idstudent.iduser.get_full_name }}{% endif %}
+            </span>
+            <span class="group">{{ exercise.exercise_data.idstudent.idgroup }}</span>
+            {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
+            <span class="type">Поиск ошибок</span>
             {% else %}
-            <span class="type"><a href="{% url 'review_text' %}">Рецензирование</a></span>s
+            <span class="type">Рецензирование</span>s
             {% endif %}
-            <span class="out_date">{{ exercise.creationdate }}</span>
-            <span class="deadline">{{ exercise.deadline }}</span>
-            {% if exercise.completiondate %}
-            <span class="completion_date">{{ exercise.completiondate }}</span>
+            <span class="out_date">{{ exercise.exercise_data.creationdate }}</span>
+            <span class="deadline">{{ exercise.exercise_data.deadline }}</span>
+            {% if exercise.exercise_data.completiondate %}
+            <span class="completion_date">{{ exercise.exercise_data.completiondate }}</span>
             {% else %}
             <span class="completion_date">-</span>
             {% endif %}
-            {% if exercise.exercisemark %}
-            <span class="mark">{{ exercise.exercisemark }}</span>
+            {% if exercise.exercise_data.exercisemark %}
+            <span class="mark">{{ exercise.exercise_data.exercisemark }}</span>
             {% else %}
             <span class="mark">-</span>
             {% endif %}
-            <button class="edit_card">
+            <button class="edit_card" id="editExerciseButton" onclick="openEditModal(this)">
                 <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
                 </svg>
@@ -64,12 +74,14 @@
                 </svg>
             </button>
             <span class="edit_delete_card">
-                <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
-                </svg>
-                <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
-                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
-                </svg>
+                <button id="editExerciseButton" onclick="openEditModal(this)">
+                    <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                </button>
+                    <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
+                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                    </svg>
             </span>
         </div>
         {% endfor %}
@@ -91,6 +103,45 @@
     </div>
 </div>
 
+<div id="editExerciseModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-head">
+            <p>Редактировать метаданные упражнения</p>
+            <button class="close-modal">
+                <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+        <form method="post" id="editExerciseForm" style="padding-top:20px;">
+            {% csrf_token %}
+            {{ edit_form.exercise_id }}
+            <label class="no-highlight">
+                ФИО студента, выполняющего упражнение:
+            </label>
+            <p id="FIOofExercise"></p>
+            <div class="vertical-level" style="margin-top:10px;">
+                <label for="{{ edit_form.creationdate.id_for_label }}" class="no-highlight">
+                    {{ edit_form.creationdate.label }}
+                </label>
+                {{ edit_form.creationdate }}
+            </div>
+
+            <div class="vertical-level" style="margin-top:10px;">
+                <label for="{{ edit_form.deadline.id_for_label }}" class="no-highlight">
+                    {{ edit_form.deadline.label }}
+                </label>
+                {{ edit_form.deadline }}
+            </div>
+
+            <div class="horizontal-level" style="margin-top:20px;">
+                <button type="submit" name="edit_text" id="confirmEditText" class="button">Сохранить</button>
+                <button type="button" id="cancelEdit" class="button grey-button">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     let exerciseToDelete = null;
 
@@ -98,6 +149,25 @@
         // exerciseToDelete = exerciseId;
         exerciseToDelete = el.parentElement.id;
         document.getElementById('deleteModal').style.display = 'flex';
+    }
+
+    function openEditModal(el) {
+        parent = el.parentElement;
+        exerciseToEdit = parent.id;
+
+        name = parent.getElementsByClassName("full_name")[0].innerHTML;
+        document.getElementById('FIOofExercise').innerHTML = name;
+
+        document.getElementById('editExerciseModal').style.display = 'flex';
+        fetch("{% url 'load_exercise_data' %}?exerciseId=" + exerciseToEdit)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('id_creationdate').innerHTML = data.creationdate;
+                document.getElementById('id_deadline').innerHTML = data.deadline;
+                document.getElementById('id_creationdate').value = data.creationdate;
+                document.getElementById('id_deadline').value = data.deadline;
+                document.getElementById('id_exercise_id').value = exerciseToEdit;
+        });
     }
 
     // AJAX удаление
@@ -133,6 +203,18 @@
         exerciseToDelete = null;
     }
 
+    function closeModalEdit(modal) {
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function openModal(modal) {
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
     function getCSRFToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
@@ -140,56 +222,33 @@
     document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('confirmDelete').addEventListener('click', deleteExercise);
         document.getElementById('cancelDelete').addEventListener('click', closeModal);
+        const editModal = document.getElementById('editExerciseModal');
+
+        const cancelEditBtn = document.getElementById('cancelEdit');
+        const closeEditBtn = editModal.querySelector('.close-modal');
+
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', function () {
+                closeModalEdit(editModal);
+            });
+        }
+
+        if (closeEditBtn) {
+            closeEditBtn.addEventListener('click', function () {
+                closeModalEdit(editModal);
+            });
+        }
         
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
+        [deleteModal, editModal].forEach(modal => {
+            if (modal) {
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        closeModal(modal);
+                    }
+                });
             }
         });
 
-        const exerciseCard = document.getElementsByClassName('exercise-card');
-        const months = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
-
-        for (let i = 0; i < exerciseCard.length; i++) {
-            const deadline = exerciseCard[i].querySelectorAll('.deadline')[0];
-            const deadlineData = deadline.textContent.split(" ")
-            const deadlineDay = deadlineData[0]
-            const deadlineMonth = months.indexOf(deadlineData[1])
-            const deadlineDate = new Date(parseInt(deadlineData[2]) + 1, deadlineMonth, deadlineDay)
-
-            const completion = exerciseCard[i].querySelectorAll('.completion_date')[0];
-            const completionData = completion.textContent.split(" ")
-            const completionDay = completionData[0]
-            const completionMonth = months.indexOf(completionData[1])
-            const completionDate = new Date(parseInt(completionData[2]) + 1, completionMonth, completionDay)
-
-            const today = new Date()
-            if (parseInt(deadlineData[2]) < today.getFullYear() ||
-                (deadlineMonth < today.getMonth() && parseInt(deadlineData[2]) <= today.getFullYear()) ||
-                (parseInt(deadlineDay) < today.getDate() && deadlineMonth <= today.getMonth() && parseInt(deadlineData[2]) <= today.getFullYear())) {
-                //console.log('red');
-                if (completion.textContent == "-" ||
-                    (parseInt(completionData[2]) > parseInt(deadlineData[2]) ||
-                    (completionMonth > deadlineMonth && parseInt(completionData[2]) > parseInt(deadlineData[2])) ||
-                    (parseInt(completionDay) > parseInt(deadlineDay) && completionMonth >= deadlineMonth && parseInt(completionData[2]) >= parseInt(deadlineData[2])))
-                ) {
-                    exerciseCard[i].classList.add('red_background');
-                }
-                else {
-                   exerciseCard[i].classList.add('green_background');
-                }
-            } else {
-                //console.log('green');
-                if (completion.textContent != "-") {
-                    if (parseInt(completionData[2]) < parseInt(deadlineData[2])||
-                        (completionMonth < deadlineMonth && parseInt(completionData[2]) <= parseInt(deadlineData[2])) ||
-                        (parseInt(completionDay) < parseInt(deadlineDay) && completionMonth <= deadlineMonth && parseInt(completionData[2]) <= parseInt(deadlineData[2]))) {
-                        exerciseCard[i].classList.add('green_background');
-                    }
-                    console.log(deadlineData, completionData)
-                }
-            }
-        }
     });
 </script>
 

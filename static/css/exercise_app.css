@@ -1,3 +1,10 @@
+:root {
+    --e-green: #CCFFCC;
+    --e-red: #FFCCCC;
+    --e-grey: #DAE0E4;
+    --e-grey2: #D9D9D9;
+}
+
 .add_exercise_form{
     width:90%;
     max-width:500px;
@@ -144,11 +151,11 @@
 }
 
 .green_background {
-    background: #DEFFD6
+    background: var(--e-green);
 }
 
 .red_background {
-    background: #FFD6D6
+    background: var(--e-red);
 }
 
 .go_back_button, .add_button {
@@ -161,6 +168,11 @@
 
 #id_exercisetext {
     width: 100% !important;
+}
+
+#editExerciseForm {
+    max-width: 90%;
+    margin: 0 5%;
 }
 
 @media (max-width:680px) {

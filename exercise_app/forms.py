@@ -152,7 +152,19 @@ class AddExerciseForm(forms.Form):
                 self.add_error('review_exercisetext', 'Для типа "Рецензирование" необходимо выбрать текст')
         
         return cleaned_data
+ 
+class EditExerciseForm(forms.Form):
+    exercise_id = forms.IntegerField(widget=forms.HiddenInput())
+    creationdate = forms.DateField(
+         label='Дата создания',
+         widget=forms.DateInput(attrs={'type': 'date'},format='%Y-%m-%d')
+    )
     
+    deadline = forms.DateField(
+        label='Срок сдачи',
+        widget=forms.DateInput(attrs={'type': 'date'},format='%Y-%m-%d')
+    )
+
 class EditTextForm(forms.Form):
     author = forms.CharField(
         label='Автор текста',

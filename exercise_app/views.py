@@ -33,6 +33,7 @@ from core_app.models import (
 from .forms import (
     AddExerciseForm,
     AddExerciseTextForm,
+    EditExerciseForm,
     EditTextForm,
     AddErrorAnnotationForm,
     ExerciseTextTaskForm,
@@ -46,13 +47,50 @@ from .forms import (
 def get_teacher_fio(request):
     return request.session.get("teacher_fio", "")
 
-def teacher_exercises(request):
+def load_exercise_data(request):
+    exercise_id = request.GET.get('exerciseId')
+    if exercise_id:
+        exercise_to_edit = get_object_or_404(Exercise, idexercise=exercise_id)
+        data = {
+            'id': exercise_to_edit.idexercise,
+            'creationdate': exercise_to_edit.creationdate,
+            'deadline': exercise_to_edit.deadline
+        }
+        return JsonResponse(data)    
+    return JsonResponse({})
+
+def teacher_exercises(request, idexercise=2):
     # if request.method == 'POST':
         # if 'delete_exercise' in request.POST:
+    exercise_to_edit = get_object_or_404(Exercise, idexercise=idexercise)
+    edit_form = EditExerciseForm(initial={
+        'creationdate': exercise_to_edit.creationdate,
+        'deadline': exercise_to_edit.deadline,
+    })
 
+    exercises_list = []
     exercises = Exercise.objects.all()
-    
-    context = {'exercises' : exercises}
+    for exercise in exercises:
+        in_time = False
+        if exercise.exercisestatus and exercise.completiondate:
+            in_time = exercise.completiondate <= exercise.deadline
+        exercises_dict = {'exercise_data' : exercise,
+                          'in_time':in_time}
+        exercises_list.append(exercises_dict)
+    context = {'exercises' : exercises_list,'edit_form': edit_form}
+
+    if request.method == "POST":
+        if 'edit_text' in request.POST:
+            edit_form = EditExerciseForm(request.POST)
+            if edit_form.is_valid():
+                exercise_to_edit = get_object_or_404(Exercise, idexercise=edit_form.cleaned_data['exercise_id'])
+                exercise_to_edit.creationdate = edit_form.cleaned_data['creationdate']
+                exercise_to_edit.deadline = edit_form.cleaned_data['deadline']
+                exercise_to_edit.save()
+                return redirect('teacher_exercises')
+            else:
+                edit_form = EditExerciseForm(request.POST)
+
     return render(request, 'teacher_exercises.html', context)
 
 @require_POST

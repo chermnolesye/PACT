@@ -7,6 +7,7 @@ urlpatterns = [
     path('load_groups/', views.load_groups, name='load_groups'),
 
     path('add_exercise/', views.add_exercise, name='add_exercise'),
+    path('load_exercise_data/', views.load_exercise_data, name='load_exercise_data'),
     path('grading_student/', views.grading_student, name='grading_student'),    
 
     path('add_review_text/', views.add_review_text, name='add_review_text'),
