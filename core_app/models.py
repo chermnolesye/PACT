@@ -321,7 +321,7 @@ class ExerciseType(models.Model):
     # ЭТО ПОЛЕ ДОЛЖНО БЫТЬ NOT NULL!!! нужно будет дополнить позже, сейчас nullable
     # иначе будут ошибки, тк в бд уже есть записи в этой таблице
 
-    exercisecode = models.IntegerField(unique=True, null=True)
+    exercisecode = models.IntegerField(unique=True, null=False)
     exerciseabbr = models.CharField(max_length=100, unique=True)
     exercisename = models.TextField()
     exercisedescription = models.TextField()
@@ -411,7 +411,7 @@ class ExerciseReview(models.Model):
     idexercisereview = models.AutoField(primary_key=True)
     idexercise = models.ForeignKey('Exercise', on_delete=models.CASCADE, db_column='idexercise')
     idexercisetext = models.ForeignKey('ExerciseText', on_delete=models.CASCADE, db_column='idexercisetext')
-    idexercisetexttask = models.ForeignKey('ExerciseTextTask', on_delete=models.CASCADE, db_column='idexercisetexttask')
+    idexercisetexttask = models.ForeignKey('ExerciseTextTask', null=True, on_delete=models.CASCADE, db_column='idexercisetexttask')
 
     class Meta:
         db_table = 'tblexercisereview'

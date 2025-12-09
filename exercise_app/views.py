@@ -59,14 +59,18 @@ def load_exercise_data(request):
         return JsonResponse(data)    
     return JsonResponse({})
 
-def teacher_exercises(request, idexercise=2):
+
+"""
+TO DO: порешать форму изменения
+"""
+def teacher_exercises(request):
     # if request.method == 'POST':
         # if 'delete_exercise' in request.POST:
-    exercise_to_edit = get_object_or_404(Exercise, idexercise=idexercise)
-    edit_form = EditExerciseForm(initial={
-        'creationdate': exercise_to_edit.creationdate,
-        'deadline': exercise_to_edit.deadline,
-    })
+    # exercise_to_edit = get_object_or_404(Exercise, idexercise=idexercise)
+    # edit_form = EditExerciseForm(initial={
+    #     'creationdate': exercise_to_edit.creationdate,
+    #     'deadline': exercise_to_edit.deadline,
+    # })
 
     exercises_list = []
     exercises = Exercise.objects.all()
@@ -77,7 +81,7 @@ def teacher_exercises(request, idexercise=2):
         exercises_dict = {'exercise_data' : exercise,
                           'in_time':in_time}
         exercises_list.append(exercises_dict)
-    context = {'exercises' : exercises_list,'edit_form': edit_form}
+    context = {'exercises' : exercises_list}
 
     if request.method == "POST":
         if 'edit_text' in request.POST:
