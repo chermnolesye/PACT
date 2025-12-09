@@ -7,16 +7,28 @@
     --e-purple: #EACFFF;
 }
 
+.grey-block {
+    background-color: var(--e-grey);
+}
+
+.green-block {
+    background-color: var(--e-green);
+}
+
+.red-block {
+    background-color: var(--e-red);
+}
+
 .selection {
     background-color: var(--e-grey2);
     cursor: pointer;
 }
 
-.selection:hover {
+.selection:hover, .selection.active {
     background-color: var(--e-purple);
 }
 
-.add-annotation-tooltip{
+.add-annotation-tooltip {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -44,7 +56,17 @@
     padding: 10px 5px;
 }
 
-
+.tasks-container {
+    flex: 2;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    overflow: hidden;
+    border-left: 2px solid black;
+    padding: 20px;
+    overflow-y: auto;
+}
 
 .comment {
     border:2px solid black;
@@ -76,6 +98,13 @@
     flex-wrap: wrap;
     justify-content: left;
     align-items: center;
+    width: 100%;
+    background-color: #ffffff;
+    flex-direction: row;
+    position: sticky;
+    top: 0px;
+    z-index: 1000;
+    margin: 0;
 }
 
 .underline {
@@ -93,36 +122,112 @@
     padding: 15px;
     margin: 10px 5px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
-    background-color: var(--e-grey);
+    border-radius: var(--border-radius);
+    position: relative;
 }
 
 .review-menu-button {
+    font-size: 16px;
     border: 1px solid black;
+    background-color: white;
     padding: 15px;
     margin: 10px 5px;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
     cursor: pointer;
+    border-radius: var(--border-radius);
+    position: relative;
 }
+
+.review-menu-button:hover {
+    box-shadow: 0 0.25rem 0.5rem #3886fbc6;
+}
+
 .review-body {
     display: flex;
-    margin: 10px;;
+    margin: 10px;
+
+    height: calc(100vh - 100px);
+    gap: 20px;
+    transition: all 0.4s ease-in-out;
 }
 
 .review-text-container {
+    flex: 3;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-
+    width: 100%;
+    max-height: 100%;
+    transition: all 0.4s ease-in-out;
 }
 
-.review-text p {
+.review-text-container-e {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    transition: all 0.4s ease-in-out;
+}
+
+.review-text {
     text-align: justify;
+    white-space: normal; 
+    line-height: 1.5;
+
+    flex: 1;
+    padding: 10px;
+    max-height: 100%;
+    overflow-y: auto;
 }
 
 .review-container {
+    width: 38%;
+    display: flex;
+    flex-direction: column;
+ 
     border-left: 2px solid black;
-    margin: 10px;
-    margin-left: 30px;
-    padding: 20px;
+    background: white;
+    padding: var(--primary-padding);
+    /* max-height: 100%; */
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.4s ease-in-out;
+    margin-top: 100px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* z-index: 1000; */
+    overflow-y: auto;
+}
+
+.review-container-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0px;
+}
+
+.close-review {
+    position: absolute;
+    top: 15px;
+    right: 50px;
+    /* margin-bottom: 20px; */
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: black;
+    z-index: 1001;
+}
+
+.review-container.active {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.review-text-container-e.with-sidebar {
+    width: 60%;
 }
 
 .review-buttons {
@@ -140,6 +245,123 @@
 }
 
 .review-buttons button:hover {
-    background-color: black;
+    background-color: #000;
     color: white;
+}
+
+.student-review, .teacher-comment {
+    padding: var(--primary-padding);
+    text-align: justify;
+}
+
+.separator {
+    border-bottom: 1px solid var(--e-grey);
+    width: 100%;
+}
+
+#comment {
+    margin-top: 20px;
+}
+
+#create-comment-form, #edit-comment-form {
+    padding: var(--primary-padding);
+}
+
+.task-container {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    margin-bottom: 30px;
+}
+
+.task-container > * {
+    margin: 10px 0px;
+}
+
+.task {
+    border-bottom: 1px solid var(--e-grey2);
+    padding: var(--primary-padding);
+}
+
+.task-header {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+.task-name {
+    align-content: left;
+}
+
+.icon {
+    display: inline-flex;
+    transition: transform 0.3s ease;
+}
+
+.toggle-btn.active .icon {
+    transform: rotate(180deg);
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: var(--grey-color);
+}
+
+.toggle-btn:hover {
+    color: var(--secondary-color);
+}
+
+.task-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    opacity: 0;
+    /* overflow-y: scroll;
+    scrollbar-width: none;
+    -ms-overflow-style: none; */
+}
+
+.task-content::-webkit-scrollbar {
+    display: none;
+}
+
+.task-content.active {
+    max-height: 100vh;
+    opacity: 1;
+    overflow-y: scroll;
+    transition: max-height 0.5s ease-in, opacity 0.3s ease-in;
+    overflow-wrap: break-word; 
+}
+
+.task-content.active::-webkit-scrollbar {
+    width: 6px;
+    display: block;
+}
+
+.task-text {
+    margin: 15px 0;
+}
+
+#editTextForm {
+    padding: var(--primary-padding);
+}
+
+#editTextForm label {
+    padding: 5px 0px;
+}
+
+#editTextForm .horizontal-level {
+    margin-top: 20px;
+}
+
+.task-edit-form input,
+.task-edit-form textarea,
+.create-task-form input,
+.create-task-form textarea {
+    margin: 5px 0px;
+    width: 100%;
+    box-sizing: border-box;
 }

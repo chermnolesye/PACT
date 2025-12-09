@@ -79,8 +79,8 @@ form {
     margin-bottom: 10px;
 }
 
-.abbr, .word, .static_word, .error-tag {
-    border-radius: 8px; 
+.abbr, .word, .static_word, .error-tag, .word-grading {
+    border-radius: 8px;
     box-sizing: border-box;
 }
 
@@ -108,13 +108,12 @@ form {
     width: 100%;
 }
 
-.word, .static_word {
-    margin: 2px; 
-    padding: 10px;              
+.word, .static_word, .word-grading {
+    margin: 2px;
+    padding: 10px;
     white-space: nowrap;
     text-align: center;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     display: flex;
     flex-grow: 1;
     justify-content: center;
@@ -184,7 +183,7 @@ form {
     z-index: 800;
 }
 
-  .menu-block {
+.menu-block, .menu-block-watch {
     position: relative;
     display: flex;
     align-items: center;
@@ -192,10 +191,13 @@ form {
     padding: 10px 15px;
     background-color: #ffffff;
     border: 1px solid var(--secondary-color);
-    cursor: pointer;
     overflow: hidden;
     color: var(--primary-color);
-  }
+    cursor: default;
+}
+.menu-block {
+    cursor: pointer;
+}
 
   .menu-block:hover {
     color: #ffffff;
@@ -658,6 +660,35 @@ label[for="id_iderrortag"] {
     margin-right: 0;
 }
 
+.popup-sidebyside {
+    max-width: 300px; 
+    width: 50%;
+}
+.popup-content-sidebyside {
+    display: flex;
+}
+.student-mark {
+    display: inline;
+    border-right: white 2px solid;
+}
+
+.teacher-mark {
+    display: inline;
+    margin-left: 10px;
+}
+
+.green_background {
+    background: #DEFFD6
+}
+
+.red_background {
+    background: #FFD6D6
+}
+
+.mistakes {
+    color: black;
+}
+
 @media (max-width: 660px) {
     .main-template-container .menu-container > .menu-block:first-child {
         border-top-left-radius: unset;
@@ -711,5 +742,21 @@ label[for="id_iderrortag"] {
         min-width: unset;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+    .student-mark, .teacher-mark, .popup-content-sidebyside {
+        display: unset;
+    }
+    .popup-sidebyside {
+        max-width: 80%;
+    }
+    .student-mark {
+        border-right: unset;
+    }
+    .teacher-mark {
+        margin: unset;
+    }
+    .teacher-mark h3 {
+        padding-top: 5px;
+        border-top: white 2px solid;
     }
 }

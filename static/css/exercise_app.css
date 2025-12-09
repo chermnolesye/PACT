@@ -1,0 +1,243 @@
+:root {
+    --e-green: #CCFFCC;
+    --e-red: #FFCCCC;
+    --e-grey: #DAE0E4;
+    --e-grey2: #D9D9D9;
+}
+
+.add_exercise_form{
+    width:90%;
+    max-width:500px;
+}
+.add_exercise_form .form-group,#grading-fields,#review-fields{
+    width:100%;
+    align-items: center;
+    gap: 10px;
+    display:flex;
+    margin-bottom:10px;
+}
+.add_exercise_form .form-group label,.add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label{
+    width:130px;
+    text-align:start;
+    display:flex;
+    color: var(--grey-color);
+}
+
+
+.add_exercise_form .form-group input,.add_exercise_form .form-group select, #review-fields select, #grading-fields select{
+    width:calc(100% - 140px);
+}
+
+.grouping-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.grouping-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.exercises {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--border-radius);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
+}
+.exercises :last-child {
+    border-bottom-right-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+}
+
+.header-card {
+    display: flex;
+    align-items: center;
+    vertical-align: middle;
+    background-color: #f8f9fa;
+    gap: 10px;
+    padding: 15px;
+    border-top-right-radius: var(--border-radius);
+    border-top-left-radius: var(--border-radius);
+}
+
+.exercise-card {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background-color: white;
+}
+
+.header-card div, .exercise-card span, .exercise-card button {
+    width: 12%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.exercise-card button {
+    background:none;
+    border:none;
+}
+
+.edit_delete_card{
+    display:none;
+}
+
+.modal-content {
+    max-width: 400px;
+}
+
+.modal-inner {
+    margin:10px 5% 0;
+}
+
+.modal-content p {
+    max-width: 90%;
+}
+
+.modal-actions {
+    margin-top:20px;
+    display:flex;
+    justify-content: center;
+}
+
+.new_exercise_btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0px;
+}
+
+.new_exercise_btn svg {
+    margin-right: 5px;
+}
+
+.exercise-card .full_name, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
+.exercise-card .deadline, .exercise-card .completion_date, .exercise-card .mark {
+    text-align: left;
+}
+
+.exercise-card .full_name, .exercise-card .group, .exercise-card .type,
+.header-card .full_name, .header-card .group, .header-card .type {
+    text-align: left;
+    flex: 2;
+}
+
+.exercise-card .out_date, .exercise-card .deadline, 
+.exercise-card .completion_date, .exercise-card .mark,
+.header-card .out_date, .header-card .deadline, 
+.header-card .completion_date, .header-card .mark  {
+    text-align: left;
+    flex: 1;
+    width: 100%
+}
+
+.exercise-card .text_name, .exercise-card .author, .exercise-card .out_date, .exercise-card .text_type {
+    width: 100% !important;
+    text-align: left;
+}
+.text_name, .author, .out_date, .text_type {
+    width: 100% !important;
+}
+
+.delete_card, .edit_card {
+    cursor: pointer;
+}
+
+.green_background {
+    background: var(--e-green);
+}
+
+.red_background {
+    background: var(--e-red);
+}
+
+.go_back_button, .add_button {
+    width: 150px;
+}
+
+.go_back_button {
+    background: var(--grey-color);
+}
+
+#id_exercisetext {
+    width: 100% !important;
+}
+
+#editExerciseForm {
+    max-width: 90%;
+    margin: 0 5%;
+}
+
+@media (max-width:680px) {
+    .edit_delete_card {
+        display: block;
+    }
+    .edit_card, .delete_card, .out_date {
+        display: none;
+    }
+    .header-card div, .exercise-card span, .exercise-card button {
+        width: 14%;
+    }
+    .modal-content {
+        max-width: 90%;
+        min-width: unset;
+    }
+}
+@media (max-width:550px) {
+    .deadline {
+        display: none;
+    }
+
+    .header-card div, .exercise-card span, .exercise-card button {
+        width: 16%;
+    }
+}
+
+@media (max-width:500px) {
+    .edit_delete_card svg {
+        display: block;
+        margin: 0 auto;
+    }
+    .edit_delete_card :first-child {
+        margin-bottom: 5px;
+    }
+    .completion_date {
+        display: none;
+    }
+    .header-card div, .exercise-card span, .exercise-card button {
+        width: 20%;
+    }
+}
+
+@media (max-width:400px) {
+    .add_exercise_form .form-group, .grouping-wrapper {
+        display: block;
+    }
+
+    .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
+        width: 100%;
+    }
+
+    .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label {
+        width: 100%;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .type{
+        display:none;
+    }
+    .header-card div, .exercise-card span, .exercise-card button {
+        width: 25%;
+    }
+    #id_exercisetext {
+        min-width: 90% !important;
+        max-width: 100%;
+    }
+}

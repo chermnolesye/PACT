@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Проверка рецензирования{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/review.css' %}" />
+{% endblock %}
+
+{% block content %}   
+
+<div class="main-container">
+
+    <div class="review-menu">
+        <div class="review-menu-block grey-block">
+            Студент: {{ exercise.idstudent.iduser.get_full_name }}
+         </div>
+
+         <div class="review-menu-block grey-block">
+            Дата создания: {{ exercise.creationdate }}
+         </div>
+
+         <div class="review-menu-block grey-block">
+            Срок сдачи: {{ exercise.deadline }}
+         </div>
+
+         {% if exercise.exercisestatus %}
+            {% if in_time %}
+            <div class="review-menu-block green-block">
+                Дата сдачи: {{ exercise.completiondate }}
+            </div>
+            {% else %}
+            <div class="review-menu-block red-block">
+                Дата сдачи: {{ exercise.completiondate }}
+            </div>
+            {% endif %}
+        {% endif %}
+
+         <div class="review-menu-button">
+            Оценить
+         </div>
+    </div>
+
+    <div class="task-container">
+        <h3>Задание к тексту:</h3>
+        <p class="separator">
+            {{ exercisereview.idexercisetexttask.tasktitle }}
+        </p>
+        <p>
+            {{ exercisereview.idexercisetexttask.tasktext }}
+        </p>
+    </div>
+
+    <div class="review-body" id="reviewBody">
+        <div class="review-text-container-e" id="reviewTextContainer">
+            <div class="text-header underline">
+                <h2>{{ text_metadata.exercisetextname }}</h2>
+                <p class="author">{{ text_metadata.author }}</p>
+                <p class="author"> {{ text_metadata.idexercisetexttype.exercisetexttypename }} </p>
+            </div>
+
+            <div class="review-text">
+                {{ text|safe }}
+            </div>
+        </div>
+
+        <div class="review-container" id="reviewContainer">
+            <div class="review-container-header">
+                <h3 class="underline">Ответ студента</h3>
+                <button class="close-review" id="closeReview">&#10006;</button>                
+            </div>
+
+            <div class="student-review separator" id="review">
+            </div>
+
+            <div class="teacher-comment">
+                <h3>Комментарий преподавателя</h3>
+                <div id="comment"> </div>
+            </div>
+
+            <!-- <form id="create-comment-form">
+                <div class="review-buttons">
+                    <button>Сохранить</button>
+                    <button>Отмена</button>                    
+                </div>
+            </form>
+
+            <form id="edit-comment-form">
+                <div class="review-buttons">
+                    <button>Изменить</button>
+                    <button>Удалить</button>                    
+                </div>
+            </form> -->
+        </div>
+    </div> 
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        const selections = document.querySelectorAll('.selection');
+        const reviewContainer = document.getElementById('reviewContainer');
+        const closeReview = document.getElementById('closeReview');
+        const reviewText = document.getElementById('review');
+        const commentText = document.getElementById('comment');
+        const reviewTextContainer = document.getElementById('reviewTextContainer');
+
+        // Функция открытия панели
+        function openReviewPanel() {
+            reviewContainer.classList.add('active');
+            if (reviewTextContainer) {
+                reviewTextContainer.classList.add('with-sidebar');
+            }
+            if (reviewBody) {
+                reviewBody.classList.add('with-sidebar');
+            }
+        }
+
+        // Функция закрытия панели
+        function closeReviewPanel() {
+            reviewContainer.classList.remove('active');
+
+            if (reviewTextContainer) {
+                reviewTextContainer.classList.remove('with-sidebar');
+            }
+
+            if (reviewBody) {
+                reviewBody.classList.remove('with-sidebar');
+            }
+            
+            // Сбрасываем выделение
+            document.querySelectorAll('.selection').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+
+        // Обработчик клика по фрагменту
+        selections.forEach(span => {
+            span.addEventListener('click', function() {
+                const fragmentId = this.getAttribute('data-fragment-id');
+                const review = this.getAttribute('data-review');
+                const teacherComment = this.getAttribute('data-teacher-comment');
+                const fragmentText = this.textContent;
+
+                reviewText.textContent = review;
+                commentText.textContent = teacherComment || 'Комментарий отсутствует';
+
+                document.querySelectorAll('.selection').forEach(s => {
+                    s.classList.remove('active');
+                });
+                this.classList.add('active');
+
+                openReviewPanel();
+            });
+        });
+
+        function handleClickOutside(event) {
+            // Если панель открыта И клик был вне панели И не по выделенному фрагменту
+            if (reviewContainer.classList.contains('active') && 
+                !reviewContainer.contains(event.target) && 
+                !event.target.classList.contains('selection')) {
+                closeReviewPanel();
+            }
+        }
+
+        // Закрытие панели
+        closeReview.addEventListener('click', closeReviewPanel);
+        document.addEventListener('click', handleClickOutside);
+        // Закрытие по ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeReviewPanel();
+            }
+        });
+        reviewContainer.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+
+    });
+</script>
+
+{% endblock %}

@@ -307,3 +307,164 @@ class WriteTool(models.Model):
 
     def __str__(self):
         return self.writetoolname
+    
+
+
+
+# ----------------------- НОВЫЕ МОДЕЛИ -----------------------
+
+
+
+class ExerciseType(models.Model):
+    idexercisetype = models.AutoField(primary_key=True)
+
+    # ЭТО ПОЛЕ ДОЛЖНО БЫТЬ NOT NULL!!! нужно будет дополнить позже, сейчас nullable
+    # иначе будут ошибки, тк в бд уже есть записи в этой таблице
+
+    exercisecode = models.IntegerField(unique=True, null=True)
+    exerciseabbr = models.CharField(max_length=100, unique=True)
+    exercisename = models.TextField()
+    exercisedescription = models.TextField()
+
+    class Meta:
+        db_table = 'tblexercisetype'
+
+    def __str__(self):
+        return self.exercisename
+
+class Exercise(models.Model):
+    EXERCISE_STATUS_CHOICES = [
+        (False, 'Не сдано'),
+        (True, 'Сдано'),
+    ]
+
+    TASK_RATES = (
+        (1, '1'),
+        (2, '2-'),
+        (3, '2'),
+        (4, '2+'),
+        (5, '3-'),
+        (6, '3'),
+        (7, '3+'),
+        (8, '4-'),
+        (9, '4'),
+        (10, '4+'),
+        (11, '5-'),
+        (12, '5')
+    )
+
+    idexercise =  models.AutoField(primary_key=True)
+    idexercisetype = models.ForeignKey('ExerciseType', on_delete=models.CASCADE, db_column='idexercisetype')
+    idstudent = models.ForeignKey('Student', on_delete=models.CASCADE, db_column='idstudent')
+    iduserteacher = models.ForeignKey('User', on_delete=models.CASCADE, db_column='iduserteacher')
+    creationdate =  models.DateField()
+    deadline =  models.DateField()
+    completiondate =  models.DateField(null=True, blank=True)
+    exercisemark = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
+    exercisemarkcomment = models.TextField(blank=True)
+    exercisestatus = models.BooleanField(choices=EXERCISE_STATUS_CHOICES, default=False)
+
+    class Meta:
+        db_table = 'tblexercise'
+        
+    def __str__(self):
+        return f"Задание {self.idexercise} - {self.idexercisetype.exercisename}"
+    
+class ExerciseGrading(models.Model):
+    idexercisegrading = models.AutoField(primary_key=True)
+    idtext = models.ForeignKey('Text', on_delete=models.CASCADE, db_column='idtext')
+    idexercise = models.ForeignKey('Exercise', on_delete=models.CASCADE, db_column='idexercise')
+
+    class Meta:
+        db_table = 'tblexercisegrading'
+
+    def __str__(self):
+        return f"{self.idexercise.idexercisetype.idexercisename} - {self.idtext.header}"
+
+class ExerciseErrorToken(models.Model):
+    idexerciseerrortoken = models.AutoField(primary_key=True)
+    position = models.IntegerField()
+    idexerciseerror = models.ForeignKey('ExerciseError', on_delete=models.CASCADE, db_column='idexerciseerror')
+    idtoken = models.ForeignKey('Token', on_delete=models.CASCADE, db_column='idtoken')
+
+    class Meta:
+        db_table = 'tblexerciseerrortoken'
+
+    def __str__(self):
+        return f"{self.idexerciseerror.correct} - {self.idtoken.tokentext}"
+
+class ExerciseError(models.Model):
+    idexerciseerror = models.AutoField(primary_key=True)
+    correct = models.TextField(blank=True, null=True) 
+    comment = models.TextField(blank=True)
+    iderrorlevel = models.ForeignKey('ErrorLevel', on_delete=models.CASCADE, db_column='iderrorlevel')
+    Reason = models.ForeignKey('Reason', on_delete=models.CASCADE, db_column='idreason')
+    Errortag = models.ForeignKey('ErrorTag', on_delete=models.CASCADE, db_column='iderrortag')
+
+    class Meta:
+        db_table = 'tblexerciseerror'
+
+    def __str__(self):
+        return self.correct
+
+class ExerciseReview(models.Model):
+    idexercisereview = models.AutoField(primary_key=True)
+    idexercise = models.ForeignKey('Exercise', on_delete=models.CASCADE, db_column='idexercise')
+    idexercisetext = models.ForeignKey('ExerciseText', on_delete=models.CASCADE, db_column='idexercisetext')
+    idexercisetexttask = models.ForeignKey('ExerciseTextTask', on_delete=models.CASCADE, db_column='idexercisetexttask')
+
+    class Meta:
+        db_table = 'tblexercisereview'
+
+    def __str__(self):
+        return f"{self.idexercise.idexercisetype.idexercisename} - {self.idexercisetext.exercisetextname}"
+
+class ExerciseText(models.Model):
+    idexercisetext = models.AutoField(primary_key=True)
+    loaddate = models.DateField()
+    author = models.CharField(max_length=300)
+    idexercisetexttype = models.ForeignKey('ExerciseTextType', on_delete=models.CASCADE, db_column='idexercisetexttype')
+    exercisetextname = models.TextField()
+    exercisetext = models.TextField()
+
+    class Meta:
+        db_table = 'tblexercisetext'
+
+    def __str__(self):
+        return self.exercisetextname
+
+class ExerciseFragmentReview(models.Model):
+    idexercisetextreview = models.AutoField(primary_key=True)
+    idexercisereview = models.ForeignKey('ExerciseReview', on_delete=models.CASCADE, db_column='idexercisereview')
+    startposition = models.IntegerField()
+    endposition = models.IntegerField()
+    review = models.TextField()
+    teachercomment = models.TextField()
+
+    class Meta:
+        db_table = 'tblexercisefragmentreview'
+
+    def __str__(self):
+        return self.review
+
+class ExerciseTextType(models.Model):
+    idexercisetexttype = models.AutoField(primary_key=True)
+    exercisetexttypename = models.TextField()
+
+    class Meta:
+        db_table = 'tblexercisetexttype'
+
+    def __str__(self):
+        return self.exercisetexttypename
+    
+class ExerciseTextTask(models.Model):
+    idexercisetexttask = models.AutoField(primary_key=True)
+    idexercisetext = models.ForeignKey(ExerciseText, on_delete=models.CASCADE, db_column='idexercisetext')
+    tasktitle = models.CharField(max_length=500)
+    tasktext = models.TextField()
+
+    class Meta:
+        db_table = 'tblexercisetexttask'
+
+    def __str__(self):
+        return self.tasktitle

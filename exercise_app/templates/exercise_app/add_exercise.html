@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Добавление упражнения{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+{% endblock %}
+
+{% block content %}   
+
+<div class="container">
+    <h2 class="highlighted-header">Добавление упражнения</h2>
+    <form method="post" class="add_exercise_form">
+        {% csrf_token %}
+
+        <div class="form-group">
+            {{ form.year.label_tag }}
+            {{ form.year }}
+        </div>
+
+        <div class="form-group">
+            {{ form.group.label_tag }}
+            {{ form.group }}
+        </div>
+
+        <div class="form-group">
+            {{ form.idstudent.label_tag }}
+            {{ form.idstudent }}
+        </div>
+
+        <div class="form-group">
+            {{ form.creationdate.label_tag }}
+            {{ form.creationdate }}
+        </div>
+
+        <div class="form-group">
+            {{ form.deadline.label_tag }}
+            {{ form.deadline }}
+        </div>
+
+        <div class="grouping-wrapper">
+            <label>Тип упражнения:</label>
+            <div class="grouping-options">
+                {% for choice in form.idexercisetype %}
+                <div>
+                    {{ choice.tag }}
+                    <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="grading-fields" style="display: none;">
+            {{ form.grading_text.label_tag }}
+            {{ form.grading_text }}
+        </div>
+
+        <div id="review-fields" style="display: none;">
+            {{ form.review_exercisetext.label_tag }}
+            {{ form.review_exercisetext }}
+        </div>
+
+        <!-- <div style="display: none;">
+        {{ form.grading_text }}
+        {{ form.review_exercisetext }}
+    </div> -->
+
+        <button type="submit" class="button">Создать упражнение</button>
+    </form>
+    
+</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const groupSelect = document.getElementById("id_group");
+        const yearSelect = document.getElementById("id_year");
+        const studentSelect = document.getElementById("id_idstudent");
+        const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
+
+        
+        // Загрузка студентов по группе
+        groupSelect.addEventListener("change", function() {
+            const groupId = this.value;
+            fetch("{% url 'load_students' %}?group_id=" + groupId)
+            .then(response => response.json())
+            .then(data => {
+                studentSelect.innerHTML = '<option value="">Выберите студента</option>';
+                data.students.forEach(student => {
+                    const option = document.createElement("option");
+                    option.value = student.id;
+                    option.textContent = student.name;
+                    studentSelect.appendChild(option);
+                });
+            });
+        });
+        yearSelect.addEventListener("change", function () {
+            const yearId = this.value;
+            fetch("{% url 'load_groups' %}?yearId=" + yearId)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    groupSelect.innerHTML = '<option value="">Выберите группу</option>';
+                    data.groups.forEach(group => {
+                        const option = document.createElement("option");
+                        option.value = group.id;
+                        option.textContent = group.groupname;
+                        groupSelect.appendChild(option);
+                    });
+                });
+        });
+        
+        // Показ полей по типу упражнения
+        exerciseTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                const gradingFields = document.getElementById('grading-fields');
+                const reviewFields = document.getElementById('review-fields');
+                const gradingHidden = document.getElementById('id_grading_text');
+                const reviewHidden = document.getElementById('id_review_exercisetext');
+
+
+                gradingFields.style.display = 'none';
+                reviewFields.style.display = 'none';
+                if (this.value === '1') {  // ID для grading
+                    gradingFields.style.display = 'flex';
+                } else if (this.value === '2') {  // ID для review  
+                    reviewFields.style.display = 'flex';
+                }
+            });
+        });
+    });
+    </script>
+
+{% endblock %}

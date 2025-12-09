@@ -1,0 +1,492 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Поиск ошибок{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
+    {% endblock %}
+
+{% block content %}
+<div class="text-app-container">
+
+    <div class="text-header">
+        <h1 class="text-title">Иванов Иван Иванович</h1>
+    </div>
+
+    <div class="menu-container">
+        <!-- Блоки меню -->
+        <div class="menu-block" data-target="view-content">
+            <span>
+                Вид
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        <div class="menu-block-watch">
+            Дата завершения:&nbsp;
+            <span class="deadline">
+                01.01.2025
+            </span>
+        </div>
+        <button class="rate-btn">Просмотреть статистику и оценить</button>
+    </div>
+
+    <div id="header-container"></div>
+    <!-- Всплывающее окно с информацией об ошибке -->
+    <div class="error-popup popup-sidebyside" id="error-popup">
+        <!-- <span class="close-btn" id="close-popup">&#x2715;</span> -->
+        <div class="popup-content-sidebyside">
+            <div class="student-mark">
+                <h3 style="margin-bottom:5px">Аннотация студента</h3>
+                <h3>
+                    <span id="error-tag-s"></span>
+                    <span id="error-tag-abbrev-s"></span>
+                </h3>
+                <p><strong>Степень грубости:</strong> <span id="error-level-s"></span></p>
+                <p><strong>Причина ошибки:</strong> <span id="error-reason-s"></span></p>
+                <p><strong>Исправление:</strong> <span id="error-correct-s"></span></p>
+                <p><strong>Комментарий:</strong> <span id="error-comment-s"></span></p>
+            </div>
+            <div class="teacher-mark">
+                <h3 style="margin-bottom:5px">Аннотация преподавателя</h3>
+                <h3>
+                    <span id="error-tag-t"></span>
+                    <span id="error-tag-abbrev-t"></span>
+                </h3>
+                <p><strong>Степень грубости:</strong> <span id="error-level-t"></span></p>
+                <p><strong>Причина ошибки:</strong> <span id="error-reason-t"></span></p>
+                <p><strong>Исправление:</strong> <span id="error-correct-t"></span></p>
+                <p><strong>Комментарий:</strong> <span id="error-comment-t"></span></p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Контентные блоки -->
+    <div class="menu-content" id="view-content">
+        <div class="menu-content-view">
+
+            <div class="option-group">
+                <p>Язык разметки</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="language" value="deutsche" checked>
+                        <span class="radio-custom"></span>
+                        <span>Deutsche</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="language" value="russian">
+                        <span class="radio-custom"></span>
+                        <span>Русский</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <p>Компактный вид</p>
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="option-group">
+                <p>Части речи</p>
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="option-group">
+                <p>Ошибки</p>
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Оценить текст</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <form method="post" id="grade-form">
+                {% csrf_token %}
+                <div class="grade-form-selects" style="width:100%;">
+                    <div class="grade-group" style="width:90%;">
+                        <p class="mistakes">Количество верно найденных ошибок: 4</p>
+                        <p class="mistakes">Количество неверно найденных ошибок: 0</p>
+                        <p class="mistakes" style="margin-bottom:10px;">Количество пропущенных ошибок: 0</p>
+                        <label for="id_textgrade">Оценка:</label>
+                        <select name="textgrade" class="form-control" id="id_textgrade">
+                            <option value="1">1</option>
+                            <option value="2">2-</option>
+                            <option value="3">2</option>
+                            <option value="4">2+</option>
+                            <option value="5">3-</option>
+                            <option value="6">3</option>
+                            <option value="7">3+</option>
+                            <option value="8">4-</option>
+                            <option value="9">4</option>
+                            <option value="10">4+</option>
+                            <option value="11">5-</option>
+                            <option value="12" selected="">5</option>
+                        </select>
+                        <label for="id_firstname">Комментарий:</label>
+                        <input type="text" name="comment" maxlength="100" required="" id="id_comment">
+                    </div>
+                </div>
+
+                <div class="grade-buttons">
+                    <button type="submit" name="grade-form" class="button" onclick="addAnnotation()">Сохранить</button>
+                    <button type="submit" class="button grey-button">Назад</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="watch-text">
+        {% for sentence in sentence_data %}
+        <div class="sentence">
+            <div class="tokens-container" id_sentence="{{ sentence.id_sentence }}">
+                <p class="sentence-number">{{ sentence.sentence.ordernumber|add:1 }}:</p>
+                {% for token in sentence.tokens %}
+                <span class="token"
+                      id_token="{{ token.token_id }}"
+                      data-pos-tag="{{ token.pos_tag }}"
+                      data-pos-tag-russian="{{ token.pos_tag_russian }}"
+                      data-pos-tag-abbrev="{{ token.pos_tag_abbrev }}"
+                      data-pos-color="{{ token.pos_tag_color }}"
+                      data-position="{{ token.token_order_number }}">
+
+                    {% if token.errors %}
+                    {% for error in token.errors %}
+                    <span class="error-tag"
+                          style="background-color: #8FFF73; display: none;"
+                          data-error-id="{{ error.error_id }}"
+                          data-error-tag="{{ error.error_tag }}"
+                          tag_id="{{ error.error_tag_id }}"
+                          data-error-tag-russian="{{ error.error_tag_russian }}"
+                          data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
+                          data-error-level="{{ error.error_level }}"
+                          data-error-correct="{{ error.error_correct }}"
+                          data-error-comment="{{ error.error_comment }}"
+                          data-error-reason="{{ error.error_reason }}">
+                        {{ error.error_tag }}
+                    </span>
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if token.pos_tag %}
+                    <span class="abbr"
+                          style="background-color: {{ token.pos_tag_color }}; display: none;"
+                          data-pos-tag="{{ token.pos_tag }}"
+                          data-pos-tag-russian="{{ token.pos_tag_russian }}"
+                          data-pos-tag-abbrev="{{ token.pos_tag_abbrev }}">
+                        {{ token.pos_tag }}
+                    </span>
+                    {% endif %}
+
+                    {% if token.token == '-EMPTY-' %}
+                    <span class="word-grading">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>
+                    </span>
+                    {% else %}
+                    <span class="word-grading">{{ token.token }}</span>
+                    {% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        const chosen = [];
+        document.addEventListener('DOMContentLoaded', function () {
+            const deadline = document.getElementsByClassName('deadline')[0];
+            const block = document.getElementsByClassName('menu-block-watch')[0];
+            const currentDate = (new Date()).toLocaleDateString('ru-Ru', { day: 'numeric', month: 'long', year: 'numeric' });
+            if (deadline.textContent < currentDate) {
+                block.classList.add('red_background');
+            }
+            else {
+                block.classList.add('green_background');
+            }
+
+
+            const languageRadios = document.querySelectorAll('input[name="language"]');
+            const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
+            const posCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
+            const errorsCheckbox = document.querySelector('.option-group:nth-child(4) input[type="checkbox"]');
+            const tokens = document.querySelectorAll('.token');
+
+            // Функция обновления отображения
+            function updateDisplay() {
+                const language = document.querySelector('input[name="language"]:checked').value;
+                const isCompact = compactViewCheckbox.checked;
+                const showPOS = posCheckbox.checked;
+                const showErrors = errorsCheckbox.checked;
+
+                tokens.forEach(token => {
+                    token.querySelectorAll('.abbr, .error-tag, .word').forEach(el => {
+                        el.style.display = 'none';
+                    });
+
+                    const word = token.querySelector('.word');
+                    if (word) word.style.display = 'inline';
+
+                    if (showPOS) {
+                        const posTag = token.querySelector('.abbr');
+                        if (posTag) {
+                            posTag.style.display = 'inline';
+                            if (isCompact) {
+                                posTag.textContent = posTag.dataset.posTagAbbrev ||
+                                    (language === 'russian' ? posTag.dataset.posTagRussian : posTag.dataset.posTagAbbrev);
+                            } else {
+                                posTag.textContent = language === 'russian' ?
+                                    posTag.dataset.posTagRussian : posTag.dataset.posTag;
+                            }
+                        }
+                    }
+
+                    // Обработка ошибок
+                    if (showErrors) {
+                        const errorTags = token.querySelectorAll('.error-tag');
+                        if (errorTags.length > 0) {
+                            errorTags.forEach(tag => {
+                                tag.style.display = 'inline';
+                                if (isCompact) {
+                                    tag.textContent = tag.dataset.errorTagAbbrev;
+                                } else {
+                                    tag.textContent = language === 'russian' ?
+                                        tag.dataset.errorTagRussian : tag.dataset.errorTag;
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Обработчики событий
+            languageRadios.forEach(radio => {
+                radio.addEventListener('change', updateDisplay);
+            });
+
+            [compactViewCheckbox, posCheckbox, errorsCheckbox].forEach(checkbox => {
+                checkbox.addEventListener('change', updateDisplay);
+            });
+
+            // Инициализация
+            updateDisplay();
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const popup = document.getElementById('error-popup');
+            const closePopupBtn = document.getElementById('close-popup');
+            let list_tags = {};
+
+            
+
+            async function fetchDataAsync(url, let_tags) {
+                const response = await fetch(url);
+                list_tags = await response.json();
+                console.log(list_tags);
+            }
+
+            fetchDataAsync('/text/get_tags/', list_tags);
+
+            // Функция для отображения всплывающего окна с информацией об ошибке
+            function showPopup(tokenElement) {
+                const errorTag = tokenElement.dataset.errorTag;
+                const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
+                const errorLevel = tokenElement.dataset.errorLevel;
+                const errorReason = tokenElement.dataset.errorReason;
+                const errorCorrect = tokenElement.dataset.errorCorrect;
+                const errorComment = tokenElement.dataset.errorComment;
+
+                if (!errorTag) {
+                    return;
+                }
+
+                document.getElementById('error-tag-s').textContent = errorTag || 'Не указано';
+                document.getElementById('error-tag-abbrev-s').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
+                document.getElementById('error-level-s').textContent = errorLevel || 'Не указано';
+                document.getElementById('error-reason-s').textContent = errorReason || 'Не указано';
+                document.getElementById('error-correct-s').textContent = errorCorrect || 'Не указано';
+                document.getElementById('error-comment-s').textContent = errorComment || 'Не указано';
+
+                document.getElementById('error-tag-t').textContent = errorTag || 'Не указано';
+                document.getElementById('error-tag-abbrev-t').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
+                document.getElementById('error-level-t').textContent = errorLevel || 'Не указано';
+                document.getElementById('error-reason-t').textContent = errorReason || 'Не указано';
+                document.getElementById('error-correct-t').textContent = errorCorrect || 'Не указано';
+                document.getElementById('error-comment-t').textContent = errorComment || 'Не указано';
+
+                const rect = tokenElement.getBoundingClientRect();
+                const offsetLeft = rect.left + window.scrollX;
+                const offsetTop = rect.top + window.scrollY;
+                const height = rect.height;
+                const width = rect.width;
+
+                const popup = document.getElementById('error-popup');
+                popup.style.display = 'block'; // Нужно, чтобы offsetHeight был доступен
+                popup.classList.add('show');
+
+                const popupHeight = popup.offsetHeight;
+                const spaceAbove = rect.top;
+
+                let top;
+                if (spaceAbove >= popupHeight + 10) {
+                    // Есть место сверху — показываем над токеном
+                    top = offsetTop - popupHeight - 6;
+                } else {
+                    // Места сверху нет — показываем под токеном
+                    top = offsetTop + height + 6;
+                }
+
+                const spaceOnTheRight = rect.left;
+                const popupWidth = popup.offsetWidth;
+
+                if (spaceOnTheRight >= popupWidth + 10) {
+                    left = offsetLeft - popupWidth + width;
+                } else {
+                    left = offsetLeft;
+                }
+
+                //popup.style.left = `${offsetLeft}px`;
+                popup.style.top = `${top}px`;
+                popup.style.left = `${left}px`;
+            }
+
+
+            // Слушаем клик по токенам
+            document.querySelectorAll('.error-tag').forEach(function (errorTagElement) {
+                errorTagElement.addEventListener('mouseover', function (e) {
+                    e.stopPropagation(); // Чтобы не всплывало до .token
+                    showPopup(this);
+                });
+                errorTagElement.addEventListener('mouseleave', function (e) {
+                    const popup = document.getElementById('error-popup');
+                    popup.classList.remove('show'); // Убираем класс для анимации исчезновения
+                    setTimeout(() => {
+                        popup.style.display = 'none'; // Скрываем окно после анимации
+                    }, 300); // Задержка, соответствующая длительности перехода
+                });
+            });
+
+
+
+        });
+
+        // Скрипт для меню
+        document.addEventListener('DOMContentLoaded', function () {
+            const rateBtn = document.querySelector('.rate-btn');
+            const modal = document.getElementById('modal');
+            const closeModal = document.querySelector('.close-modal');
+            const menuBlocks = document.querySelectorAll('.menu-block');
+            const backButton = document.querySelector('.button-grey');
+
+
+            menuBlocks.forEach(block => {
+                block.addEventListener('click', function (e) {
+                    e.stopPropagation();
+
+                    const contentId = this.getAttribute('data-target');
+                    const content = document.getElementById(contentId);
+                    if (!content) return;
+
+                    const isAlreadyOpen = content.style.display === 'block';
+
+                    // Скрываем все другие контенты
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        if (c !== content) {
+                            c.style.display = 'none';
+                        }
+                    });
+
+                    if (isAlreadyOpen) {
+                        content.style.display = 'none';
+                    }
+                    else {
+                        // Позиционируем текущий контент
+                        const rect = this.getBoundingClientRect();
+                        content.style.display = 'block';
+                        content.style.position = 'fixed';
+                        content.style.left = `${rect.left}px`;
+                        content.style.top = `${rect.bottom}px`;
+                        content.style.zIndex = '1001'; // Выше чем у меню
+                    }
+
+                });
+            });
+
+            // Обновление позиции при прокрутке
+            window.addEventListener('scroll', function () {
+                document.querySelectorAll('.menu-content').forEach(content => {
+                    if (content.style.display === 'block') {
+                        const targetId = content.id.replace('-content', '');
+                        const menuItem = document.querySelector(`[data-target="${content.id}"]`);
+                        if (menuItem) {
+                            const rect = menuItem.getBoundingClientRect();
+                            content.style.left = `${rect.left}px`;
+                            content.style.top = `${rect.bottom}px`;
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.menu-content').forEach(content => {
+                content.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+
+            document.addEventListener('click', function (e) {
+                // Проверяем, был ли клик вне всех .menu-content и .menu-block
+                const isClickInsideContent = Array.from(document.querySelectorAll('.menu-content, .menu-block')).some(
+                    element => element.contains(e.target)
+                );
+
+                if (!isClickInsideContent) {
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        c.style.display = 'none';
+                    });
+                }
+            });
+
+            rateBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.menu-content').forEach(c => {
+                    c.style.display = 'none';
+                });
+                modal.style.display = 'flex';
+            });
+
+            closeModal.addEventListener('click', function () {
+                modal.style.display = 'none';
+            });
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+        });
+
+    </script>
+    {% endblock %}
