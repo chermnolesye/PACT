@@ -6,31 +6,24 @@
 <script src="{% static 'js/external/xlsx.full.min.js' %}"></script>
 <script src="{% static 'js/external/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/external/jquery.min.js' %}"></script>
-{%endblock plugins%} {% block link %}
+{%endblock plugins%} 
+
+{% block link %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/dashboards.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'css/external/bootstrap.min.css' %}" />
 {% endblock link %}
+
 {% block content %}
 <main class="container-fluid mt-5 fs-5">
 	<h2 class="text-primary text-center my-5">Количество ошибок для заданного типа ошибки и выбранных групп</h2>
 
 	<div class="d-flex flex-column flex-md-row my-4 gap-4 justify-content-evenly">
-		<!-- <div class="col">
-			<label class="text-center text-primary"> Язык </label>
-			<hr class="mt-1" />
-			<select id="selected_language" class="form-select" onchange="on_change_language()">
-				{% for language in languages %}
-				<option value="{{language.id_language}}">{{ language.language_name }}</option>
-				{% endfor %}
-			</select>
-		</div> -->
-
 		<div class="col">
 			<label class="text-center text-primary"> Статистика </label>
 			<hr class="mt-1"/>
 			<select id="selected_stat" class="form-select" onchange="on_change_type_static()">
-				<option>абсолютная</option>
-				<option>на 100 токенов</option>
+				<option value="absolute">абсолютная</option>
+				<option value="per_tokens">на 100 токенов</option>
             </select>
 		</div>
 	</div>
@@ -40,11 +33,47 @@
 		<div class="d-flex flex-column flex-md-row my-4 gap-4 justify-content-evenly">
 			<div class="col">
 				<label class="text-center text-primary"> Группы </label>
-				{% verbatim %}
-				<select id="filter_group" class="form-select" v-model="selected_groups" multiple>
-					<option v-for="group in groups">{{ group.groupname }} ( {{ group.enrollment_date }} )</option>
-				</select>
-				{% endverbatim %}
+				<div class="input-group mb-2">
+					<input 
+						type="text" 
+						class="form-control" 
+						placeholder="Поиск группы..." 
+						id="group_search"
+						@input="on_group_search"
+					>
+				</div>
+
+				<div class="form-check mb-2">
+					<input
+						type="checkbox"
+						class="form-check-input"
+						id="select_all_groups"
+						@change="on_select_all_groups"
+						:checked="selected_groups.length === filtered_groups.length"
+					>
+					<label class="form-check-label text-filter" for="select_all_groups">
+						Выбрать все группы
+					</label>
+				</div>
+
+				<div class="groups-checkbox-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 10px;">
+					{% verbatim %}
+					<div v-for="group in filtered_groups" :key="group.idgroup" class="form-check">
+						<input
+							type="checkbox"
+							class="form-check-input"
+							:id="'group_' + group.idgroup"
+							:value="group.idgroup"
+							v-model="selected_groups"
+							@change="on_change_groups"
+						>
+						<label class="form-check-label" :for="'group_' + group.idgroup">
+							{{ group.groupname }} ({{ group.idayear__title }})
+						</label>
+					</div>
+					{% endverbatim %}
+				</div>
+				
 				<div id="error_group" class="form-text error-message"> выберете хотя бы одну группу </div>
 			</div>
 
@@ -54,7 +83,7 @@
 					<div class="col-8">
 						{% verbatim %}
 						<select id="filter_tag" class="form-select" v-model="selected_tag">
-							<option v-for="tag in tags":value="tag.id_tag">{{ tag.tag_text_russian }}</option>
+							<option v-for="tag in tags" :value="tag.iderrortag">{{ tag.tagtextrussian }}</option>
 						</select>
 						{% endverbatim %}
 					</div>
@@ -63,8 +92,8 @@
 						<input
 							id="tag_children"
 							type="checkbox"
-							value=""
 							class="form-check-input"
+							v-model="checked_tag_children"
 						/>
 						<label class="form-check-label text-filter" for="tag_children"> вложенные ошибки </label>
 					</div>
@@ -116,7 +145,6 @@
 								<input
 									id="filter_all_texts"
 									type="checkbox"
-									value=""
 									class="form-check-input"
 									data-bs-toggle="collapse"
 									data-bs-target="#header"
@@ -137,7 +165,7 @@
 										v-model="selected_text"
 										@change="on_change_text"
 									>
-										<option v-for="text in texts":value="text.header">{{ text.header }}</option>
+										<option v-for="text in texts" :value="text.header">{{ text.header }}</option>
 									</select>
 									{% endverbatim %}
 								</div>
@@ -150,7 +178,6 @@
 								<input
 									id="filter_text_types"
 									type="checkbox"
-									value=""
 									class="form-check-input"
 									data-bs-toggle="collapse"
 									data-bs-target="#text_type"
@@ -169,7 +196,7 @@
 										v-model="selected_text_type"
 										@change="on_change_text_type"
 									>
-										<option v-for="text_type in text_types":value="text_type.id_text_type">
+										<option v-for="text_type in text_types" :value="text_type.idtexttype">
 											{{ text_type.texttypename }}
 										</option>
 									</select>
@@ -216,28 +243,6 @@
 
 	<hr class="mt-2" />
 	<div id="legend_checked_filters">
-		<div class="d-flex flex-column flex-md-row gap-3 mt-4 justify-content-start">
-			<div id="card_tag" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary text-center" v-html="tag">{{tag}}</p>
-				</div>
-			</div>
-			<div id="card_tag_children" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary"> Группа ошибок: <span v-html="tag">{{tag}}</span></p>
-				</div>
-			</div>
-			<div id="card_text" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary text-center" v-html="text">{{text}}</p>
-				</div>
-			</div>
-			<div id="card_text_type" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary text-center" v-html="text_type">{{text_type}}</p>
-				</div>
-			</div>
-		</div>
 	</div>
 
 	<div id="diagrams" class="d-flex flex-column my-2">
@@ -251,428 +256,591 @@
 		</div>
 	</div>
 </main>
-{% endblock content%} {%block script%}
+{% endblock content%} 
+
+{%block script%}
 <script type="text/javascript">
-	var colors = [
-		'rgba(255, 0, 0, 1)',
-		'rgba(0, 255, 0, 1)',
-		'rgba(0, 0, 255, 1)',
-		'rgba(199, 21, 133, 1)',
-		'rgba(255, 69, 0, 1)',
-		'rgba(75, 0, 130, 1)',
-		'rgba(255, 255, 0, 1)',
-		'rgba(148, 0, 211, 1)',
-		'rgba(139, 69, 19, 1)',
-		'rgba(0, 128, 0, 1)',
-		'rgba(188, 143, 143, 1)',
-		'rgba(255, 0, 255, 1)',
-		'rgba(128, 128, 0, 1)',
+var colors = [
+    'rgba(255, 0, 0, 1)',
+    'rgba(0, 255, 0, 1)',
+    'rgba(0, 0, 255, 1)',
+    'rgba(199, 21, 133, 1)',
+    'rgba(255, 69, 0, 1)',
+    'rgba(75, 0, 130, 1)',
+    'rgba(255, 255, 0, 1)',
+    'rgba(148, 0, 211, 1)',
+    'rgba(139, 69, 19, 1)',
+    'rgba(0, 128, 0, 1)',
+    'rgba(188, 143, 143, 1)',
+    'rgba(255, 0, 255, 1)',
+    'rgba(128, 128, 0, 1)',
 
-		'rgba(255, 0, 0, 0.9)',
-		'rgba(0, 255, 0, 0.9)',
-		'rgba(0, 0, 255, 0.9)',
-		'rgba(199, 21, 133, 0.9)',
-		'rgba(255, 69, 0, 0.9)',
-		'rgba(75, 0, 130, 0.9)',
-		'rgba(255, 255, 0, 0.9)',
-		'rgba(148, 0, 211, 0.9)',
-		'rgba(139, 69, 19, 0.9)',
-		'rgba(0, 128, 0, 0.9)',
-		'rgba(188, 143, 143, 0.9)',
-		'rgba(255, 0, 255, 0.9)',
-		'rgba(128, 128, 0, 0.9)',
+    'rgba(255, 0, 0, 0.9)',
+    'rgba(0, 255, 0, 0.9)',
+    'rgba(0, 0, 255, 0.9)',
+    'rgba(199, 21, 133, 0.9)',
+    'rgba(255, 69, 0, 0.9)',
+    'rgba(75, 0, 130, 0.9)',
+    'rgba(255, 255, 0, 0.9)',
+    'rgba(148, 0, 211, 0.9)',
+    'rgba(139, 69, 19, 0.9)',
+    'rgba(0, 128, 0, 0.9)',
+    'rgba(188, 143, 143, 0.9)',
+    'rgba(255, 0, 255, 0.9)',
+    'rgba(128, 128, 0, 0.9)',
 
-		'rgba(255, 0, 0, 0.8)',
-		'rgba(0, 255, 0, 0.8)',
-		'rgba(0, 0, 255, 0.8)',
-		'rgba(199, 21, 133, 0.8)',
-		'rgba(255, 69, 0, 0.8)',
-		'rgba(75, 0, 130, 0.8)',
-		'rgba(255, 255, 0, 0.8)',
-		'rgba(148, 0, 211, 0.8)',
-		'rgba(139, 69, 19, 0.8)',
-		'rgba(0, 128, 0, 0.8)',
-		'rgba(188, 143, 143, 0.8)',
-		'rgba(255, 0, 255, 0.8)',
-		'rgba(128, 128, 0, 0.8)',
+    'rgba(255, 0, 0, 0.8)',
+    'rgba(0, 255, 0, 0.8)',
+    'rgba(0, 0, 255, 0.8)',
+    'rgba(199, 21, 133, 0.8)',
+    'rgba(255, 69, 0, 0.8)',
+    'rgba(75, 0, 130, 0.8)',
+    'rgba(255, 255, 0, 0.8)',
+    'rgba(148, 0, 211, 0.8)',
+    'rgba(139, 69, 19, 0.8)',
+    'rgba(0, 128, 0, 0.8)',
+    'rgba(188, 143, 143, 0.8)',
+    'rgba(255, 0, 255, 0.8)',
+    'rgba(128, 128, 0, 0.8)',
 
-		'rgba(255, 0, 0, 0.7)',
-		'rgba(0, 255, 0, 0.7)',
-		'rgba(0, 0, 255, 0.7)',
-		'rgba(199, 21, 133, 0.7)',
-		'rgba(255, 69, 0, 0.7)',
-		'rgba(75, 0, 130, 0.7)',
-		'rgba(255, 255, 0, 0.7)',
-		'rgba(148, 0, 211, 0.7)',
-		'rgba(139, 69, 19, 0.7)',
-		'rgba(0, 128, 0, 0.7)',
-		'rgba(188, 143, 143, 0.7)',
-		'rgba(255, 0, 255, 0.7)',
-		'rgba(128, 128, 0, 0.7)',
+    'rgba(255, 0, 0, 0.7)',
+    'rgba(0, 255, 0, 0.7)',
+    'rgba(0, 0, 255, 0.7)',
+    'rgba(199, 21, 133, 0.7)',
+    'rgba(255, 69, 0, 0.7)',
+    'rgba(75, 0, 130, 0.7)',
+    'rgba(255, 255, 0, 0.7)',
+    'rgba(148, 0, 211, 0.7)',
+    'rgba(139, 69, 19, 0.7)',
+    'rgba(0, 128, 0, 0.7)',
+    'rgba(188, 143, 143, 0.7)',
+    'rgba(255, 0, 255, 0.7)',
+    'rgba(128, 128, 0, 0.7)',
 
-		'rgba(255, 0, 0, 0.6)',
-		'rgba(0, 255, 0, 0.6)',
-		'rgba(0, 0, 255, 0.6)',
-		'rgba(199, 21, 133, 0.6)',
-		'rgba(255, 69, 0, 0.6)',
-		'rgba(75, 0, 130, 0.6)',
-		'rgba(255, 255, 0, 0.6)',
-		'rgba(148, 0, 211, 0.6)',
-		'rgba(139, 69, 19, 0.6)',
-		'rgba(0, 128, 0, 0.6)',
-		'rgba(188, 143, 143, 0.6)',
-		'rgba(255, 0, 255, 0.6)',
-		'rgba(128, 128, 0, 0.6)',
+    'rgba(255, 0, 0, 0.6)',
+    'rgba(0, 255, 0, 0.6)',
+    'rgba(0, 0, 255, 0.6)',
+    'rgba(199, 21, 133, 0.6)',
+    'rgba(255, 69, 0, 0.6)',
+    'rgba(75, 0, 130, 0.6)',
+    'rgba(255, 255, 0, 0.6)',
+    'rgba(148, 0, 211, 0.6)',
+    'rgba(139, 69, 19, 0.6)',
+    'rgba(0, 128, 0, 0.6)',
+    'rgba(188, 143, 143, 0.6)',
+    'rgba(255, 0, 255, 0.6)',
+    'rgba(128, 128, 0, 0.6)',
 
-		'rgba(255, 0, 0, 0.5)',
-		'rgba(0, 255, 0, 0.5)',
-		'rgba(0, 0, 255, 0.5)',
-		'rgba(199, 21, 133, 0.5)',
-		'rgba(255, 69, 0, 0.5)',
-		'rgba(75, 0, 130, 0.5)',
-		'rgba(255, 255, 0, 0.5)',
-		'rgba(148, 0, 211, 0.5)',
-		'rgba(139, 69, 19, 0.5)',
-		'rgba(0, 128, 0, 0.5)',
-		'rgba(188, 143, 143, 0.5)',
-		'rgba(255, 0, 255, 0.5)',
-		'rgba(128, 128, 0, 0.5)',
+    'rgba(255, 0, 0, 0.5)',
+    'rgba(0, 255, 0, 0.5)',
+    'rgba(0, 0, 255, 0.5)',
+    'rgba(199, 21, 133, 0.5)',
+    'rgba(255, 69, 0, 0.5)',
+    'rgba(75, 0, 130, 0.5)',
+    'rgba(255, 255, 0, 0.5)',
+    'rgba(148, 0, 211, 0.5)',
+    'rgba(139, 69, 19, 0.5)',
+    'rgba(0, 128, 0, 0.5)',
+    'rgba(188, 143, 143, 0.5)',
+    'rgba(255, 0, 255, 0.5)',
+    'rgba(128, 128, 0, 0.5)',
 
-		'rgba(255, 0, 0, 0.4)',
-		'rgba(0, 255, 0, 0.4)',
-		'rgba(0, 0, 255, 0.4)',
-		'rgba(199, 21, 133, 0.4)',
-		'rgba(255, 69, 0, 0.4)',
-		'rgba(75, 0, 130, 0.4)',
-		'rgba(255, 255, 0, 0.4)',
-		'rgba(148, 0, 211, 0.4)',
-		'rgba(139, 69, 19, 0.4)',
-		'rgba(0, 128, 0, 0.4)',
-		'rgba(188, 143, 143, 0.4)',
-		'rgba(255, 0, 255, 0.4)',
-		'rgba(128, 128, 0, 0.4)',
-	]
+    'rgba(255, 0, 0, 0.4)',
+    'rgba(0, 255, 0, 0.4)',
+    'rgba(0, 0, 255, 0.4)',
+    'rgba(199, 21, 133, 0.4)',
+    'rgba(255, 69, 0, 0.4)',
+    'rgba(75, 0, 130, 0.4)',
+    'rgba(255, 255, 0, 0.4)',
+    'rgba(148, 0, 211, 0.4)',
+    'rgba(139, 69, 19, 0.4)',
+    'rgba(0, 128, 0, 0.4)',
+    'rgba(188, 143, 143, 0.4)',
+    'rgba(255, 0, 255, 0.4)',
+    'rgba(128, 128, 0, 0.4)',
+  ]
 
-	var list_languages = {{languages | safe}}
 	var list_groups = {{groups | safe}}
 	var list_texts = []
 	var list_text_types = []
 	var list_tags = {{tags | safe}}
 	var list_data = []
-	var data_for_language = []
-	var list_selected_groups = []
-	var change_level_text = false
 	var selected_groups = []
-	var selected_tag = ''
-	var checked_tag_children = false
 
+	var current_tag_name = ''
+	var current_text_name = ''
+	var current_text_type_name = ''
 
-	async function post_request_data_errors(text, text_type, group, tag, checked_tag_children) {
-	    var data = []
-	    var texts = []
-	    var text_types = []
+	function on_change_font_size() {
+		var selected_size = parseInt(document.getElementById("font_size").value);
 
-	    await axios({
-	        method: 'post',
-	        url: '',
-	        data: {
-	            'text': text,
-	            'text_type': text_type,
-	            'group': group,
-	            'tag': tag,
-	            'checked_tag_children': checked_tag_children
-	        },
-	        headers: {
-	            'X-Requested-With': 'XMLHttpRequest',
-	        }
-	    })
-	        .then(function (response) {
-	            data = response.data.data
-	            texts = response.data.texts
-	            text_types = response.data.text_types
-	        })
+		if (groups_bar.chart) {
+			Chart.defaults.font.size = selected_size;
+			groups_bar.chart.options.plugins.legend.labels.font.size = selected_size;
+			groups_bar.chart.options.scales.x.ticks.font.size = selected_size;
+			groups_bar.chart.options.scales.x.title.font.size = selected_size;
+			groups_bar.chart.options.scales.y.ticks.font.size = selected_size;
+			groups_bar.chart.options.scales.y.title.font.size = selected_size;
+			groups_bar.chart.update();
+		}
 
-	    list_data = data
-	    list_texts = texts
-	    list_text_types = text_types
+		if (groups_pie.chart) {
+			Chart.defaults.font.size = selected_size;
+			groups_pie.chart.options.plugins.legend.labels.font.size = selected_size;
+			groups_pie.chart.update();
+		}
+
+		Chart.defaults.plugins.tooltip.titleFont = { size: selected_size };
+		Chart.defaults.plugins.tooltip.bodyFont = { size: selected_size };
 	}
 
+	async function post_request_data_errors(text, text_type, groups, tag, checked_tag_children) {
+		var data = []
+		var texts = []
+		var text_types = []
+
+		await axios({
+			method: 'post',
+			url: '',
+			data: {
+				'text': text,
+				'text_type': text_type,
+				'group': groups,
+				'tag': tag,
+				'checked_tag_children': checked_tag_children
+			},
+			headers: {
+				'X-Requested-With': 'XMLHttpRequest',
+			}
+		})
+			.then(function (response) {
+				data = response.data.data
+				texts = response.data.texts
+				text_types = response.data.text_types
+			})
+
+		list_data = data
+		list_texts = texts
+		list_text_types = text_types
+
+		filters.texts = texts
+		filters.text_types = text_types
+	}
 
 	function on_download() {
 		var data = []
 
-		tag_selected = list_tags.filter(tag => tag.id_tag == filters.selected_tag)
-		if (checked_tag_children) {
-			data.push([tag_selected[0].tag_text_russian, 'с вложенными ошибками'])
-		}
-		else {
-			data.push([tag_selected[0].tag_text_russian])
+		var tag_selected = list_tags.find(tag => tag.iderrortag == filters.selected_tag)
+		if (!tag_selected) return;
+
+		if (filters.checked_tag_children) {
+			data.push([tag_selected.tagtextrussian, 'с вложенными ошибками'])
+		} else {
+			data.push([tag_selected.tagtextrussian])
 		}
 
-		data.push(["tag_language", "id_group", "group_number", "enrollment_date", "count_data",
-		  "count_data_on_100_tokens"])
-		for (let i=0; i<data_for_language.length; i++) {
-			data.push([data_for_language[i].tag__tag_language, data_for_language[i].id_group,
-				data_for_language[i].number, data_for_language[i].date,
-				data_for_language[i].count_data, data_for_language[i].count_data_on_tokens])
+		data.push(["Группа", "Учебный год", "Количество ошибок"])
+
+		for (let i = 0; i < list_data.length; i++) {
+			var item = list_data[i]
+			var group_name = item.groupname || ''
+			var academic_year = item.idayear__title || ''
+			var count = item.count_data || 0
+			data.push([group_name, academic_year, count])
 		}
 
-		var workbook = XLSX.utils.book_new(),
-			worksheet = XLSX.utils.aoa_to_sheet(data)
+		var workbook = XLSX.utils.book_new()
+		var worksheet = XLSX.utils.aoa_to_sheet(data)
 		workbook.SheetNames.push("Errors")
 		workbook.Sheets["Errors"] = worksheet
 
-		selected_language_id = document.getElementById("selected_language").value
-		selected_language = list_languages.filter(language => language.id_language == selected_language_id)
-
 		XLSX.writeFile(workbook,
-			`Errors_groups_${tag_selected[0].tag_text_russian}_${selected_language[0].language_name}.xlsx`)
+			`Errors_groups_${tag_selected.tagtextrussian}.xlsx`)
 	}
 
 	function update_data() {
-		groups_bar.get_data()
-		groups_bar.update_chart()
-		groups_pie.get_data()
-		groups_pie.update_chart()
-	}
-
-	function update_data_for_language() {
-		selected_language = document.getElementById("selected_language").value
-		data_for_language = list_data.filter(data => data.tag__tag_language == selected_language)
-		filters.texts = list_texts.filter(text => text.language == selected_language)
-		filters.text_types = list_text_types.filter(text_type => text_type.language_id == selected_language)
-		update_data()
-	}
-
-	function on_change_language() {
-		if (change_level_text) {
-			change_level_text = false
-			filters.selected_groups = list_selected_groups
+		if (groups_bar.chart) {
+			groups_bar.get_data()
+			groups_bar.update_chart()
 		}
-		else {
-			change_level_text = true
-			list_selected_groups = filters.selected_groups
+		if (groups_pie.chart) {
+			groups_pie.get_data()
+			groups_pie.update_chart()
 		}
-
-		selected_language = document.getElementById("selected_language").value
-		filters.tags = list_tags.filter(tag => tag.tag_language == selected_language)
-		filters.groups = list_groups.filter(group => group.language == selected_language)
-		update_data_for_language()
-	}
-
-	function on_change_font_size() {
-		selected_font_size = document.getElementById("font_size").value
-		Chart.defaults.font.size = selected_font_size
-		update_data()
 	}
 
 	function on_change_type_static() {
-		type_stat = document.getElementById("selected_stat").value
+		var type_stat = document.getElementById("selected_stat").value
 		if (type_stat == 'абсолютная') {
-			data_for_language.sort((x, y) => y.count_data - x.count_data)
+			list_data.sort((x, y) => y.count_data - x.count_data)
+        } else {
+        	list_data.sort((x, y) => y.count_data_on_tokens - x.count_data_on_tokens)
         }
-        else {
-        	data_for_language.sort((x, y) => y.count_data_on_tokens - x.count_data_on_tokens)
-        }
-
         update_data()
 	}
 
+function update_legend_filters() {
+    var container = document.getElementById("legend_checked_filters")
+    container.innerHTML = '' 
+
+    var mainRow = document.createElement("div")
+    mainRow.className = "d-flex flex-wrap gap-3 mt-4" 
+
+    if (current_tag_name) {
+        var tagCard = document.createElement("div")
+        tagCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+        tagCard.style.paddingRight = "30px"
+        
+        var cardBody = document.createElement("div")
+        cardBody.className = "card-body"
+        
+        var cardText = document.createElement("p")
+        cardText.className = "card-text text-primary text-center mb-0"
+        cardText.textContent = filters.checked_tag_children ? 
+            `Группа ошибок: ${current_tag_name}` : current_tag_name
+
+        var closeBtn = document.createElement("button")
+        closeBtn.type = "button"
+        closeBtn.className = "btn-close position-absolute"
+        closeBtn.style = "top: 5px; right: 5px;"
+        closeBtn.onclick = function() {
+            remove_filter('tag', '')
+        }
+        
+        cardBody.appendChild(cardText)
+        tagCard.appendChild(cardBody)
+        tagCard.appendChild(closeBtn)
+        mainRow.appendChild(tagCard)
+    }
+
+    if (current_text_name) {
+        var textCard = document.createElement("div")
+        textCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+        textCard.style.paddingRight = "30px"
+        
+        var cardBody = document.createElement("div")
+        cardBody.className = "card-body"
+        
+        var cardText = document.createElement("p")
+        cardText.className = "card-text text-primary text-center mb-0"
+        cardText.textContent = current_text_name
+        
+        var closeBtn = document.createElement("button")
+        closeBtn.type = "button"
+        closeBtn.className = "btn-close position-absolute"
+        closeBtn.style = "top: 5px; right: 5px;"
+        closeBtn.onclick = function() {
+            remove_filter('text', '')
+        }
+        
+        cardBody.appendChild(cardText)
+        textCard.appendChild(cardBody)
+        textCard.appendChild(closeBtn)
+        mainRow.appendChild(textCard)
+    }
+
+    if (current_text_type_name) {
+        var textTypeCard = document.createElement("div")
+        textTypeCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+        textTypeCard.style.paddingRight = "30px"
+        
+        var cardBody = document.createElement("div")
+        cardBody.className = "card-body"
+        
+        var cardText = document.createElement("p")
+        cardText.className = "card-text text-primary text-center mb-0"
+        cardText.textContent = current_text_type_name
+        
+        var closeBtn = document.createElement("button")
+        closeBtn.type = "button"
+        closeBtn.className = "btn-close position-absolute"
+        closeBtn.style = "top: 5px; right: 5px;"
+        closeBtn.onclick = function() {
+            remove_filter('text_type', '')
+        }
+        
+        cardBody.appendChild(cardText)
+        textTypeCard.appendChild(cardBody)
+        textTypeCard.appendChild(closeBtn)
+        mainRow.appendChild(textTypeCard)
+    }
+
+    container.appendChild(mainRow)
+
+    if (filters.selected_groups && filters.selected_groups.length > 0) {
+        var groupsRow = document.createElement("div")
+        groupsRow.className = "d-flex flex-wrap gap-3 mt-2" 
+
+        filters.selected_groups.forEach(function(groupId) {
+            var groupInfo = list_groups.find(g => g.idgroup == groupId)
+            if (groupInfo) {
+                var groupCard = document.createElement("div")
+                groupCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+                groupCard.style.paddingRight = "30px"
+                
+                var cardBody = document.createElement("div")
+                cardBody.className = "card-body"
+                
+                var cardText = document.createElement("p")
+                cardText.className = "card-text text-primary text-center mb-0"
+                cardText.textContent = `${groupInfo.groupname} (${groupInfo.idayear__title})`
+                
+                var closeBtn = document.createElement("button")
+                closeBtn.type = "button"
+                closeBtn.className = "btn-close position-absolute"
+                closeBtn.style = "top: 5px; right: 5px;"
+                closeBtn.onclick = function() {
+                    remove_filter('group', groupId)
+                }
+                
+                cardBody.appendChild(cardText)
+                groupCard.appendChild(cardBody)
+                groupCard.appendChild(closeBtn)
+                groupsRow.appendChild(groupCard)
+            }
+        })
+
+        container.appendChild(groupsRow)
+    }
+}
+
+	async function remove_filter(filterType, filterValue) {
+		switch(filterType) {
+			case 'tag':
+				filters.selected_tag = ''
+				current_tag_name = ''
+				break
+				
+			case 'text':
+				filters.selected_text = ''
+				current_text_name = ''
+				document.getElementById('filter_all_texts').checked = false
+				break
+				
+			case 'text_type':
+				filters.selected_text_type = ''
+				current_text_type_name = ''
+				document.getElementById('filter_text_types').checked = false
+				break
+				
+			case 'group':
+				var index = filters.selected_groups.indexOf(parseInt(filterValue))
+				if (index > -1) {
+					filters.selected_groups.splice(index, 1)
+				}
+				if (document.getElementById('select_all_groups').checked) {
+					document.getElementById('select_all_groups').checked = false
+				}
+				break
+		}
+
+		if (filterType === 'tag') {
+			list_data = []
+			update_data()
+			document.getElementById("btn-download").disabled = true
+			document.getElementById("btn-filters").disabled = true
+		} else {
+			if (filters.selected_tag) {
+				await filters.update_diagrams()
+			}
+		}
+		
+		update_legend_filters()
+	}
 
 	var filters = new Vue({
 		el: '#form_error_groups_filters',
 		data: {
-			groups: list_groups.filter(group => group.language == list_languages[0].id_language),
+			groups: list_groups,
+			filtered_groups: list_groups,
 			selected_groups: [],
-			tags: list_tags.filter(tag => tag.tag_language == list_languages[0].id_language),
+			tags: list_tags,
 			selected_tag: '',
-			texts: list_texts.filter(text => text.language == list_languages[0].id_language),
+			texts: [],
 			selected_text: '',
-			text_types: list_text_types.filter(text_type => text_type.language_id == list_languages[0].id_language),
-			selected_text_type: ''
+			text_types: [],
+			selected_text_type: '',
+			checked_tag_children: false,
+			group_search_query: ''
 		},
 		methods: {
-			async update_diagrams() {
-				await post_request_data_errors(this.selected_text, this.selected_text_type, selected_groups,
-						selected_tag, checked_tag_children)
-				document.getElementById("selected_stat").value = 'абсолютная'
-				update_data_for_language()
-			},
-			on_choice_params() {
-				if (this.selected_tag == '') {
-					document.getElementById("error_tag").style.display = "block"
-					document.getElementById("filter_tag").classList.add('border')
-					document.getElementById("filter_tag").classList.add('border-danger')
+			on_select_all_groups(event) {
+				if (event.target.checked) {
+					this.selected_groups = this.filtered_groups.map(group => group.idgroup)
+				} else {
+					this.selected_groups = []
 				}
-				else {
+				update_legend_filters()
+				this.on_change_groups()
+			},
+
+			async on_change_groups() {
+				update_legend_filters()
+
+				if (this.selected_tag && this.selected_groups.length > 0) {
+					await this.update_texts_for_selected_groups()
+				} else {
+					this.texts = []
+					this.selected_text = ''
+					current_text_name = ''
+					update_legend_filters()
+				}
+			},
+
+			async update_texts_for_selected_groups() {
+				if (!this.selected_tag || this.selected_groups.length === 0) {
+					this.texts = []
+					return
+				}
+				
+				try {
+					await axios({
+						method: 'post',
+						url: '',
+						data: {
+							'text': '',
+							'text_type': '',
+							'group': this.selected_groups,
+							'tag': this.selected_tag,
+							'checked_tag_children': this.checked_tag_children
+						},
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+						}
+					})
+					.then(function (response) {
+						filters.texts = response.data.texts
+						if (filters.selected_text && !filters.texts.some(text => text.header === filters.selected_text)) {
+							filters.selected_text = ''
+							current_text_name = ''
+						}
+						update_legend_filters()
+					})
+				} catch (error) {
+					console.error('Error updating texts:', error)
+					this.texts = []
+				}
+			},
+			
+			async update_diagrams() {
+				await post_request_data_errors(
+					this.selected_text, 
+					this.selected_text_type, 
+					this.selected_groups,
+					this.selected_tag, 
+					this.checked_tag_children
+				)
+				document.getElementById("selected_stat").value = 'абсолютная'
+				update_data()
+			},
+			
+			async on_choice_params() {
+				let hasErrors = false
+
+				if (!this.selected_tag) {
+					document.getElementById("error_tag").style.display = "block"
+					document.getElementById("filter_tag").classList.add('border', 'border-danger')
+					hasErrors = true
+				} else {
 					document.getElementById("error_tag").style.display = "none"
-					document.getElementById("filter_tag").classList.remove('border-danger')
-					document.getElementById("filter_tag").classList.remove('border')
+					document.getElementById("filter_tag").classList.remove('border', 'border-danger')
 				}
 
 				if (this.selected_groups.length == 0) {
 					document.getElementById("error_group").style.display = 'block'
-					document.getElementById("filter_group").classList.add('border')
-					document.getElementById("filter_group").classList.add('border-danger')
-				}
-				else {
+					hasErrors = true
+				} else {
 					document.getElementById("error_group").style.display = 'none'
-					document.getElementById("filter_group").classList.remove('border-danger')
-					document.getElementById("filter_group").classList.remove('border')
 				}
 
-				if (this.selected_groups.length != 0 && this.selected_tag != '') {
-					document.getElementById("card_tag").style.display = 'none'
-					document.getElementById("card_tag_children").style.display = 'none'
+				if (hasErrors) return
 
-					selected_groups = this.selected_groups
-					selected_tag = this.selected_tag
-
-					if (document.getElementById("tag_children").checked) {
-						checked_tag_children = true
-					}
-					else {
-						checked_tag_children = false
-					}
-
-					legend_filters.remove_cards_for_groups()
-					this.update_diagrams()
-
-					legend_filters.groups = this.selected_groups
-					legend_filters.create_cards_for_groups()
-					legend_filters.length_applied_groups = this.selected_groups.length
-
-					tag = list_tags.filter(tag => tag.id_tag == this.selected_tag)
-					legend_filters.tag = tag[0].tag_text_russian
-
-					if (checked_tag_children) {
-						document.getElementById("card_tag_children").style.display = 'block'
-					}
-					else {
-						document.getElementById("card_tag").style.display = 'block'
-					}
-
-					document.getElementById("btn-download").disabled = false
-					document.getElementById("btn-filters").disabled = false
+				var tag = list_tags.find(tag => tag.iderrortag == this.selected_tag)
+				if (tag) {
+					current_tag_name = tag.tagtextrussian
 				}
+
+				if (this.selected_text) {
+					current_text_name = this.selected_text
+				}
+				if (this.selected_text_type) {
+					var text_type_obj = list_text_types.find(t => t.idtexttype == this.selected_text_type)
+					if (text_type_obj) {
+						current_text_type_name = text_type_obj.texttypename
+					}
+				}
+
+				document.getElementById("btn-download").disabled = false
+				document.getElementById("btn-filters").disabled = false
+
+				await this.update_diagrams()
+				update_legend_filters()
 			},
+			
 			async on_change_choice_text() {
 				if (!document.getElementById('filter_all_texts').checked) {
 					this.selected_text = ''
-					this.update_diagrams()
-
-					legend_filters.text = ''
-					document.getElementById("card_text").style.display = 'none'
+					await this.update_diagrams()
+					current_text_name = ''
+					update_legend_filters()
 				}
 			},
+			
 			async on_change_text() {
-				this.update_diagrams()
-
-				legend_filters.text = this.selected_text
-				document.getElementById("card_text").style.display = 'block'
+				await this.update_diagrams()
+				current_text_name = this.selected_text
+				update_legend_filters()
 			},
+			
 			async on_change_choice_text_types() {
 				if (!document.getElementById('filter_text_types').checked) {
 					this.selected_text_type = ''
-					this.update_diagrams()
-
-					legend_filters.text_type = ''
-					document.getElementById("card_text_type").style.display = 'none'
+					await this.update_diagrams()
+					current_text_type_name = ''
+					update_legend_filters()
 				}
 			},
+			
 			async on_change_text_type() {
-				this.update_diagrams()
-
-				selected_text_type = list_text_types.filter(text_type => text_type.id_text_type ==
-																							this.selected_text_type)
-				legend_filters.text_type = selected_text_type[0].text_type_name
-				document.getElementById("card_text_type").style.display = 'block'
-			}
-		}
-	})
-
-	var legend_filters = new Vue({
-		el: '#legend_checked_filters',
-		data: {
-			groups: [],
-			tag: '',
-			text: '',
-			text_type: '',
-			length_applied_groups: 0
-		},
-		methods: {
-			create_cards_for_groups() {
-				dt = document.getElementById("legend_checked_filters")
-
-				var div_row = document.createElement("div")
-
-				for (let i=0; i<this.groups.length; i++) {
-					if (i % 9 == 0) {
-						if (i != 0) {
-							dt.appendChild(div_row)
-						}
-
-						div_row = document.createElement("div")
-						div_row.classList.add('d-flex')
-						div_row.classList.add('flex-column')
-						div_row.classList.add('flex-md-row')
-						div_row.classList.add('gap-3')
-						div_row.classList.add('mt-2')
-						div_row.classList.add('justify-content-start')
-					}
-
-					 let div = document.createElement("div")
-					 div.classList.add('card')
-					 div.classList.add('card-rounded')
-					 div.classList.add('shadow-sm')
-					 div.classList.add('border')
-					 div.classList.add('border-primary')
-
-					 let div_child = document.createElement("div")
-					 div_child.classList.add('card-body')
-
-					 let p = document.createElement("p")
-					 p.classList.add('card-text')
-					 p.classList.add('text-primary')
-					 p.classList.add('text-center')
-					 p.appendChild(document.createTextNode(this.groups[i]))
-
-					 div_child.appendChild(p)
-					 div.appendChild(div_child)
-					 div_row.appendChild(div)
+				await this.update_diagrams()
+				var text_type = list_text_types.find(text_type => text_type.idtexttype == this.selected_text_type)
+				if (text_type) {
+					current_text_type_name = text_type.texttypename
+					update_legend_filters()
 				}
-				dt.appendChild(div_row)
 			},
-			remove_cards_for_groups() {
-				dt = document.getElementById("legend_checked_filters")
-
-				if (this.length_applied_groups != 0) {
-					if (this.length_applied_groups % 9 == 0) {
-						for (let i=0; i<Math.floor(this.length_applied_groups / 9); i++) {
-							dt.removeChild(dt.lastElementChild)
-						}
-					}
-					else {
-						for (let i=0; i<Math.floor(this.length_applied_groups / 9) + 1; i++) {
-							dt.removeChild(dt.lastElementChild)
-						}
-					}
+			
+			on_group_search(event) {
+				this.group_search_query = event.target.value.toLowerCase();
+				this.filter_groups();
+			},
+			
+			filter_groups() {
+				if (!this.group_search_query) {
+					this.filtered_groups = this.groups;
+				} else {
+					this.filtered_groups = this.groups.filter(group => {
+						const groupName = group.groupname ? group.groupname.toLowerCase() : '';
+						const academicYear = group.idayear__title ? group.idayear__title.toLowerCase() : '';
+						return groupName.includes(this.group_search_query) || 
+							academicYear.includes(this.group_search_query) ||
+							`${groupName} (${academicYear})`.toLowerCase().includes(this.group_search_query);
+					});
 				}
 			}
+		},
+		mounted() {
+			this.filtered_groups = this.groups;
 		}
 	})
 
-
-	Chart.defaults.font.size = 16
 	var groups_bar = new Vue({
 	    el: '#errors_groups_bar',
 	    data: {
 	        chart: {},
 	        labels: [],
-	        stars: [],
-	        chart_type: 'bar',
-	        chartColor: 'crimson',
-	        loading: false
+	        data_points: [],
+	        chart_type: 'bar'
 	    },
 	    methods: {
 	        mounted() {
@@ -694,12 +862,49 @@
 	                },
 	                options: {
 	                    responsive: true,
-	                    tooltips: {
-	                        mode: 'index'
+	                    plugins: {
+	                        legend: {
+	                            position: 'bottom',
+	                            labels: {
+	                                font: {
+	                                    size: 16 
+	                                }
+	                            }
+	                        },
+	                        tooltip: {
+	                            titleFont: { size: 16 },
+	                            bodyFont: { size: 16 }
+	                        }
 	                    },
 	                    scales: {
 	                        y: {
-	                            beginAtZero: true
+	                            beginAtZero: true,
+	                            title: {
+	                                display: true,
+	                                text: 'Количество ошибок',
+	                                font: {
+	                                    size: 16
+	                                }
+	                            },
+	                            ticks: {
+	                                font: {
+	                                    size: 16
+	                                }
+	                            }
+	                        },
+	                        x: {
+	                            title: {
+	                                display: true,
+	                                text: 'Группы',
+	                                font: {
+	                                    size: 16
+	                                }
+	                            },
+	                            ticks: {
+	                                font: {
+	                                    size: 16
+	                                }
+	                            }
 	                        }
 	                    }
 	                }
@@ -707,110 +912,271 @@
 	        },
 	        update_chart() {
 	            this.chart.data.labels = this.labels
-	            this.chart.data.datasets[0].data = this.stars
+	            this.chart.data.datasets[0].data = this.data_points
 	            this.chart.update()
 	        },
 	        get_data() {
-	            var labels = []
-	            var points = []
-	            type_stat = document.getElementById("selected_stat").value
+				var labels = []
+				var points = []
+				var type_stat = document.getElementById("selected_stat").value
 
-	            for (let i=0; i<data_for_language.length; i++) {
-                        group = data_for_language[i].number + ' (' + data_for_language[i].date + ')'
-                        labels.push(group)
+				for (let i = 0; i < list_data.length; i++) {
+					var item = list_data[i]
+					
+					var group_name = item.groupname || ''
+					var academic_year = item.idayear__title || ''
+					var group_display = group_name && academic_year ? 
+						`${group_name} (${academic_year})` : 
+						(group_name || 'Неизвестная группа')
+					
+					labels.push(group_display)
 
-                        if (type_stat == 'абсолютная') {
-                            points.push(data_for_language[i].count_data)
-                        }
-                        else {
-                            points.push(data_for_language[i].count_data_on_tokens)
-                        }
-                    }
+					if (type_stat == 'абсолютная') {
+						points.push(item.count_data || 0)
+					} else {
+						points.push(item.count_data_on_tokens || item.count_data || 0)
+					}
+				}
 
-	            this.labels = labels
-	            this.stars = points
-	        }
-	    }
-	})
-
-	groups_bar.mounted()
-
-	var groups_pie = new Vue({
-	    el: '#errors_groups_pie',
-	    data: {
-	        chart: {},
-	        labels: [],
-	        stars: [],
-	        chart_type: 'pie',
-	        chartColor: 'crimson',
-	        loading: false
+				this.labels = labels
+				this.data_points = points
+			}
 	    },
-	    methods: {
-	        mounted() {
-	            this.init_chart()
-	            this.get_data()
-	            this.update_chart()
-	        },
-	        init_chart() {
-	            this.chart = Vue.markRaw(new Chart(this.$refs.chart, {
-	                type: this.chart_type,
-	                data: {
-	                    labels: [],
-	                    datasets: [{
-	                        label: 'Количество ошибок',
-	                        backgroundColor: colors,
-	                        borderColor: colors,
-	                        data: []
-	                    }]
-	                },
-	                options: {
-	                    responsive: true,
-	                    tooltips: {
-	                        mode: 'index'
-	                    },
-	                    scales: {
-	                        y: {
-	                            beginAtZero: true
-	                        }
-	                    }
-	                }
-	            }));
-	        },
-	        update_chart() {
-	            this.chart.data.labels = this.labels
-	            this.chart.data.datasets[0].data = this.stars
-	            this.chart.update()
-	        },
-	        get_data() {
-	            var labels = []
-	            var points = []
-	            type_stat = document.getElementById("selected_stat").value
-
-	            var count = 0
-		    	var count_on_tokens = 0
-	            for (let i=0; i<data_for_language.length; i++) {
-	                count += data_for_language[i].count_data
-					count_on_tokens += data_for_language[i].count_data_on_tokens
-	            }
-
-	            for (let i=0; i<data_for_language.length; i++) {
-                        group = data_for_language[i].number + ' (' + data_for_language[i].date + ')'
-                        labels.push(group)
-
-                        if (type_stat == 'абсолютная') {
-                            points.push(data_for_language[i].count_data * 100 / count)
-                        }
-                        else {
-                            points.push(data_for_language[i].count_data_on_tokens * 100 / count_on_tokens)
-                        }
-                    }
-
-	            this.labels = labels
-	            this.stars = points
-	        }
+	    mounted() {
+	        this.mounted()
 	    }
 	})
 
-	groups_pie.mounted()
+var groups_pie = new Vue({
+    el: '#errors_groups_pie',
+    data: {
+        chart: {},
+        labels: [],
+        data_points: [],
+        chart_type: 'pie'
+    },
+    methods: {
+        mounted() {
+            this.init_chart()
+            this.get_data()
+            this.update_chart()
+        },
+        init_chart() {
+            var ctx = this.$refs.chart.getContext('2d')
+
+            const lineLabelPlugin = {
+                id: 'lineLabels',
+                afterDraw(chart) {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    
+                    const dataset = chart.data.datasets[0];
+                    const meta = chart.getDatasetMeta(0);
+                    const total = dataset.data.reduce((a, b) => a + b, 0);
+
+                    const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+                    const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+                    const radius = Math.min(
+                        (chart.chartArea.right - chart.chartArea.left) / 2,
+                        (chart.chartArea.bottom - chart.chartArea.top) / 2
+                    ) * 0.8;
+                    
+                    meta.data.forEach((element, index) => {
+                        const percentage = total > 0 ? (dataset.data[index] / total) * 100 : 0;
+
+                        if (percentage < 1.5) return;
+                        
+                        const label = chart.data.labels[index];
+                        const shortLabel = label.length > 20 ? label.substring(0, 20) + '...' : label;
+                        const labelText = `${shortLabel} (${percentage.toFixed(1)}%)`;
+
+                        if (meta.data.length === 1) {
+                            const textX = centerX + radius + 70;
+                            const textY = centerY;
+
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.strokeStyle = '#ccc';
+                            ctx.lineWidth = 1;
+                            const textWidth = ctx.measureText(labelText).width;
+                            ctx.fillRect(textX - 5, textY - 8, textWidth + 10, 16);
+                            ctx.strokeRect(textX - 5, textY - 8, textWidth + 10, 16);
+
+                            ctx.fillStyle = '#333';
+                            ctx.font = '11px Arial';
+                            ctx.textAlign = 'left';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(labelText, textX, textY);
+                            
+                            return; 
+                        }
+
+                        const startAngle = element.startAngle;
+                        const endAngle = element.endAngle;
+                        const midAngle = startAngle + (endAngle - startAngle) / 2;
+
+                        const labelX = centerX + Math.cos(midAngle) * radius;
+                        const labelY = centerY + Math.sin(midAngle) * radius;
+
+                        const isLeft = labelX < centerX;
+                        const lineLength = 60;
+
+                        const lineEndX = labelX + Math.cos(midAngle) * lineLength;
+                        const lineEndY = labelY + Math.sin(midAngle) * lineLength;
+
+                        const textX = lineEndX + (isLeft ? -10 : 10);
+                        const textY = lineEndY;
+
+                        ctx.strokeStyle = '#666';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 3]);
+                        ctx.beginPath();
+                        ctx.moveTo(labelX, labelY);
+                        ctx.lineTo(lineEndX, lineEndY);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        const textWidth = ctx.measureText(labelText).width;
+                        const textHeight = 16;
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.strokeStyle = '#ccc';
+                        ctx.lineWidth = 1;
+                        
+                        if (isLeft) {
+                            ctx.fillRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+                            ctx.strokeRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+                        } else {
+                            ctx.fillRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+                            ctx.strokeRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+                        }
+
+                        ctx.fillStyle = '#333';
+                        ctx.font = '11px Arial';
+                        ctx.textAlign = isLeft ? 'right' : 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(labelText, isLeft ? textX - 5 : textX + 5, textY);
+                    });
+                    
+                    ctx.restore();
+                }
+            };
+
+            this.chart = new Chart(ctx, {
+                type: this.chart_type,
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Количество ошибок',
+                        backgroundColor: colors,
+                        borderColor: function(context) {
+                            const chart = context.chart;
+                            const meta = chart.getDatasetMeta(0);
+                            if (meta.data.length === 1) {
+                                return 'transparent';
+                            }
+                            return '#000000';
+                        },
+                        borderWidth: function(context) {
+                            const chart = context.chart;
+                            const meta = chart.getDatasetMeta(0);
+                            if (meta.data.length === 1) {
+                                return 0;
+                            }
+                            return 0.3;
+                        },
+                        data: []
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false 
+                        },
+                        tooltip: {
+                            enabled: true,
+                            titleFont: { size: 16 },
+                            bodyFont: { size: 16 }
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 100,
+                            right: 100,
+                            top: 100,
+                            bottom: 100
+                        }
+                    }
+                },
+                plugins: [lineLabelPlugin]
+            });
+        },
+        update_chart() {
+            this.chart.data.labels = this.labels
+            this.chart.data.datasets[0].data = this.data_points
+            this.chart.update()
+        },
+        get_data() {
+            var labels = []
+            var points = []
+            var type_stat = document.getElementById("selected_stat").value
+
+            var total = 0
+            for (let i = 0; i < list_data.length; i++) {
+                if (type_stat == 'абсолютная') {
+                    total += list_data[i].count_data || 0
+                } else {
+                    total += list_data[i].count_data_on_tokens || list_data[i].count_data || 0
+                }
+            }
+
+            if (total === 0) {
+                this.labels = ['Нет данных']
+                this.data_points = [100]
+                return
+            }
+
+            var sorted_data = [...list_data].sort((a, b) => {
+                if (type_stat == 'абсолютная') {
+                    return (b.count_data || 0) - (a.count_data || 0)
+                } else {
+                    return ((b.count_data_on_tokens || b.count_data || 0) - (a.count_data_on_tokens || a.count_data || 0))
+                }
+            });
+
+            for (let i = 0; i < sorted_data.length; i++) {
+                var item = sorted_data[i]
+                var group_name = item.groupname || ''
+                var academic_year = item.idayear__title || ''
+                var group_display = group_name && academic_year ? 
+                    `${group_name} (${academic_year})` : 
+                    (group_name || 'Неизвестная группа')
+                
+                labels.push(group_display)
+
+                if (type_stat == 'абсолютная') {
+                    var value = item.count_data || 0
+                    var percentage = (value * 100 / total).toFixed(2)
+                    points.push(parseFloat(percentage))
+                } else {
+                    var value = item.count_data_on_tokens || item.count_data || 0
+                    var percentage = (value * 100 / total).toFixed(2)
+                    points.push(parseFloat(percentage))
+                }
+            }
+
+            this.labels = labels
+            this.data_points = points
+        }
+    },
+    mounted() {
+        this.mounted()
+    }
+})
+
+	document.addEventListener('DOMContentLoaded', function() {
+		document.getElementById("error_tag").style.display = 'none'
+		document.getElementById("error_group").style.display = 'none'
+	})
 </script>
 {%endblock script%}

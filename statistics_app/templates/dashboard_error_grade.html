@@ -1,12 +1,14 @@
- {% load static %} 
- {%block plugins%}
+{% load static %} 
+{%block plugins%}
 <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 <script src="{% static 'js/external/axios.min.js' %}"></script>
 <script src="{% static 'js/external/chart.umd.min.js' %}"></script>
 <script src="{% static 'js/external/xlsx.full.min.js' %}"></script>
 <script src="{% static 'js/external/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/external/jquery.min.js' %}"></script>
-{%endblock plugins%} {% block link %}
+{%endblock plugins%} 
+
+{% block link %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/dashboards.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'css/external/bootstrap.min.css' %}" />
 {% endblock link %}
@@ -20,9 +22,19 @@
 			<label class="text-center text-primary"> Статистика </label>
 			<hr class="mt-1"/>
 			<select id="selected_stat" class="form-select" onchange="update_data()">
-				<option>абсолютная</option>
-				<option>на 100 токенов</option>
+				<option value="absolute">абсолютная</option>
+				<option value="per_tokens">на 100 токенов</option>
             </select>
+		</div>
+		<div id="signature" class="col">
+			<label class="text-center text-primary"> Подписи на </label>
+			<hr class="mt-1"/>
+			{% verbatim %}
+			<select class="form-select" v-model="selected_language_labels" @change="on_change_language_labels">
+				<option value="russian">Русском</option>
+				<option value="german">Немецком</option>
+			</select>
+			{% endverbatim %}
 		</div>
 	</div>
 
@@ -36,11 +48,11 @@
 				<select id="font_size" class="form-select" onchange="on_change_font_size()">
 					<option>10</option>
 					<option>11</option>
-					<option selected>12</option>
+					<option>12</option>
 					<option>13</option>
 					<option>14</option>
 					<option>15</option>
-					<option>16</option>
+					<option selected>16</option>
 					<option>17</option>
 					<option>18</option>
 					<option>19</option>
@@ -71,7 +83,7 @@
 						<path
 							stroke-linecap="round"
 							stroke-width="1.5"
-							d="M20.058 9.723c.948-.534 1.423-.801 1.682-1.232.26-.43.26-.949.26-1.987v-.69c0-1.326 0-1.99-.44-2.402C21.122 3 20.415 3 19 3H5c-1.414 0-2.121 0-2.56.412C2 3.824 2 4.488 2 5.815v.69c0 1.037 0 1.556.26 1.986.26.43.733.698 1.682 1.232l2.913 1.64c.636.358.955.537 1.183.735.474.411.766.895.898 1.49.064.284.064.618.064 1.285v2.67c0 .909 0 1.364.252 1.718.252.355.7.53 1.594.88 1.879.734 2.818 1.101 3.486.683.668-.417.668-1.372.668-3.282v-2.67c0-.666 0-1 .064-1.285a2.68 2.68 0 0 1 .899-1.49"
+							d="M20.058 9.723c.948-.534 1.423-.801 1.682-1.232.26-.43.26-.949.26-1.987v-.69c0-1.326 0-1.99-.44-2.402C21.122 3 20.415 3 19 3H5c-1.414 0-2.121 0-2.56.412C2 3.824 2 4.488 2 5.815v-.69c0 1.037 0 1.556.26 1.986.26.43.733.698 1.682 1.232l2.913 1.64c.636.358.955.537 1.183.735.474.411.766.895.898 1.49.064.284.064.618.064 1.285v2.67c0 .909 0 1.364.252 1.718.252.355.7.53 1.594.88 1.879.734 2.818 1.101 3.486.683.668-.417.668-1.372.668-3.282v-2.67c0-.666 0-1 .064-1.285a2.68 2.68 0 0 1 .899-1.49"
 						/>
 					</svg>
 				</button>
@@ -100,7 +112,7 @@
 										data-bs-target="#none"
 										aria-expanded="false"
 										aria-controls="none"
-										@change="on_change_choice_student_filters(); on_change_choice_all();"
+										@change="on_change_choice_all"
 										checked
 									/>
 									<label class="form-check-label text-filter" for="all"> Все </label>
@@ -124,62 +136,47 @@
 										aria-controls="group"
 										@change="on_change_choice_student_filters"
 									/>
-									<div class="row row-cols-3">
-										<div class="col">
-											<label class="form-check-label text-filter" for="groups"> Группа </label>
-										</div>
-										<div class="col">
-											<span id="enrollment_date" class="text-filter element-visibility">
-												Учебный год
-											</span>
-										</div>
-									</div>
+									<label class="form-check-label text-filter" for="groups"> Группа </label>
 									<div
 										id="group"
 										class="accordion-collapse collapse"
 										data-bs-parent="#filters_for_student"
 									>
 										<div class="row">
-											<div class="col">
+											<div class="col-8">
+												<div class="input-group mb-2">
+													<input 
+														type="text" 
+														class="form-control" 
+														placeholder="Поиск группы..." 
+														id="group_search"
+														@input="on_group_search"
+													>
+												</div>
 												{% verbatim %}
 												<select
 													id="filter_group"
 													class="form-select"
 													v-model="selected_group"
-													@change="on_change_group_number"
+													size="6"
 												>
-													<option v-for="group in groups":value="group.groupname">{{ group.groupname }}</option>
-												</select>
-												{% endverbatim %}
-											</div>
-											<div class="col">
-												{% verbatim %}
-												<select
-													id="filter_group_date"
-													class="form-select"
-													v-model="selected_date"
-												>
-													<option v-for="date in group_dates">
-														{{ date.enrollment_date }}
+													<option v-for="group in filtered_groups" 
+															:value="group.idgroup">
+														{{ group.groupname }} ({{ group.idayear__title }})
 													</option>
 												</select>
 												{% endverbatim %}
 											</div>
-											<div class="col">
-												<button type="button" class="btn btn-primary" @click="on_change_group">
+											<div class="col-4">
+												<button type="button" class="btn btn-primary mt-4" @click="on_change_group">
 													Применить
 												</button>
 											</div>
 										</div>
 										<div class="row">
-											<div class="col-4">
+											<div class="col-12">
 												<div id="error_group" class="form-text error-message">
 													выберите группу
-												</div>
-											</div>
-											<div class="col">
-												<div id="error_group_date" class="form-text error-message">
-													выберите учебный год
 												</div>
 											</div>
 										</div>
@@ -364,7 +361,7 @@
 													@change="on_change_text_type"
 												>
 													<option
-														v-for="text_type in text_types":value="text_type.id_text_type"
+														v-for="text_type in text_types":value="text_type.texttypename"
 													>
 														{{ text_type.texttypename }}
 													</option>
@@ -383,44 +380,7 @@
 	</div>
 
 	<hr class="mt-2" />
-		<div id="legend_checked_filters" class="d-flex flex-column flex-md-row gap-3 mt-4 justify-content-start">
-			<div id="card_group" v-show="group && enrollment_date" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary">
-						<span v-html="group">{{group}}</span> (<span v-html="enrollment_date">{{enrollment_date}}</span>)
-					</p>
-				</div>
-			</div>
-		
-			<div id="card_student" v-show="surname || name || patronymic" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary">
-						<span v-html="surname">{{surname}}</span>
-						<span v-html="name">{{name}}</span>
-						<span v-html="patronymic">{{patronymic}}</span>
-					</p>
-				</div>
-			</div>
-		
-			<div id="card_course" v-show="course" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary"><span v-html="course">{{course}}</span> курс</p>
-				</div>
-			</div>
-		
-			<div id="card_text" v-show="text" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary" v-html="text">{{text}}</p>
-				</div>
-			</div>
-		
-			<div id="card_text_type" v-show="text_type" class="card card-rounded shadow-sm card-display border border-primary">
-				<div class="card-body">
-					<p class="card-text text-primary" v-html="text_type">{{text_type}}</p>
-				</div>
-			</div>
-		</div>
-		
+	<div id="legend_checked_filters">
 	</div>
 
 	<div id="diagrams" class="d-flex flex-column  my-2">
@@ -434,238 +394,1039 @@
 		</div>
 	</div>
 </main>
-{% endblock content%} {%block script%}
+{% endblock content%} 
+
+{%block script%}
 <script type="text/javascript">
-	var list_languages = {{languages | safe}}
+	var pie_colors = [
+		'rgba(0, 255, 0, 1)',        // зеленый
+		'rgba(0, 0, 255, 1)',        // синий
+		'rgba(199, 21, 133, 1)',     // фиолетовый
+		'rgba(255, 69, 0, 1)',       // оранжевый
+		'rgba(75, 0, 130, 1)',       // индиго
+		'rgba(255, 255, 0, 1)',      // желтый
+		'rgba(148, 0, 211, 1)',      // темно-фиолетовый
+		'rgba(139, 69, 19, 1)',      // коричневый
+		'rgba(0, 128, 0, 1)',        // темно-зеленый
+		'rgba(188, 143, 143, 1)',    // розово-коричневый
+		'rgba(255, 0, 255, 1)',      // пурпурный
+		'rgba(128, 128, 0, 1)',      // оливковый
+		'rgba(0, 128, 128, 1)',      // бирюзовый
+		'rgba(128, 0, 128, 1)',      // пурпурный
+		'rgba(70, 130, 180, 1)',     // стальной синий
+		'rgba(210, 105, 30, 1)',     // шоколадный
+		'rgba(0, 255, 255, 1)',      // голубой
+		'rgba(255, 165, 0, 1)',      // оранжевый
+	]
+
+	var bar_color = 'crimson';
+
 	var list_groups = {{groups | safe}}
-	var list_enrollment_date = []
 	var list_courses = {{courses | safe}}
 	var list_texts = {{texts | safe}}
 	var list_text_types = {{ text_types | safe}}
 	var list_data = {{data | safe}}
 
-	var data_for_language = list_data.filter(data => data.grade__grade_language == list_languages[0].id_language)
+	var current_group = ''
+	var current_enrollment_date = ''
+	var current_surname = ''
+	var current_name = ''
+	var current_patronymic = ''
+	var current_course = ''
+	var current_text = ''
+	var current_text_type = ''
 
+	var current_language = 'russian';
 
-	async function post_request_data_errors(group, enrollment_date, surname, name, patronymic, course, text,
-											text_type) {
-	    var data = []
-
-	    await axios({
-	        method: 'post',
-	        url: '',
-	        data: {
-	        	'group': group,
-	            'enrollment_date': enrollment_date,
-	            'surname': surname,
-	            'name': name,
-	            'patronymic': patronymic,
-	            'course': course,
-	            'text': text,
-	            'text_type': text_type,
-	            'flag_post': 'update_diagrams'
-	        },
-	        headers: {
-	            'X-Requested-With': 'XMLHttpRequest',
-	        }
-	    })
-	        .then(function (response) {
-	            data = response.data.data_grade_errors
-	        })
-
-	    list_data = data
-		// console.log(list_data)
-		update_data();
+	function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i++) {
+				const cookie = cookies[i].trim();
+				if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
 	}
 
+	var signature_app = new Vue({
+		el: '#signature',
+		data: {
+			selected_language_labels: 'russian'
+		},
+		methods: {
+			on_change_language_labels() {
+				current_language = this.selected_language_labels;
+				update_data();
+			}
+		}
+	});
+
+	function on_change_font_size() {
+		var selected_size = parseInt(document.getElementById("font_size").value);
+		
+		Chart.defaults.font.size = selected_size;
+		
+		if (grade_errors_bar.chart) {
+			grade_errors_bar.chart.options.plugins.legend.labels.font.size = selected_size;
+			grade_errors_bar.chart.options.scales.x.ticks.font.size = selected_size;
+			grade_errors_bar.chart.options.scales.x.title.font.size = selected_size;
+			grade_errors_bar.chart.options.scales.y.ticks.font.size = selected_size;
+			grade_errors_bar.chart.options.scales.y.title.font.size = selected_size;
+			grade_errors_bar.chart.update();
+		}
+		
+		if (grade_errors_pie.chart) {
+			grade_errors_pie.chart.options.plugins.tooltip.titleFont.size = selected_size;
+			grade_errors_pie.chart.options.plugins.tooltip.bodyFont.size = selected_size;
+			grade_errors_pie.chart.update();
+		}
+
+		Chart.defaults.plugins.tooltip.titleFont = { size: selected_size };
+		Chart.defaults.plugins.tooltip.bodyFont = { size: selected_size };
+	}
+
+	async function post_request_data_errors(group, enrollment_date, surname, name, patronymic, course, text, text_type) {
+	    try {
+	        const response = await axios({
+	            method: 'post',
+	            url: '',
+	            data: {
+	                'group': group,
+	                'enrollment_date': enrollment_date,
+	                'surname': surname,
+	                'name': name,
+	                'patronymic': patronymic,
+	                'course': course,
+	                'text': text,
+	                'text_type': text_type,
+	                'flag_post': 'update_diagrams'
+	            },
+	            headers: {
+	                'X-Requested-With': 'XMLHttpRequest',
+	                'X-CSRFToken': getCookie('csrftoken')
+	            }
+	        });
+	        
+	        list_data = response.data.data_grade_errors;
+	        update_data();
+	        
+	    } catch (error) {
+	        console.error('Request failed:', error);
+	    }
+	}
 
 	function on_download() {
 		var data = []
+		data.push(["id_errorlevel", "errorlevelname", "errorlevelrussian", "count_data", "count_data_on_tokens"])
+		for (let i=0; i<list_data.length; i++) {
+			data.push([
+				list_data[i].iderrorlevel__iderrorlevel,
+				list_data[i].iderrorlevel__errorlevelname,
+				list_data[i].iderrorlevel__errorlevelrussian,
+				list_data[i].count_data,
+				list_data[i].count_data_on_tokens || 0
+			])
+		}
 
-		data.push(["id_grade", "grade_name", "grade_language", "count_data", "count_data_on_100_tokens"])
-		for (let i=0; i<data_for_language.length; i++) {
-			data.push([data_for_language[i].grade__id_grade, data_for_language[i].grade__grade_name,
-					data_for_language[i].grade__grade_language, data_for_language[i].count_data,
-					data_for_language[i].count_data_on_tokens])
-	    }
-
-	    var workbook = XLSX.utils.book_new(),
-	    	worksheet = XLSX.utils.aoa_to_sheet(data)
-	    workbook.SheetNames.push("Errors")
-	    workbook.Sheets["Errors"] = worksheet
-
-	    XLSX.writeFile(workbook, `Errors_grade.xlsx`)
+		var workbook = XLSX.utils.book_new(),
+			worksheet = XLSX.utils.aoa_to_sheet(data)
+		workbook.SheetNames.push("Errors")
+		workbook.Sheets["Errors"] = worksheet
+		XLSX.writeFile(workbook, `Errors_grade.xlsx`)
 	}
 
 	function update_data() {
-		data_for_language = list_data.filter(data => data.grade__grade_language == list_languages[0].id_language);
 		grade_errors_bar.get_data()
 		grade_errors_bar.update_chart()
 		grade_errors_pie.get_data()
 		grade_errors_pie.update_chart()
 	}
 
-	async function post_request_data() {
-		await post_request_data_errors(filters.selected_group, filters.selected_date, filters.surname, filters.name,
-										filters.patronymic, filters.selected_course, filters.selected_text,
-										filters.selected_text_type)
+	function update_legend_filters() {
+		var container = document.getElementById("legend_checked_filters")
+		container.innerHTML = ''
+
+		var mainRow = document.createElement("div")
+		mainRow.className = "d-flex flex-wrap gap-3 mt-4"
+
+		if (current_group && current_enrollment_date) {
+			var groupCard = document.createElement("div")
+			groupCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			groupCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = `${current_group} (${current_enrollment_date})`
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('group')
+			}
+			
+			cardBody.appendChild(cardText)
+			groupCard.appendChild(cardBody)
+			groupCard.appendChild(closeBtn)
+			mainRow.appendChild(groupCard)
+		}
+
+		if (current_surname || current_name || current_patronymic) {
+			var studentCard = document.createElement("div")
+			studentCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			studentCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var studentName = [current_surname, current_name, current_patronymic].filter(Boolean).join(' ')
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = studentName
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('student')
+			}
+			
+			cardBody.appendChild(cardText)
+			studentCard.appendChild(cardBody)
+			studentCard.appendChild(closeBtn)
+			mainRow.appendChild(studentCard)
+		}
+
+		if (current_course) {
+			var courseCard = document.createElement("div")
+			courseCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			courseCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = `${current_course} курс`
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('course')
+			}
+			
+			cardBody.appendChild(cardText)
+			courseCard.appendChild(cardBody)
+			courseCard.appendChild(closeBtn)
+			mainRow.appendChild(courseCard)
+		}
+
+		if (current_text) {
+			var textCard = document.createElement("div")
+			textCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			textCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = current_text
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('text')
+			}
+			
+			cardBody.appendChild(cardText)
+			textCard.appendChild(cardBody)
+			textCard.appendChild(closeBtn)
+			mainRow.appendChild(textCard)
+		}
+
+		if (current_text_type) {
+			var textTypeCard = document.createElement("div")
+			textTypeCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			textTypeCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = current_text_type
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('text_type')
+			}
+			
+			cardBody.appendChild(cardText)
+			textTypeCard.appendChild(cardBody)
+			textTypeCard.appendChild(closeBtn)
+			mainRow.appendChild(textTypeCard)
+		}
+
+		container.appendChild(mainRow)
 	}
-</script>
-<script src="{% static 'js/dashboards.js' %}" type="text/javascript"></script>
-<script type="text/javascript">
-	Chart.defaults.font.size = 12
+
+	async function remove_filter(filterType) {
+		switch(filterType) {
+			case 'group':
+				current_group = ''
+				current_enrollment_date = ''
+				filters.selected_group = ''
+				document.getElementById('groups').checked = false
+				document.getElementById('all').checked = true
+				break
+				
+			case 'student':
+				current_surname = ''
+				current_name = ''
+				current_patronymic = ''
+				filters.surname = ''
+				filters.name = ''
+				filters.patronymic = ''
+				document.getElementById('students').checked = false
+				document.getElementById('all').checked = true
+				break
+				
+			case 'course':
+				current_course = ''
+				filters.selected_course = ''
+				document.getElementById('courses').checked = false
+				document.getElementById('all').checked = true
+				break
+				
+			case 'text':
+				current_text = ''
+				filters.selected_text = ''
+				document.getElementById('filter_all_texts').checked = false
+				break
+				
+			case 'text_type':
+				current_text_type = ''
+				filters.selected_text_type = ''
+				document.getElementById('filter_text_types').checked = false
+				break
+		}
+		
+		await post_request_data_errors(
+			current_group,
+			current_enrollment_date,
+			current_surname,
+			current_name, 
+			current_patronymic,
+			current_course,
+			current_text,
+			current_text_type
+		)
+		
+		update_legend_filters()
+	}
+
+	var filters = new Vue({ 
+		el: '#form_filters',
+		data: {
+			groups: list_groups,
+			filtered_groups: list_groups,
+			selected_group: '',
+			group_search_query: '',
+			surname: '',
+			name: '',
+			patronymic: '',
+			courses: list_courses,
+			selected_course: '',
+			texts: list_texts,
+			selected_text: '',
+			text_types: list_text_types,
+			selected_text_type: ''
+		},
+		methods: { 
+			on_group_search(event) {
+				this.group_search_query = event.target.value.toLowerCase();
+				this.filter_groups();
+			},
+			
+			filter_groups() {
+				if (!this.group_search_query) {
+					this.filtered_groups = this.groups;
+				} else {
+					this.filtered_groups = this.groups.filter(group => {
+						const groupName = group.groupname ? group.groupname.toLowerCase() : '';
+						const academicYear = group.idayear__title ? group.idayear__title.toLowerCase() : '';
+						return groupName.includes(this.group_search_query) || 
+							academicYear.includes(this.group_search_query) ||
+							`${groupName} (${academicYear})`.toLowerCase().includes(this.group_search_query);
+					});
+				}
+			},
+
+			on_change_choice_student_filters() {
+				if (document.getElementById('groups').checked) {
+					this.group_search_query = '';
+					this.filter_groups();
+				}
+
+				this.selected_group = ''
+				this.surname = ''
+				this.name = ''
+				this.patronymic = ''
+				this.selected_course = ''
+			},
+
+			async on_change_choice_all() {
+				current_group = '';
+				current_enrollment_date = '';
+				current_surname = '';
+				current_name = '';
+				current_patronymic = '';
+				current_course = '';
+				current_text = '';
+				current_text_type = '';
+				
+				this.selected_text = '';
+				this.selected_text_type = '';
+				document.getElementById('filter_all_texts').checked = false;
+				document.getElementById('filter_text_types').checked = false;
+
+				try {
+					const response = await axios({
+						method: 'post',
+						url: '',
+						data: {
+							'flag_post': 'choice_all'
+						},
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': getCookie('csrftoken')
+						}
+					});
+					
+					this.texts = response.data.texts;
+					this.text_types = response.data.text_types;
+				} catch (error) {
+					console.error('Failed to get all texts:', error);
+				}
+
+				await post_request_data_errors('', '', '', '', '', '', '', '');
+				update_legend_filters();
+			},
+
+			async on_change_group(){
+				if (this.selected_group == '') {
+					document.getElementById("error_group").style.display = 'block'
+					document.getElementById("filter_group").classList.add('border', 'border-danger')
+					return
+				} else {
+					document.getElementById("error_group").style.display = 'none'
+					document.getElementById("filter_group").classList.remove('border', 'border-danger')
+				}
+
+				const selectedGroupObj = this.groups.find(g => g.idgroup == this.selected_group);
+				if (selectedGroupObj) {
+					current_group = selectedGroupObj.groupname;
+					current_enrollment_date = selectedGroupObj.idayear__title;
+					current_surname = '';
+					current_name = '';
+					current_patronymic = '';
+					current_course = '';
+					
+					try {
+						const response = await axios({
+							method: 'post',
+							url: '',
+							data: {
+								'group': current_group,
+								'enrollment_date': current_enrollment_date,
+								'flag_post': 'choice_group'
+							},
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': getCookie('csrftoken')
+							}
+						});
+						
+						this.texts = response.data.texts;
+						this.text_types = response.data.text_types;
+					} catch (error) {
+						console.error('Failed to get group texts:', error);
+					}
+					
+					await post_request_data_errors(
+						current_group, 
+						current_enrollment_date,
+						'', '', '', 
+						'', 
+						this.selected_text,
+						this.selected_text_type
+					);
+
+					update_legend_filters();
+				}
+			},
+
+			async on_change_student() {
+				if (!this.surname) {
+					document.getElementById("error_student_surname").style.display = 'block'
+					document.getElementById("surname").classList.add('border', 'border-danger')
+				} else {
+					document.getElementById("error_student_surname").style.display = 'none'
+					document.getElementById("surname").classList.remove('border', 'border-danger')
+				}
+
+				if (!this.name) {
+					document.getElementById("error_student_name").style.display = 'block'
+					document.getElementById("name").classList.add('border', 'border-danger')
+				} else {
+					document.getElementById("error_student_name").style.display = 'none'
+					document.getElementById("name").classList.remove('border', 'border-danger')
+				}
+
+				if (this.surname && this.name) {
+					current_surname = this.surname;
+					current_name = this.name;
+					current_patronymic = this.patronymic;
+					current_group = '';
+					current_enrollment_date = '';
+					current_course = '';
+					
+					try {
+						const response = await axios({
+							method: 'post',
+							url: '',
+							data: {
+								'surname': current_surname,
+								'name': current_name,
+								'patronymic': current_patronymic,
+								'flag_post': 'choice_student'
+							},
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': getCookie('csrftoken')
+							}
+						});
+						
+						this.texts = response.data.texts;
+						this.text_types = response.data.text_types;
+					} catch (error) {
+						console.error('Failed to get student texts:', error);
+					}
+					
+					await post_request_data_errors(
+						'', '',
+						current_surname, 
+						current_name, 
+						current_patronymic,
+						'', 
+						this.selected_text,
+						this.selected_text_type
+					);
+
+					update_legend_filters();
+				}
+			},
+
+			async on_change_course() {
+				if (this.selected_course) {
+					current_course = this.selected_course;
+					current_group = '';
+					current_enrollment_date = '';
+					current_surname = '';
+					current_name = '';
+					current_patronymic = '';
+					
+					try {
+						const response = await axios({
+							method: 'post',
+							url: '',
+							data: {
+								'course': current_course,
+								'flag_post': 'choice_course'
+							},
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': getCookie('csrftoken')
+							}
+						});
+						
+						this.texts = response.data.texts;
+						this.text_types = response.data.text_types;
+					} catch (error) {
+						console.error('Failed to get course texts:', error);
+					}
+					
+					await post_request_data_errors(
+						'', '',
+						'', '', '', 
+						current_course,
+						this.selected_text,
+						this.selected_text_type
+					);
+
+					update_legend_filters();
+				}
+			},
+
+			async on_change_choice_text() {
+				if (!document.getElementById('filter_all_texts').checked) {
+					this.selected_text = ''
+					await this.on_change_text()
+				}
+			},
+
+			async on_change_text() {
+				if (this.selected_text) {
+					current_text = this.selected_text;
+					
+					await post_request_data_errors(
+						current_group, 
+						current_enrollment_date,
+						current_surname, 
+						current_name,
+						current_patronymic, 
+						current_course, 
+						current_text,
+						this.selected_text_type
+					);
+
+					update_legend_filters();
+				} else {
+					current_text = '';
+					await post_request_data_errors(
+						current_group, 
+						current_enrollment_date,
+						current_surname, 
+						current_name,
+						current_patronymic, 
+						current_course, 
+						'',
+						this.selected_text_type
+					);
+					update_legend_filters();
+				}
+			},
+
+			async on_change_choice_text_types() {
+				if (!document.getElementById('filter_text_types').checked) {
+					this.selected_text_type = ''
+					await this.on_change_text_type()
+				}
+			},
+
+			async on_change_text_type() {
+				if (this.selected_text_type) {
+					current_text_type = this.selected_text_type;
+					
+					await post_request_data_errors(
+						current_group, 
+						current_enrollment_date,
+						current_surname, 
+						current_name,
+						current_patronymic, 
+						current_course, 
+						current_text,
+						current_text_type
+					);
+
+					update_legend_filters();
+				} else {
+					current_text_type = '';
+					await post_request_data_errors(
+						current_group, 
+						current_enrollment_date,
+						current_surname, 
+						current_name,
+						current_patronymic, 
+						current_course, 
+						current_text,
+						''
+					);
+					update_legend_filters();
+				}
+			}
+		},
+		mounted() {
+			this.filtered_groups = this.groups;
+		}
+	})
 
 	var grade_errors_bar = new Vue({
 		el: '#grade_errors_bar',
 		data: {
-			chart: {},
+			chart: null,
 			labels: [],
 			stars: [],
-			chart_type: 'bar',
-			
-			chartColor: 'crimson',
-			loading: false
+			chart_type: 'bar'
 		},
 		methods: {
-			mounted() {
-				this.init_chart()
-				this.get_data()
-				this.update_chart()
-			},
 			init_chart() {
-				this.chart = Vue.markRaw(new Chart(this.$refs.chart, {
+				if (this.chart) {
+					this.chart.destroy();
+				}
+				
+				var ctx = this.$refs.chart.getContext('2d');
+				this.chart = new Chart(ctx, {
 					type: this.chart_type,
 					data: {
-						labels: [],
+						labels: this.labels,
 						datasets: [{
 							label: 'Количество ошибок',
-							backgroundColor: 'crimson',
-							borderColor: 'crimson',
-							data: []
-						}]
-					},
-					options: {
-						responsive: true,
-						tooltips: {
-							mode: 'index'
-						},
-						scales: {
-							y: {
-								beginAtZero: true
-							}
-						}
-					}
-				}));
-			},
-			update_chart() {
-				this.chart.data.labels = this.labels
-				this.chart.data.datasets[0].data = this.stars
-				this.chart.update()
-			},
-			get_data() {
-				var labels = []
-				var points = []
-				type_stat = document.getElementById("selected_stat").value
-
-				for (let i=0; i<data_for_language.length; i++) {
-					labels.push(data_for_language[i].iderrorlevel__errorlevelname)
-
-					if (type_stat == 'абсолютная') {
-						points.push(data_for_language[i].count_data)
-					}
-					else {
-						points.push(data_for_language[i].count_data_on_tokens)
-					}
-				}
-
-				this.labels = labels
-				this.stars = points
-			}
-		}
-	})
-
-	grade_errors_bar.mounted()
-
-	var grade_errors_pie = new Vue({
-		el: '#grade_errors_pie',
-		data: {
-			chart: {},
-			labels: [],
-			stars: [],
-			chart_type: 'pie',
-			chartColor: 'crimson',
-			loading: false
-		},
-		methods: {
-			mounted() {
-				this.init_chart()
-				this.get_data()
-				this.update_chart()
-			},
-			init_chart() {
-				this.chart = Vue.markRaw(new Chart(this.$refs.chart, {
-					type: this.chart_type,
-					data: {
-						labels: [],
-						datasets: [{
-							label: 'Грубость ошибки',
-							backgroundColor: colors,
-							borderColor: colors,
-							data: []
+							backgroundColor: bar_color,
+							borderColor: bar_color,
+							data: this.stars
 						}]
 					},
 					options: {
 						responsive: true,
 						plugins: {
 							legend: {
-								position: 'bottom'
+								display: true,
+								position: 'bottom',
+								labels: {
+									font: {
+										size: 16
+									}
+								}
 							},
-						},
-						tooltips: {
-							mode: 'index'
+							tooltip: {
+								titleFont: { size: 16 },
+								bodyFont: { size: 16 }
+							}
 						},
 						scales: {
 							y: {
-								beginAtZero: true
+								beginAtZero: true,
+								title: {
+									display: true,
+									text: 'Количество ошибок',
+									font: {
+										size: 16
+									}
+								},
+								ticks: {
+									font: {
+										size: 16
+									}
+								}
+							},
+							x: {
+								title: {
+									display: true,
+									text: 'Степени грубости ошибок',
+									font: {
+										size: 16
+									}
+								},
+								ticks: {
+									font: {
+										size: 16
+									}
+								}
 							}
 						}
 					}
-				}));
+				});
 			},
 			update_chart() {
-				this.chart.data.labels = this.labels
-				this.chart.data.datasets[0].data = this.stars
-				this.chart.update()
+				if (this.chart) {
+					this.chart.data.labels = this.labels;
+					this.chart.data.datasets[0].data = this.stars;
+					this.chart.update();
+				}
 			},
 			get_data() {
-				var labels = []
-				var points = []
-				type_stat = document.getElementById("selected_stat").value
+				this.labels = [];
+				this.stars = [];
+				
+				var type_stat = document.getElementById("selected_stat").value
 
-				var count = 0
-				var count_on_tokens = 0
-				for (let i=0; i<data_for_language.length; i++) {
-					count += data_for_language[i].count_data
-					count_on_tokens += data_for_language[i].count_data_on_tokens
-				}
-
-				for (let i=0; i<data_for_language.length; i++) {
-					labels.push(data_for_language[i].iderrorlevel__errorlevelname)
-
-					if (type_stat == 'абсолютная') {
-						points.push(data_for_language[i].count_data * 100 / count)
+				for (let i=0; i<list_data.length; i++) {
+					var errorLevelName = '';
+					if (current_language === 'russian' && list_data[i].iderrorlevel__errorlevelrussian) {
+						errorLevelName = list_data[i].iderrorlevel__errorlevelrussian;
+					} else {
+						errorLevelName = list_data[i].iderrorlevel__errorlevelname;
 					}
-					else {
-						points.push(data_for_language[i].count_data_on_tokens * 100 / count_on_tokens)
+					
+					if (errorLevelName) {
+						this.labels.push(errorLevelName);
+						
+						if (type_stat == 'absolute') {
+							this.stars.push(list_data[i].count_data || 0);
+						} else {
+							this.stars.push(list_data[i].count_data_on_tokens || 0);
+						}
 					}
 				}
-
-				this.labels = labels
-				this.stars = points
 			}
+		},
+		mounted() {
+			this.get_data();
+			this.init_chart();
 		}
 	})
 
-	grade_errors_pie.mounted()
+	var grade_errors_pie = new Vue({
+		el: '#grade_errors_pie',
+		data: {
+			chart: null,
+			labels: [],
+			stars: [],
+			chart_type: 'pie'
+		},
+		methods: {
+			init_chart() {
+				if (this.chart) {
+					this.chart.destroy();
+				}
+				
+				var ctx = this.$refs.chart.getContext('2d');
+
+				const lineLabelPlugin = {
+					id: 'lineLabels',
+					afterDraw(chart) {
+						const ctx = chart.ctx;
+						ctx.save();
+						
+						const dataset = chart.data.datasets[0];
+						const meta = chart.getDatasetMeta(0);
+						const total = dataset.data.reduce((a, b) => a + b, 0);
+
+						const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+						const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+						const radius = Math.min(
+							(chart.chartArea.right - chart.chartArea.left) / 2,
+							(chart.chartArea.bottom - chart.chartArea.top) / 2
+						) * 0.8;
+						
+						meta.data.forEach((element, index) => {
+							const percentage = total > 0 ? (dataset.data[index] / total) * 100 : 0;
+
+							if (percentage < 1.5) return;
+							
+							const label = chart.data.labels[index];
+							const shortLabel = label.length > 20 ? label.substring(0, 20) + '...' : label;
+							const labelText = `${shortLabel} (${percentage.toFixed(1)}%)`;
+
+							if (meta.data.length === 1) {
+								const textX = centerX + radius + 70;
+								const textY = centerY;
+
+								ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+								ctx.strokeStyle = '#ccc';
+								ctx.lineWidth = 1;
+								const textWidth = ctx.measureText(labelText).width;
+								ctx.fillRect(textX - 5, textY - 8, textWidth + 10, 16);
+								ctx.strokeRect(textX - 5, textY - 8, textWidth + 10, 16);
+
+								ctx.fillStyle = '#333';
+								ctx.font = '11px Arial';
+								ctx.textAlign = 'left';
+								ctx.textBaseline = 'middle';
+								ctx.fillText(labelText, textX, textY);
+								
+								return; 
+							}
+
+							const startAngle = element.startAngle;
+							const endAngle = element.endAngle;
+							const midAngle = startAngle + (endAngle - startAngle) / 2;
+
+							const labelX = centerX + Math.cos(midAngle) * radius;
+							const labelY = centerY + Math.sin(midAngle) * radius;
+
+							const isLeft = labelX < centerX;
+							const lineLength = 60;
+
+							const lineEndX = labelX + Math.cos(midAngle) * lineLength;
+							const lineEndY = labelY + Math.sin(midAngle) * lineLength;
+
+							const textX = lineEndX + (isLeft ? -10 : 10);
+							const textY = lineEndY;
+
+							ctx.strokeStyle = '#666';
+							ctx.lineWidth = 1;
+							ctx.setLineDash([5, 3]);
+							ctx.beginPath();
+							ctx.moveTo(labelX, labelY);
+							ctx.lineTo(lineEndX, lineEndY);
+							ctx.stroke();
+							ctx.setLineDash([]);
+
+							const textWidth = ctx.measureText(labelText).width;
+							const textHeight = 16;
+
+							ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+							ctx.strokeStyle = '#ccc';
+							ctx.lineWidth = 1;
+							
+							if (isLeft) {
+								ctx.fillRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+								ctx.strokeRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+							} else {
+								ctx.fillRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+								ctx.strokeRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+							}
+
+							ctx.fillStyle = '#333';
+							ctx.font = '11px Arial';
+							ctx.textAlign = isLeft ? 'right' : 'left';
+							ctx.textBaseline = 'middle';
+							ctx.fillText(labelText, isLeft ? textX - 5 : textX + 5, textY);
+						});
+						
+						ctx.restore();
+					}
+				};
+
+				this.chart = new Chart(ctx, {
+					type: this.chart_type,
+					data: {
+						labels: this.labels,
+						datasets: [{
+							label: 'Количество ошибок',
+							backgroundColor: pie_colors,
+							borderColor: function(context) {
+								const chart = context.chart;
+								const meta = chart.getDatasetMeta(0);
+								if (meta.data.length === 1) {
+									return 'transparent';
+								}
+								return '#000000';
+							},
+							borderWidth: function(context) {
+								const chart = context.chart;
+								const meta = chart.getDatasetMeta(0);
+								if (meta.data.length === 1) {
+									return 0;
+								}
+								return 0.3;
+							},
+							data: this.stars
+						}]
+					},
+					options: {
+						responsive: true,
+						plugins: {
+							legend: {
+								display: false
+							},
+							tooltip: {
+								enabled: true,
+								titleFont: { size: 16 },
+								bodyFont: { size: 16 },
+								callbacks: {
+									label: function(context) {
+										var label = context.label || '';
+										var value = context.raw || 0;
+										return label + ': ' + value.toFixed(2) + '%';
+									}
+								}
+							}
+						},
+						layout: {
+							padding: {
+								left: 100,
+								right: 100,
+								top: 100,
+								bottom: 100
+							}
+						}
+					},
+					plugins: [lineLabelPlugin]
+				});
+			},
+			update_chart() {
+				if (this.chart) {
+					this.chart.data.labels = this.labels;
+					this.chart.data.datasets[0].data = this.stars;
+					this.chart.update();
+				}
+			},
+			get_data() {
+				this.labels = [];
+				this.stars = [];
+				
+				var type_stat = document.getElementById("selected_stat").value
+
+				var total_count = 0;
+				var total_tokens = 0;
+				
+				for (let i=0; i<list_data.length; i++) {
+					total_count += list_data[i].count_data || 0;
+					total_tokens += list_data[i].count_data_on_tokens || 0;
+				}
+
+				for (let i=0; i<list_data.length; i++) {
+					var errorLevelName = '';
+					if (current_language === 'russian' && list_data[i].iderrorlevel__errorlevelrussian) {
+						errorLevelName = list_data[i].iderrorlevel__errorlevelrussian;
+					} else {
+						errorLevelName = list_data[i].iderrorlevel__errorlevelname;
+					}
+					
+					if (errorLevelName) {
+						this.labels.push(errorLevelName);
+						
+						if (type_stat == 'absolute') {
+							if (total_count > 0) {
+								this.stars.push(((list_data[i].count_data || 0) / total_count * 100));
+							} else {
+								this.stars.push(0);
+							}
+						} else {
+							if (total_tokens > 0) {
+								this.stars.push(((list_data[i].count_data_on_tokens || 0) / total_tokens * 100));
+							} else {
+								this.stars.push(0);
+							}
+						}
+					}
+				}
+			}
+		},
+		mounted() {
+			this.get_data();
+			this.init_chart();
+		}
+	})
+
+	document.addEventListener('DOMContentLoaded', function() {
+		document.getElementById("error_group").style.display = 'none'
+		document.getElementById("error_student_surname").style.display = 'none'
+		document.getElementById("error_student_name").style.display = 'none'
+
+		Chart.defaults.font.size = 16;
+		Chart.defaults.plugins.tooltip.titleFont = { size: 16 };
+		Chart.defaults.plugins.tooltip.bodyFont = { size: 16 };
+		
+		setTimeout(() => {
+			if (grade_errors_bar && grade_errors_pie) {
+				grade_errors_bar.get_data();
+				grade_errors_bar.init_chart();
+				grade_errors_pie.get_data();
+				grade_errors_pie.init_chart();
+			}
+		}, 100);
+	});
 </script>
 {%endblock script%}

@@ -62,47 +62,29 @@ def get_levels():
     return levels
 
 
-def get_texts_id_keys(data_count, texts_id):
-    #print(data_count[0])
+def get_texts_id_keys(data_count, texts_id, text_id_key, tag_key):
     """Создаёт словарь: {id тега: [id текстов]}"""
     for data in data_count:
-        if "iderrortag__iderrortag" in data:
-            key = "iderrortag__iderrortag"
-        elif "iderrorlevel__iderrorlevel" in data:
-            key = "iderrorlevel__iderrorlevel"
-        else:
-            continue
-            
-        if data[key] not in texts_id:
-            texts_id[data[key]] = []
+        if data.get(tag_key) not in texts_id:
+            texts_id[data.get(tag_key)] = []
     return texts_id
 
 
-def get_texts_id_and_data_on_tokens(data_count, texts_id, id_data):
+def get_texts_id_and_data_on_tokens(data_count, texts_id, id_data, text_id_key, tag_key):
     """Заполняет texts_id и объединяет ошибки по id_data"""
     data_count_on_tokens = []
     id_data_count_on_tokens = []
 
     for data in data_count:
-        if "iderrortag__iderrortag" in data:
-            tag_key = "iderrortag__iderrortag"
-        elif "iderrorlevel__iderrorlevel" in data:
-            tag_key = "iderrorlevel__iderrorlevel"
-        else:
-            continue
-            
-        if (
-            data["errortoken__idtoken__idsentence__idtext__idtext"]
-            not in texts_id[data[tag_key]]
-        ):
-            texts_id[data[tag_key]].append(
-                data["errortoken__idtoken__idsentence__idtext__idtext"]
-            )
+        if data.get(text_id_key) not in texts_id[data[tag_key]]:
+            texts_id[data[tag_key]].append(data.get(text_id_key))
 
         if data[id_data] not in id_data_count_on_tokens:
             id_data_count_on_tokens.append(data[id_data])
-            del data["errortoken__idtoken__idsentence__idtext__idtext"]
-            data_count_on_tokens.append(data)
+            new_data = data.copy()
+            if text_id_key in new_data:
+                del new_data[text_id_key]
+            data_count_on_tokens.append(new_data)
         else:
             idx = 0
             while data_count_on_tokens[idx][id_data] != data[id_data]:
@@ -112,7 +94,7 @@ def get_texts_id_and_data_on_tokens(data_count, texts_id, id_data):
     return data_count_on_tokens, texts_id
 
 
-def get_on_tokens(texts_id, data_count):
+def get_on_tokens(texts_id, data_count, tag_key):
     """Считает процент ошибок на 100 токенов"""
     count_tokens = {}
 
@@ -123,13 +105,6 @@ def get_on_tokens(texts_id, data_count):
         count_tokens[tag_id] = count_tokens_tag["res"]
 
     for data in data_count:
-        if "iderrortag__iderrortag" in data:
-            tag_key = "iderrortag__iderrortag"
-        elif "iderrorlevel__iderrorlevel" in data:
-            tag_key = "iderrorlevel__iderrorlevel"
-        else:
-            continue
-            
         if count_tokens.get(data[tag_key], 0):
             data["count_data_on_tokens"] = (
                 data["count_data"] * 100 / count_tokens[data[tag_key]]
@@ -142,14 +117,23 @@ def get_on_tokens(texts_id, data_count):
 
 def get_data_on_tokens(data_count, id_data, is_unique_data, is_for_one_group):
     """Основная обработка данных по токенам"""
-    texts_id = get_texts_id_keys(data_count, {})
+    print("=== DEBUG get_data_on_tokens ===")
+    print(f"Input data count: {len(data_count)}")
+    if data_count:
+        print(f"Sample input keys: {list(data_count[0].keys())}")
+
+    if data_count and 'idtoken__idsentence__idtext' in data_count[0]:
+        text_id_key = "idtoken__idsentence__idtext"
+        tag_key = "iderror__iderrortag__iderrortag"
+    
+    texts_id = get_texts_id_keys(data_count, {}, text_id_key, tag_key)
 
     if is_for_one_group:
         count_errors = 0
 
         for data in data_count:
-            if data["iderror__idtext"] not in texts_id[data["iderrortag"]]:
-                texts_id[data["iderrortag"]].append(data["iderror__idtext"])
+            if data.get(text_id_key) not in texts_id[data.get(tag_key)]:
+                texts_id[data.get(tag_key)].append(data.get(text_id_key))
             count_errors += data["count_data"]
 
         count_tokens = {}
@@ -159,9 +143,9 @@ def get_data_on_tokens(data_count, id_data, is_unique_data, is_for_one_group):
             ).aggregate(res=Count("idsentence__idtext"))
             count_tokens[tag_id] = count_tokens_tag["res"]
 
-        if count_tokens.get(data_count[0]["iderrortag"], 0):
+        if count_tokens.get(data_count[0].get(tag_key), 0):
             data_count[0]["count_data_on_tokens"] = (
-                count_errors * 100 / count_tokens[data_count[0]["iderrortag"]]
+                count_errors * 100 / count_tokens[data_count[0].get(tag_key)]
             )
         else:
             data_count[0]["count_data_on_tokens"] = 0
@@ -172,14 +156,14 @@ def get_data_on_tokens(data_count, id_data, is_unique_data, is_for_one_group):
 
     if is_unique_data:
         data_count_on_tokens, texts_id = get_texts_id_and_data_on_tokens(
-            data_count, texts_id, id_data
+            data_count, texts_id, id_data, text_id_key, tag_key
         )
-        data_count_on_tokens = get_on_tokens(texts_id, data_count_on_tokens)
+        data_count_on_tokens = get_on_tokens(texts_id, data_count_on_tokens, tag_key)
         return data_count_on_tokens
 
     for data in data_count:
         count_tokens = Token.objects.filter(
-            idsentence__idtext=data["iderror__idtext"]
+            idsentence__idtext=data.get(text_id_key)
         ).aggregate(res=Count("idsentence__idtext"))
         if count_tokens["res"]:
             data["count_data_on_tokens"] = (
@@ -188,84 +172,95 @@ def get_data_on_tokens(data_count, id_data, is_unique_data, is_for_one_group):
         else:
             data["count_data_on_tokens"] = 0
 
+    print(f"Output data count: {len(data_count)}")
+    print("==================")
+    
     return data_count
 
 
-def get_data_errors_dfs(v, d, d_on_tokens, level, level_input, h, flags_levels, data):
+def get_data_errors_dfs(v, level, level_input, h, flags_levels, data):
     """DFS для суммирования ошибок по иерархии тегов"""
     h[v] = 1
-    level += 1
+    current_level = level + 1
+    
+    total_count = data[v]["count_data"]
+    total_tokens = data[v]["count_data_on_tokens"]
 
     for i in range(len(data)):
         if data[i]["idtagparent"] == data[v]["iderrortag"] and h[i] == 0:
-            c, c_on_tokens = get_data_errors_dfs(
-                i, d, d_on_tokens, level, level_input, h, flags_levels, data
+            child_count, child_tokens = get_data_errors_dfs(
+                i, current_level, level_input, h, flags_levels, data
             )
-            d = c
-            d_on_tokens = c_on_tokens
+            total_count += child_count
+            total_tokens += child_tokens
 
-    if level > level_input:
-        return data[v]["count_data"] + d, data[v]["count_data_on_tokens"] + d_on_tokens
-    else:
+    if current_level <= level_input:
         flags_levels[v] = True
-        data[v]["count_data"] += d
-        data[v]["count_data_on_tokens"] += d_on_tokens
-        return 0, 0
+        data[v]["count_data"] = total_count
+        data[v]["count_data_on_tokens"] = total_tokens
+    else:
+        flags_levels[v] = False
+
+    return total_count, total_tokens
 
 
 def get_data_errors(data_count_errors, level, is_sorted):
     """Финальная сборка статистики по ошибкам"""
-    list_tags_id_in_markup = [
-        data["iderrortag__iderrortag"] for data in data_count_errors
-    ]
+    if data_count_errors:
+        print(f"Input keys: {list(data_count_errors[0].keys())}")
 
+    if data_count_errors and 'iderror__iderrortag__iderrortag' in data_count_errors[0]:
+        tag_id_key = "iderror__iderrortag__iderrortag"
+        tag_parent_key = "iderror__iderrortag__idtagparent"
+        tag_text_key = "iderror__iderrortag__tagtext"
+        tag_text_russian_key = "iderror__iderrortag__tagtextrussian"
+
+    list_tags_id_in_markup = [
+        data.get(tag_id_key) for data in data_count_errors if data.get(tag_id_key) is not None
+    ]
     data_tags_not_in_errors = list(
-        ErrorTag.objects.annotate(
-            tag_id=F("iderrortag"),
-            id_parent=F("idtagparent"),
-            tag_text=F("tagtext"),
-            tagtext_russian=F("tagtextrussian"),
-        )
-        .values("iderrortag", "idtagparent", "tagtext", "tagtextrussian")
+        ErrorTag.objects.values("iderrortag", "idtagparent", "tagtext", "tagtextrussian")
         .filter(~Q(iderrortag__in=list_tags_id_in_markup))
         .annotate(
             count_data=Value(0, output_field=IntegerField()),
             count_data_on_tokens=Value(0, output_field=IntegerField()),
         )
     )
-    # print((data_count_errors + data_tags_not_in_errors)[1])
-    s = 0
+
+    data = []
     for item in data_count_errors + data_tags_not_in_errors:
-        if (
-            item.get("iderrortag", None) == None
-            and item.get("iderrortag__iderrortag", None) == None
-        ):
-            s += 1
+        if "iderrortag" in item:
+            data_item = {
+                "iderrortag": item["iderrortag"],
+                "idtagparent": item["idtagparent"],
+                "tagtext": item["tagtext"],
+                "tagtextrussian": item["tagtextrussian"],
+                "count_data": item["count_data"],
+                "count_data_on_tokens": item.get("count_data_on_tokens", 0),
+            }
+        else:
+            data_item = {
+                "iderrortag": item.get(tag_id_key),
+                "idtagparent": item.get(tag_parent_key),
+                "tagtext": item.get(tag_text_key),
+                "tagtextrussian": item.get(tag_text_russian_key),
+                "count_data": item["count_data"],
+                "count_data_on_tokens": item.get("count_data_on_tokens", 0),
+            }
+        data.append(data_item)
 
-    #print(len(data_count_errors + data_tags_not_in_errors), s)
-
-    data = [
-        {
-            "iderrortag": item.get("iderrortag", None)
-            if item.get("iderrortag") != None
-            else item.get("iderrortag__iderrortag", None),
-            "idtagparent": item.get("idtagparent", item.get("iderrortag__idtagparent")),
-            "tagtext": item.get("tagtext", item.get("text")),
-            "tagtextrussian": item.get("tagtextrussian", item.get("text_russian")),
-            "count_data": item["count_data"],
-            "count_data_on_tokens": item.get("count_data_on_tokens", 0),
-        }
-        for item in data_count_errors + data_tags_not_in_errors
-    ]
+    print(f"Processed {len(data)} items total")
 
     n = len(data)
     h = [0] * n
     flags_levels = [False] * n
 
+    # Обрабатываем иерархию
     for i in range(n):
-        if h[i] == 0 and data[i]["idtagparent"] is None:
-            get_data_errors_dfs(i, 0, 0, -1, level, h, flags_levels, data)
+        if h[i] == 0 and (data[i]["idtagparent"] is None or data[i]["idtagparent"] == -1):
+            get_data_errors_dfs(i, -1, level, h, flags_levels, data)
 
+    # Собираем результат
     data_grouped = []
     for i in range(n):
         if flags_levels[i]:
@@ -273,12 +268,16 @@ def get_data_errors(data_count_errors, level, is_sorted):
                 data[i]["idtagparent"] = -1
             data_grouped.append(data[i])
 
+    # Сортируем
     if is_sorted:
-        data = sorted(data_grouped, key=lambda d: d["count_data"], reverse=True)
+        result_data = sorted(data_grouped, key=lambda d: d["count_data"], reverse=True)
     else:
-        data = sorted(data_grouped, key=lambda d: d["iderrortag"])
+        result_data = sorted(data_grouped, key=lambda d: d["iderrortag"])
 
-    return data
+    print(f"Final result: {len(result_data)} items")
+    print("==================")
+    
+    return result_data
 
 
 def get_enrollment_date(list_filters):
@@ -321,192 +320,115 @@ def get_enrollment_date(list_filters):
 
 
 def get_filters_for_choice_all(list_filters):
-    text = list_filters.get("text")
-    text_type = list_filters.get("text_type")
+    """Получаем все тексты и типы текстов без фильтров"""
+    texts = list(
+        Text.objects.filter(errorcheckflag=True)
+        .values("header")
+        .distinct()
+        .order_by("header")
+    )
 
-    if text_type:
-        texts = list(
-            Text.objects.filter(errorcheckflag=True, idtexttype__texttypename=text_type)
-            .values("header")
-            .distinct()
-            .order_by("header")
-        )
-    else:
-        texts = list(
-            Text.objects.filter(errorcheckflag=True)
-            .values("header")
-            .distinct()
-            .order_by("header")
-        )
-
-    if text:
-        text_types = list(
-            TextType.objects.filter(text__errorcheckflag=True, text__header=text)
-            .values()
-            .distinct()
-            .order_by("idtexttype")
-        )
-    else:
-        text_types = list(
-            TextType.objects.filter(text__errorcheckflag=True)
-            .values()
-            .distinct()
-            .order_by("idtexttype")
-        )
+    text_types = list(
+        TextType.objects.filter(text__errorcheckflag=True)
+        .values()
+        .distinct()
+        .order_by("idtexttype")
+    )
 
     return texts, text_types
 
-
 def get_filters_for_choice_group(list_filters):
+    """Получаем тексты и типы текстов для выбранной группы"""
     group = list_filters["group"]
-    text = list_filters.get("text")
-    text_type = list_filters.get("text_type")
     enrollment_date = list_filters["enrollment_date"]
 
     start_year = enrollment_date.split(" \\ ")[0]
     academic_year_title = f"{start_year}/{int(start_year) + 1}"
-
     group_obj = Group.objects.get(groupname=group, idayear__title=academic_year_title)
 
-    if text_type:
-        texts = list(
-            Text.objects.filter(
-                errorcheckflag=True,
-                idstudent__idgroup=group_obj,
-                idtexttype__texttypename=text_type,
-            )
-            .values("header")
-            .distinct()
-            .order_by("header")
+    texts = list(
+        Text.objects.filter(
+            errorcheckflag=True,
+            idstudent__idgroup=group_obj
         )
-    else:
-        texts = list(
-            Text.objects.filter(errorcheckflag=True, idstudent__idgroup=group_obj)
-            .values("header")
-            .distinct()
-            .order_by("header")
-        )
+        .values("header")
+        .distinct()
+        .order_by("header")
+    )
 
-    if text:
-        text_types = list(
-            TextType.objects.filter(
-                text__errorcheckflag=True,
-                text__idstudent__idgroup=group_obj,
-                text__header=text,
-            )
-            .values()
-            .distinct()
-            .order_by("idtexttype")
+    text_types = list(
+        TextType.objects.filter(
+            text__errorcheckflag=True,
+            text__idstudent__idgroup=group_obj
         )
-    else:
-        text_types = list(
-            TextType.objects.filter(
-                text__errorcheckflag=True, text__idstudent__idgroup=group_obj
-            )
-            .values()
-            .distinct()
-            .order_by("idtexttype")
-        )
+        .values()
+        .distinct()
+        .order_by("idtexttype")
+    )
 
     return texts, text_types
 
 
 def get_filters_for_choice_student(list_filters):
+    """Получаем тексты и типы текстов для выбранного студента"""
     surname = list_filters["surname"]
     name = list_filters["name"]
-    text = list_filters.get("text")
-    text_type = list_filters.get("text_type")
-    user_filter = Q(text__idstudent__iduser__lastname=surname) & Q(
-        text__idstudent__iduser__firstname=name
+    patronymic = list_filters.get("patronymic", "")
+
+    user_filter = Q(text__idstudent__iduser__lastname__iexact=surname) & Q(
+        text__idstudent__iduser__firstname__iexact=name
+    )
+    
+    if patronymic:
+        user_filter &= Q(text__idstudent__iduser__middlename__iexact=patronymic)
+
+    texts = list(
+        Text.objects.filter(
+            errorcheckflag=True
+        )
+        .filter(user_filter)
+        .values("header")
+        .distinct()
+        .order_by("header")
     )
 
-    if text:
-        text_types = list(
-            TextType.objects.filter(
-                Q(text__errorcheckflag=True, text__header=text) & user_filter
-            )
-            .values()
-            .distinct()
-            .order_by("idtexttype")
+    text_types = list(
+        TextType.objects.filter(
+            text__errorcheckflag=True
         )
-    else:
-        text_types = list(
-            TextType.objects.filter(Q(text__errorcheckflag=True) &  user_filter)
-            .values()
-            .distinct()
-            .order_by("idtexttype")
-        )
-
-    if text_type:
-        texts = list(
-            Text.objects.filter(
-                Q(errorcheckflag=True, idtexttype__texttypename=text_type) & Q(idstudent__iduser__lastname=surname) & Q(
-        idstudent__iduser__firstname=name
+        .filter(user_filter)
+        .values()
+        .distinct()
+        .order_by("idtexttype")
     )
-            )
-            .values("header")
-            .distinct()
-            .order_by("header")
-        )
-    else:
-        texts = list(
-            Text.objects.filter(Q(errorcheckflag=True)  & Q(idstudent__iduser__lastname=surname) & Q(
-        idstudent__iduser__firstname=name
-    ))
-            .values("header")
-            .distinct()
-            .order_by("header")
-        )
 
     return texts, text_types
 
 
+
 def get_filters_for_choice_course(list_filters):
+    """Получаем тексты и типы текстов для выбранного курса"""
     course = list_filters["course"]
-    text = list_filters.get("text")
-    text_type = list_filters.get("text_type")
 
-    if text_type:
-        texts = list(
-            Text.objects.filter(
-                errorcheckflag=True,
-                idstudent__idgroup__studycourse=course,
-                idtexttype__texttypename=text_type,
-            )
-            .values("header")
-            .distinct()
-            .order_by("header")
+    texts = list(
+        Text.objects.filter(
+            errorcheckflag=True,
+            idstudent__idgroup__studycourse=course
         )
-    else:
-        texts = list(
-            Text.objects.filter(
-                errorcheckflag=True, idstudent__idgroup__studycourse=course
-            )
-            .values("header")
-            .distinct()
-            .order_by("header")
-        )
+        .values("header")
+        .distinct()
+        .order_by("header")
+    )
 
-    if text:
-        text_types = list(
-            TextType.objects.filter(
-                text__errorcheckflag=True,
-                text__idstudent__idgroup__studycourse=course,
-                text__header=text,
-            )
-            .values()
-            .distinct()
-            .order_by("idtexttype")
+    text_types = list(
+        TextType.objects.filter(
+            text__errorcheckflag=True,
+            text__idstudent__idgroup__studycourse=course
         )
-    else:
-        text_types = list(
-            TextType.objects.filter(
-                text__errorcheckflag=True, text__idstudent__idgroup__studycourse=course
-            )
-            .values()
-            .distinct()
-            .order_by("idtexttype")
-        )
+        .values()
+        .distinct()
+        .order_by("idtexttype")
+    )
 
     return texts, text_types
 
@@ -652,17 +574,18 @@ def get_filters_for_choice_text_type(list_filters):
 
 
 def get_zero_count_grade_errors(data_count_errors):
+    if data_count_errors and 'iderror__iderrorlevel__iderrorlevel' in data_count_errors[0]:
+        grade_key = "iderror__iderrorlevel__iderrorlevel"
+    else:
+        grade_key = "errortoken__iderror__iderrorlevel__iderrorlevel"
+    
     list_grades_id_in_markup = [
-        data["iderrorlevel__iderrorlevel"] for data in data_count_errors
+        data.get(grade_key) for data in data_count_errors if data.get(grade_key) is not None
     ]
 
     data_grades_not_in_errors = list(
         ErrorLevel.objects.filter(~Q(iderrorlevel__in=list_grades_id_in_markup))
-        .annotate(
-            iderrorlevel__iderrorlevel=F("iderrorlevel"),
-            iderrorlevel__errorlevelname=F("errorlevelname"),
-        )
-        .values("iderrorlevel__iderrorlevel", "iderrorlevel__errorlevelname")
+        .values("iderrorlevel", "errorlevelname")
         .annotate(
             count_data=Value(0, output_field=IntegerField()),
             count_data_on_tokens=Value(0, output_field=IntegerField()),

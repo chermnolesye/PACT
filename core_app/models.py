@@ -96,6 +96,7 @@ class ErrorLevel(models.Model):
     errorlevelname = models.CharField(max_length=255)
     errorlevelabbrev = models.CharField(max_length=30, blank=True, null=True)
     errorlevelvalue = models.SmallIntegerField()
+    errorlevelrussian = models.CharField(max_length=255, blank=True, null=True)  
 
     class Meta:
         db_table = 'tblerrorlevel'

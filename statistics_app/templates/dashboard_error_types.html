@@ -1,4 +1,3 @@
-
 {% load static %} 
 {%block plugins%}
 <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
@@ -7,6 +6,7 @@
 <script src="{% static 'js/external/xlsx.full.min.js' %}"></script>
 <script src="{% static 'js/external/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/external/jquery.min.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 {%endblock plugins%} {% block link %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/dashboards.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'css/external/bootstrap.min.css' %}" />
@@ -81,8 +81,8 @@
 						{% verbatim %}
 						<select class="form-select" v-model="selected_tag_parent" @change="on_change_tag_parent">
 							<option selected> -- </option>
-							<option v-for="tag_parent in tag_parents":value="tag_parent.id_tag">
-								{{ tag_parent.tag_text_russian }}
+							<option v-for="tag_parent in tag_parents":value="tag_parent.iderrortag">
+								{{ tag_parent.tagtextrussian }}
 							</option>
 						</select>
 						{% endverbatim %}
@@ -142,7 +142,7 @@
 										data-bs-target="#none"
 										aria-expanded="false"
 										aria-controls="none"
-										@change="on_change_choice_student_filters(); on_change_choice_all();"
+										@change="on_change_choice_all"
 										checked
 									/>
 									<label class="form-check-label text-filter" for="all"> Все </label>
@@ -165,62 +165,47 @@
 										aria-controls="group"
 										@change="on_change_choice_student_filters"
 									/>
-									<div class="row row-cols-3">
-										<div class="col">
-											<label class="form-check-label text-filter" for="groups"> Группа </label>
-										</div>
-										<div class="col">
-											<span id="enrollment_date" class="text-filter element-visibility">
-												Учебный год
-											</span>
-										</div>
-									</div>
+									<label class="form-check-label text-filter" for="groups"> Группа </label>
 									<div
 										id="group"
 										class="accordion-collapse collapse"
 										data-bs-parent="#filters_for_student"
 									>
 										<div class="row">
-											<div class="col">
+											<div class="col-8">
+												<div class="input-group mb-2">
+													<input 
+														type="text" 
+														class="form-control" 
+														placeholder="Поиск группы..." 
+														id="group_search"
+														@input="on_group_search"
+													>
+												</div>
 												{% verbatim %}
 												<select
-												 	id="filter_group"
+													id="filter_group"
 													class="form-select"
 													v-model="selected_group"
-													@change="on_change_group_number"
+													size="6"
 												>
-													<option v-for="group in groups">{{ group.groupname }}</option>
-												</select>
-												{% endverbatim %}
-											</div>
-											<div class="col">
-												{% verbatim %}
-												<select
-													id="filter_group_date"
-													class="form-select"
-													v-model="selected_date"
-												>
-													<option v-for="date in group_dates">
-														{{ date.enrollment_date }}
+													<option v-for="group in filtered_groups" 
+															:value="group.idgroup">
+														{{ group.groupname }} ({{ group.idayear__title }})
 													</option>
 												</select>
 												{% endverbatim %}
 											</div>
-											<div class="col">
-												<button type="button" class="btn btn-primary" @click="on_change_group">
+											<div class="col-4">
+												<button type="button" class="btn btn-primary mt-4" @click="on_change_group">
 													Применить
 												</button>
 											</div>
 										</div>
 										<div class="row">
-											<div class="col-4">
+											<div class="col-12">
 												<div id="error_group" class="form-text error-message">
 													выберите группу
-												</div>
-											</div>
-											<div class="col">
-												<div id="error_group_date" class="form-text error-message">
-													выберите учебный год
 												</div>
 											</div>
 										</div>
@@ -326,7 +311,7 @@
 													v-model="selected_course"
 													@change="on_change_course"
 												>
-													<option v-for="course in courses">
+													<option v-for="course in courses":value="course.studycourse">
 														{{ course.studycourse }}
 													</option>
 												</select>
@@ -384,7 +369,6 @@
 											<input
 												id="filter_text_types"
 												type="checkbox"
-												value=""
 												class="form-check-input"
 												data-bs-toggle="collapse"
 												data-bs-target="#text_type"
@@ -406,7 +390,7 @@
 													@change="on_change_text_type"
 												>
 													<option
-														v-for="text_type in text_types":value="text_type.id_text_type"
+														v-for="text_type in text_types":value="text_type.texttypename"
 													>
 														{{ text_type.texttypename }}
 													</option>
@@ -425,38 +409,7 @@
 	</div>
 
 	<hr class="mt-2" />
-	<div id="legend_checked_filters" class="d-flex flex-column flex-md-row gap-3 mt-4 justify-content-start">
-		<div id="card_group" class="card card-rounded shadow-sm card-display border border-primary">
-			<div class="card-body">
-				<p class="card-text text-primary">
-					<span v-html="group">{{group}}</span> (<span v-html="enrollment_date">{{enrollment_date}}</span>)
-				</p>
-			</div>
-		</div>
-		<div id="card_student" class="card card-rounded shadow-sm card-display border border-primary">
-			<div class="card-body">
-				<p class="card-text text-primary">
-					<span v-html="surname">{{surname}}</span>
-					<span v-html="name">{{name}}</span>
-					<span v-html="patronymic">{{patronymic}}</span>
-				</p>
-			</div>
-		</div>
-		<div id="card_course" class="card card-rounded shadow-sm card-display border border-primary">
-			<div class="card-body">
-				<p class="card-text text-primary"> <span v-html="course">{{course}}</span> курс</p>
-			</div>
-		</div>
-		<div id="card_text" class="card card-rounded shadow-sm card-display border border-primary">
-			<div class="card-body">
-				<p class="card-text text-primary" v-html="text">{{text}}</p>
-			</div>
-		</div>
-		<div id="card_text_type" class="card card-rounded shadow-sm card-display border border-primary">
-			<div class="card-body">
-				<p class="card-text text-primary" v-html="text_type">{{text_type}}</p>
-			</div>
-		</div>
+	<div id="legend_checked_filters">
 	</div>
 
 	<div id="diagrams" class="d-flex flex-column my-2">
@@ -471,6 +424,7 @@
 	</div>
 </main>
 {% endblock content%} {%block script%}
+
 <script type="text/javascript">
 	var list_levels = {{levels | safe}}
 	var list_groups = {{groups | safe}}
@@ -482,19 +436,46 @@
 	var list_tag_parents = {{tag_parents | safe}}
 	let dict_children = {{dict_children | safe}}
 
-	var change_level_text = false
 	var data_for_language = list_data
 
+	var colors = [
+		'#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
+		'#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40', '#36A2EB', '#FFCE56',
+		'#9966FF', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40', '#36A2EB'
+	]
 
-	async function post_request_data_errors(group, enrollment_date, surname, name, patronymic, course, text, text_type,
-											level) {
+	var current_group = ''
+	var current_enrollment_date = ''
+	var current_surname = ''
+	var current_name = ''
+	var current_patronymic = ''
+	var current_course = ''
+	var current_text = ''
+	var current_text_type = ''
+
+	function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i++) {
+				const cookie = cookies[i].trim();
+				if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
+	}
+
+	async function post_request_data_errors(group, enrollment_date, surname, name, patronymic, course, text, text_type, level) {
 	    var data = []
 
 	    await axios({
 	        method: 'post',
 	        url: '',
 	        data: {
-	        	'group': group,
+	            'group': group,
 	            'enrollment_date': enrollment_date,
 	            'surname': surname,
 	            'name': name,
@@ -507,26 +488,35 @@
 	        },
 	        headers: {
 	            'X-Requested-With': 'XMLHttpRequest',
+	            'X-CSRFToken': getCookie('csrftoken')
 	        }
 	    })
-	        .then(function (response) {
-	            data = response.data.data_type_errors
-	        })
+	    .then(function (response) {
+	        data = response.data.data_type_errors
+	        list_data = data
+	        data_for_language = list_data
+	    })
+	    .catch(function (error) {
+	        console.error("Error fetching data:", error);
+	    })
 
-	    list_data = data
+	    if (tag_parents_app) {
+	        tag_parents_app.selected_tag_parent = '--'
+	    }
 	}
-
 
 	function on_download() {
 		var data = []
-
-		data.push(["id_tag", "tag_parent", "tag_language", "tag_text", "tag_text_russian", "count_data",
-					"count_data_on_100_tokens"])
+		data.push(["id_tag", "tag_parent", "tag_text", "tag_text_russian", "count_data", "count_data_on_tokens"])
 		for (let i=0; i<data_for_language.length; i++) {
-			data.push([data_for_language[i].tag__id_tag, data_for_language[i].tag__tag_parent,
-				data_for_language[i].tag__tag_language, data_for_language[i].tag__tag_text,
-				data_for_language[i].tag__tag_text_russian, data_for_language[i].count_data,
-				data_for_language[i].count_data_on_tokens])
+			data.push([
+				data_for_language[i].iderrortag, 
+				data_for_language[i].idtagparent,
+				data_for_language[i].tagtext, 
+				data_for_language[i].tagtextrussian, 
+				data_for_language[i].count_data, 
+				data_for_language[i].count_data_on_tokens
+			]) 
 		}
 
 		var workbook = XLSX.utils.book_new(),
@@ -534,89 +524,583 @@
 		workbook.SheetNames.push("Errors")
 		workbook.Sheets["Errors"] = worksheet
 
-		XLSX.writeFile(workbook,
-			`Errors_types_${level_detail.selected_level_detail}_level.xlsx`)
+		XLSX.writeFile(workbook, `Errors_types_${level_detail_app.selected_level_detail}_level.xlsx`)
 	}
 
 	function update_data() {
-		type_errors_bar.get_data()
-		type_errors_bar.update_chart()
-		type_errors_pie.get_data()
-		type_errors_pie.update_chart()
+	    var type_stat = document.getElementById("selected_stat").value;
+	    if (type_stat == 'абсолютная') {
+	        data_for_language.sort((a, b) => b.count_data - a.count_data);
+	    } else {
+	        data_for_language.sort((a, b) => (b.count_data_on_tokens || 0) - (a.count_data_on_tokens || 0));
+	    }
+	    
+	    if (type_errors_bar_app) {
+	        type_errors_bar_app.get_data()
+	        type_errors_bar_app.update_chart()
+	    }
+	    if (type_errors_pie_app) {
+	        type_errors_pie_app.get_data()
+	        type_errors_pie_app.update_chart()
+	    }
 	}
 
 	async function post_request_data() {
-		await post_request_data_errors(filters.selected_group, filters.selected_date, filters.surname, filters.name,
-										filters.patronymic, filters.selected_course, filters.selected_text,
-										filters.selected_text_type, level_detail.selected_level_detail)
+		await post_request_data_errors(
+			current_group, 
+			current_enrollment_date,
+			current_surname, 
+			current_name,
+			current_patronymic, 
+			current_course, 
+			current_text,
+			current_text_type, 
+			level_detail_app.selected_level_detail
+		)
+		update_data()
 	}
 
-	var level_detail = new Vue({
-    el: '#level_detail',
-    data: {
-        levels: list_levels, // Используем все уровни без фильтрации
-        selected_level_detail: list_levels[0].id_level // Выбираем первый уровень по умолчанию
-    },
-    methods:{
-        on_change_level_detail() {
-            filters.update_diagrams()
-        }
-    }
-})
+	function update_legend_filters() {
+		var container = document.getElementById("legend_checked_filters")
+		container.innerHTML = ''
 
-	var tag_parents = new Vue({
+		var mainRow = document.createElement("div")
+		mainRow.className = "d-flex flex-wrap gap-3 mt-4"
+
+		if (current_group && current_enrollment_date) {
+			var groupCard = document.createElement("div")
+			groupCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			groupCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = `${current_group} (${current_enrollment_date})`
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('group')
+			}
+			
+			cardBody.appendChild(cardText)
+			groupCard.appendChild(cardBody)
+			groupCard.appendChild(closeBtn)
+			mainRow.appendChild(groupCard)
+		}
+
+		if (current_surname || current_name || current_patronymic) {
+			var studentCard = document.createElement("div")
+			studentCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			studentCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var studentName = [current_surname, current_name, current_patronymic].filter(Boolean).join(' ')
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = studentName
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('student')
+			}
+			
+			cardBody.appendChild(cardText)
+			studentCard.appendChild(cardBody)
+			studentCard.appendChild(closeBtn)
+			mainRow.appendChild(studentCard)
+		}
+
+		if (current_course) {
+			var courseCard = document.createElement("div")
+			courseCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			courseCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = `${current_course} курс`
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('course')
+			}
+			
+			cardBody.appendChild(cardText)
+			courseCard.appendChild(cardBody)
+			courseCard.appendChild(closeBtn)
+			mainRow.appendChild(courseCard)
+		}
+
+		if (current_text) {
+			var textCard = document.createElement("div")
+			textCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			textCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = current_text
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('text')
+			}
+			
+			cardBody.appendChild(cardText)
+			textCard.appendChild(cardBody)
+			textCard.appendChild(closeBtn)
+			mainRow.appendChild(textCard)
+		}
+
+		if (current_text_type) {
+			var textTypeCard = document.createElement("div")
+			textTypeCard.className = "card card-rounded shadow-sm border border-primary position-relative"
+			textTypeCard.style.paddingRight = "30px"
+			
+			var cardBody = document.createElement("div")
+			cardBody.className = "card-body"
+			
+			var cardText = document.createElement("p")
+			cardText.className = "card-text text-primary text-center mb-0"
+			cardText.textContent = current_text_type
+			
+			var closeBtn = document.createElement("button")
+			closeBtn.type = "button"
+			closeBtn.className = "btn-close position-absolute"
+			closeBtn.style = "top: 5px; right: 5px;"
+			closeBtn.onclick = function() {
+				remove_filter('text_type')
+			}
+			
+			cardBody.appendChild(cardText)
+			textTypeCard.appendChild(cardBody)
+			textTypeCard.appendChild(closeBtn)
+			mainRow.appendChild(textTypeCard)
+		}
+
+		container.appendChild(mainRow)
+	}
+
+	async function remove_filter(filterType) {
+		switch(filterType) {
+			case 'group':
+				current_group = ''
+				current_enrollment_date = ''
+				filters_app.selected_group = ''
+				document.getElementById('groups').checked = false
+				document.getElementById('all').checked = true
+				break
+				
+			case 'student':
+				current_surname = ''
+				current_name = ''
+				current_patronymic = ''
+				filters_app.surname = ''
+				filters_app.name = ''
+				filters_app.patronymic = ''
+				document.getElementById('students').checked = false
+				document.getElementById('all').checked = true
+				break
+				
+			case 'course':
+				current_course = ''
+				filters_app.selected_course = ''
+				document.getElementById('courses').checked = false
+				document.getElementById('all').checked = true
+				break
+				
+			case 'text':
+				current_text = ''
+				filters_app.selected_text = ''
+				document.getElementById('filter_all_texts').checked = false
+				break
+				
+			case 'text_type':
+				current_text_type = ''
+				filters_app.selected_text_type = ''
+				document.getElementById('filter_text_types').checked = false
+				break
+		}
+		
+		await post_request_data()
+		update_legend_filters()
+	}
+
+	var level_detail_app = new Vue({
+	    el: '#level_detail',
+	    data: {
+	        levels: list_levels,
+	        selected_level_detail: list_levels[0].id_level
+	    },
+	    methods: {
+	        async on_change_level_detail() {
+	            await post_request_data()
+	        }
+	    }
+	})
+
+	var tag_parents_app = new Vue({
 		el: '#tag_parents',
 		data: {
-			tag_parents: list_tag_parents.filter(tag_parent => tag_parent.tag_language == list_languages[0].id_language),
+			tag_parents: list_tag_parents,
 			selected_tag_parent: '--'
 		},
-		methods:{
+		methods: {
 			on_change_tag_parent() {
 				data_for_language = list_data
 
 				if (this.selected_tag_parent != '--') {
 					var grouped_data_for_tag = []
-
 					var tag_children = dict_children[this.selected_tag_parent]
+					
 					for (let i=0; i<tag_children.length; i++) {
-						grouped_data = data_for_language.filter(data => data.tag__id_tag == tag_children[i])
-
+						var grouped_data = data_for_language.filter(data => data.iderrortag == tag_children[i])
 						if (grouped_data.length != 0) {
 							grouped_data_for_tag.push(grouped_data[0])
 						}
 					}
 
 					data_for_language = grouped_data_for_tag
-					data_for_language.sort((x, y) => y.count_data - x.count_data)
+у
+					var type_stat = document.getElementById("selected_stat").value;
+					if (type_stat == 'абсолютная') {
+						data_for_language.sort((x, y) => y.count_data - x.count_data)
+					} else {
+						data_for_language.sort((x, y) => (y.count_data_on_tokens || 0) - (x.count_data_on_tokens || 0))
+					}
 				}
 
 				update_data()
 			}
 		}
 	})
-</script>
-<script src="{% static 'js/dashboards.js' %}" type="text/javascript"></script>
-<script type="text/javascript">
-	Chart.defaults.font.size = 16
 
-	var type_errors_bar = new Vue({
+	var signature_app = new Vue({
+		el: '#signature',
+		data: {
+			language_labels: ['Русском', 'Немецком'],
+			selected_language_labels: 'Русском'
+		},
+		methods: {
+			on_change_language_labels() {
+				update_data()
+			}
+		}
+	})
+
+	var filters_app = new Vue({ 
+		el: '#form_filters',
+		data: {
+			groups: list_groups,
+			filtered_groups: list_groups,
+			selected_group: '',
+			group_search_query: '',
+			surname: '',
+			name: '',
+			patronymic: '',
+			courses: [...new Map(list_courses.map(item => [item.studycourse, item])).values()],
+			selected_course: '',
+			texts: list_texts,
+			selected_text: '',
+			text_types: list_text_types,
+			selected_text_type: ''
+		},
+		methods: { 
+			on_group_search(event) {
+				this.group_search_query = event.target.value.toLowerCase();
+				this.filter_groups();
+			},
+			
+			filter_groups() {
+				if (!this.group_search_query) {
+					this.filtered_groups = this.groups;
+				} else {
+					this.filtered_groups = this.groups.filter(group => {
+						const groupName = group.groupname ? group.groupname.toLowerCase() : '';
+						const academicYear = group.idayear__title ? group.idayear__title.toLowerCase() : '';
+						return groupName.includes(this.group_search_query) || 
+							academicYear.includes(this.group_search_query) ||
+							`${groupName} (${academicYear})`.toLowerCase().includes(this.group_search_query);
+					});
+				}
+			},
+
+			on_change_choice_student_filters() {
+				if (document.getElementById('groups').checked) {
+					this.group_search_query = '';
+					this.filter_groups();
+				}
+
+				this.selected_group = ''
+				this.surname = ''
+				this.name = ''
+				this.patronymic = ''
+				this.selected_course = ''
+			},
+
+			async on_change_choice_all() {
+				current_group = '';
+				current_enrollment_date = '';
+				current_surname = '';
+				current_name = '';
+				current_patronymic = '';
+				current_course = '';
+				current_text = '';
+				current_text_type = '';
+				
+				this.selected_text = '';
+				this.selected_text_type = '';
+				document.getElementById('filter_all_texts').checked = false;
+				document.getElementById('filter_text_types').checked = false;
+
+				try {
+					const response = await axios({
+						method: 'post',
+						url: '',
+						data: {
+							'flag_post': 'choice_all'
+						},
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRFToken': getCookie('csrftoken')
+						}
+					});
+					
+					this.texts = response.data.texts;
+					this.text_types = response.data.text_types;
+				} catch (error) {
+					console.error('Failed to get all texts:', error);
+				}
+
+				await post_request_data();
+				update_legend_filters();
+			},
+
+			async on_change_group(){
+				if (this.selected_group == '') {
+					document.getElementById("error_group").style.display = 'block'
+					document.getElementById("filter_group").classList.add('border', 'border-danger')
+					return
+				} else {
+					document.getElementById("error_group").style.display = 'none'
+					document.getElementById("filter_group").classList.remove('border', 'border-danger')
+				}
+
+				const selectedGroupObj = this.groups.find(g => g.idgroup == this.selected_group);
+				if (selectedGroupObj) {
+					current_group = selectedGroupObj.groupname;
+					current_enrollment_date = selectedGroupObj.idayear__title;
+					current_surname = '';
+					current_name = '';
+					current_patronymic = '';
+					current_course = '';
+
+					this.selected_text = '';
+					this.selected_text_type = '';
+					document.getElementById('filter_all_texts').checked = false;
+					document.getElementById('filter_text_types').checked = false;
+					
+					try {
+						const response = await axios({
+							method: 'post',
+							url: '',
+							data: {
+								'group': current_group,
+								'enrollment_date': current_enrollment_date,
+								'flag_post': 'choice_group'
+							},
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': getCookie('csrftoken')
+							}
+						});
+						
+						this.texts = response.data.texts;
+						this.text_types = response.data.text_types;
+					} catch (error) {
+						console.error('Failed to get group texts:', error);
+					}
+					
+					await post_request_data();
+					update_legend_filters();
+				}
+			},
+
+			async on_change_student() {
+				if (!this.surname) {
+					document.getElementById("error_student_surname").style.display = 'block'
+					document.getElementById("surname").classList.add('border', 'border-danger')
+				} else {
+					document.getElementById("error_student_surname").style.display = 'none'
+					document.getElementById("surname").classList.remove('border', 'border-danger')
+				}
+
+				if (!this.name) {
+					document.getElementById("error_student_name").style.display = 'block'
+					document.getElementById("name").classList.add('border', 'border-danger')
+				} else {
+					document.getElementById("error_student_name").style.display = 'none'
+					document.getElementById("name").classList.remove('border', 'border-danger')
+				}
+
+				if (this.surname && this.name) {
+					current_surname = this.surname;
+					current_name = this.name;
+					current_patronymic = this.patronymic;
+					current_group = '';
+					current_enrollment_date = '';
+					current_course = '';
+
+					this.selected_text = '';
+					this.selected_text_type = '';
+					document.getElementById('filter_all_texts').checked = false;
+					document.getElementById('filter_text_types').checked = false;
+					
+					try {
+						const response = await axios({
+							method: 'post',
+							url: '',
+							data: {
+								'surname': current_surname,
+								'name': current_name,
+								'patronymic': current_patronymic,
+								'flag_post': 'choice_student'
+							},
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': getCookie('csrftoken')
+							}
+						});
+						
+						this.texts = response.data.texts;
+						this.text_types = response.data.text_types;
+					} catch (error) {
+						console.error('Failed to get student texts:', error);
+					}
+					
+					await post_request_data();
+					update_legend_filters();
+				}
+			},
+
+			async on_change_course() {
+				if (this.selected_course) {
+					current_course = this.selected_course;
+					current_group = '';
+					current_enrollment_date = '';
+					current_surname = '';
+					current_name = '';
+					current_patronymic = '';
+
+					this.selected_text = '';
+					this.selected_text_type = '';
+					document.getElementById('filter_all_texts').checked = false;
+					document.getElementById('filter_text_types').checked = false;
+					
+					try {
+						const response = await axios({
+							method: 'post',
+							url: '',
+							data: {
+								'course': current_course,
+								'flag_post': 'choice_course'
+							},
+							headers: {
+								'X-Requested-With': 'XMLHttpRequest',
+								'X-CSRFToken': getCookie('csrftoken')
+							}
+						});
+						
+						this.texts = response.data.texts;
+						this.text_types = response.data.text_types;
+					} catch (error) {
+						console.error('Failed to get course texts:', error);
+					}
+					
+					await post_request_data();
+					update_legend_filters();
+				}
+			},
+
+			async on_change_choice_text() {
+				if (!document.getElementById('filter_all_texts').checked) {
+					this.selected_text = ''
+					await this.on_change_text()
+				}
+			},
+
+			async on_change_text() {
+				if (this.selected_text) {
+					current_text = this.selected_text;
+				} else {
+					current_text = '';
+				}
+				
+				await post_request_data();
+				update_legend_filters();
+			},
+
+			async on_change_choice_text_types() {
+				if (!document.getElementById('filter_text_types').checked) {
+					this.selected_text_type = ''
+					await this.on_change_text_type()
+				}
+			},
+
+			async on_change_text_type() {
+				if (this.selected_text_type) {
+					current_text_type = this.selected_text_type;
+				} else {
+					current_text_type = '';
+				}
+				
+				await post_request_data();
+				update_legend_filters();
+			}
+		},
+		mounted() {
+			this.filtered_groups = this.groups;
+		}
+	})
+
+	var type_errors_bar_app = new Vue({
 		el: '#type_errors_bar',
 		data: {
-			chart: {},
+			chart: null,
 			labels: [],
 			stars: [],
 			chart_type: 'bar',
-			chartColor: 'crimson',
 			loading: false
 		},
+		mounted() {
+			this.init_chart()
+			this.get_data()
+			this.update_chart()
+		},
 		methods: {
-			mounted() {
-				this.init_chart()
-				this.get_data()
-				this.update_chart()
-			},
 			init_chart() {
-				this.chart = Vue.markRaw(new Chart(this.$refs.chart, {
+				var ctx = this.$refs.chart.getContext('2d')
+				this.chart = new Chart(ctx, {
 					type: this.chart_type,
 					data: {
 						labels: [],
@@ -629,82 +1113,31 @@
 					},
 					options: {
 						responsive: true,
-						tooltips: {
-							mode: 'index'
-						},
-						scales: {
-							y: {
-								beginAtZero: true
-							}
-						}
-					}
-				}));
-			},
-			update_chart() {
-				this.chart.data.labels = this.labels
-				this.chart.data.datasets[0].data = this.stars
-				this.chart.update()
-			},
-			get_data() {
-				var labels = []
-				var points = []
-				type_stat = document.getElementById("selected_stat").value
-
-				for (let i=0; i<data_for_language.length; i++) {
-					labels.push(data_for_language[i].tag__tag_text_russian)
-					if (type_stat == 'абсолютная') {
-						points.push(data_for_language[i].count_data)
-					}
-					else {
-						points.push(data_for_language[i].count_data_on_tokens)
-					}
-				}
-
-				this.labels = labels
-				this.stars = points
-			}
-		}
-	})
-
-	type_errors_bar.mounted()
-
-	var type_errors_pie = new Vue({
-		el: '#type_errors_pie',
-		data: {
-			chart: {},
-			labels: [],
-			stars: [],
-			chart_type: 'pie',
-			chartColor: 'crimson',
-			loading: false
-		},
-		methods: {
-			mounted() {
-				this.init_chart()
-				this.get_data()
-				this.update_chart()
-			},
-			init_chart() {
-				this.chart = Vue.markRaw(new Chart(this.$refs.chart, {
-					type: this.chart_type,
-					data: {
-						labels: [],
-						datasets: [{
-							label: 'Тип ошибки',
-							backgroundColor: colors,
-							borderColor: colors,
-							data: []
-						}]
-					},
-					options: {
-						responsive: true,
 						plugins: {
 							legend: {
-								position: 'bottom'
+								display: true
 							},
-						},
-						tooltips: {
-							mode: 'index'
+							tooltip: {
+								mode: 'index',
+								callbacks: {
+									label: function(context) {
+										let label = context.dataset.label || '';
+										if (label) {
+											label += ': ';
+										}
+										const value = context.parsed.y;
+										if (value !== null) {
+											const type_stat = document.getElementById("selected_stat").value;
+											if (type_stat === 'на 100 токенов') {
+												label += value.toFixed(2);
+											} else {
+												label += Math.round(value);
+											}
+										}
+										return label;
+									}
+								}
+							}
 						},
 						scales: {
 							y: {
@@ -712,38 +1145,38 @@
 							}
 						}
 					}
-				}));
+				})
 			},
 			update_chart() {
-				this.chart.data.labels = this.labels
-				this.chart.data.datasets[0].data = this.stars
-				this.chart.update()
+				if (this.chart) {
+					this.chart.data.labels = this.labels
+					this.chart.data.datasets[0].data = this.stars
+					this.chart.update()
+				}
 			},
 			get_data() {
 				var labels = []
 				var points = []
-				type_stat = document.getElementById("selected_stat").value
+				var type_stat = document.getElementById("selected_stat").value
 
-				let count = 0
-				let count_on_tokens = 0
-				for (let i=0; i<data_for_language.length; i++) {
-					count += data_for_language[i].count_data
-					count_on_tokens += data_for_language[i].count_data_on_tokens
+				var sorted_data = [...data_for_language];
+				if (type_stat == 'абсолютная') {
+					sorted_data.sort((a, b) => b.count_data - a.count_data);
+				} else {
+					sorted_data.sort((a, b) => (b.count_data_on_tokens || 0) - (a.count_data_on_tokens || 0));
 				}
 
-				for (let i=0; i<data_for_language.length; i++) {
-					if (signature.selected_language_labels == 'Русском') {
-						labels.push(data_for_language[i].tag__tag_text_russian)
+				for (let i=0; i<sorted_data.length; i++) {
+					if (signature_app.selected_language_labels == 'Русском') {
+						labels.push(sorted_data[i].tagtextrussian)
+					} else {
+						labels.push(sorted_data[i].tagtext)
 					}
-					else {
-						labels.push(data_for_language[i].tag__tag_text)
-					}
-
+					
 					if (type_stat == 'абсолютная') {
-						points.push(data_for_language[i].count_data * 100 / count)
-					}
-					else {
-						points.push(data_for_language[i].count_data_on_tokens * 100 / count_on_tokens)
+						points.push(sorted_data[i].count_data)
+					} else {
+						points.push(sorted_data[i].count_data_on_tokens || 0)
 					}
 				}
 
@@ -753,6 +1186,231 @@
 		}
 	})
 
-	type_errors_pie.mounted()
+var type_errors_pie_app = new Vue({
+    el: '#type_errors_pie',
+    data: {
+        chart: null,
+        labels: [],
+        stars: [],
+        chart_type: 'pie',
+        loading: false
+    },
+    mounted() {
+        this.init_chart()
+        this.get_data()
+        this.update_chart()
+    },
+    methods: {
+        init_chart() {
+            var ctx = this.$refs.chart.getContext('2d')
+
+            const lineLabelPlugin = {
+                id: 'lineLabels',
+                afterDraw(chart) {
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    
+                    const dataset = chart.data.datasets[0];
+                    const meta = chart.getDatasetMeta(0);
+                    const total = dataset.data.reduce((a, b) => a + b, 0);
+
+                    const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+                    const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+                    const radius = Math.min(
+                        (chart.chartArea.right - chart.chartArea.left) / 2,
+                        (chart.chartArea.bottom - chart.chartArea.top) / 2
+                    ) * 0.8;
+                    
+                    meta.data.forEach((element, index) => {
+                        const percentage = total > 0 ? (dataset.data[index] / total) * 100 : 0;
+
+                        if (percentage < 1.5) return;
+                        
+                        const label = chart.data.labels[index];
+                        const shortLabel = label.length > 20 ? label.substring(0, 20) + '...' : label;
+                        const labelText = `${shortLabel} (${percentage.toFixed(1)}%)`;
+
+                        if (meta.data.length === 1) {
+                            const textX = centerX + radius + 70;
+                            const textY = centerY;
+
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.strokeStyle = '#ccc';
+                            ctx.lineWidth = 1;
+                            const textWidth = ctx.measureText(labelText).width;
+                            ctx.fillRect(textX - 5, textY - 8, textWidth + 10, 16);
+                            ctx.strokeRect(textX - 5, textY - 8, textWidth + 10, 16);
+
+                            ctx.fillStyle = '#333';
+                            ctx.font = '11px Arial';
+                            ctx.textAlign = 'left';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(labelText, textX, textY);
+                            
+                            return; 
+                        }
+
+                        const startAngle = element.startAngle;
+                        const endAngle = element.endAngle;
+                        const midAngle = startAngle + (endAngle - startAngle) / 2;
+
+                        const labelX = centerX + Math.cos(midAngle) * radius;
+                        const labelY = centerY + Math.sin(midAngle) * radius;
+
+                        const isLeft = labelX < centerX;
+                        const lineLength = 60;
+
+                        const lineEndX = labelX + Math.cos(midAngle) * lineLength;
+                        const lineEndY = labelY + Math.sin(midAngle) * lineLength;
+
+                        const textX = lineEndX + (isLeft ? -10 : 10);
+                        const textY = lineEndY;
+
+                        ctx.strokeStyle = '#666';
+                        ctx.lineWidth = 1;
+                        ctx.setLineDash([5, 3]);
+                        ctx.beginPath();
+                        ctx.moveTo(labelX, labelY);
+                        ctx.lineTo(lineEndX, lineEndY);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+
+                        const textWidth = ctx.measureText(labelText).width;
+                        const textHeight = 16;
+
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.strokeStyle = '#ccc';
+                        ctx.lineWidth = 1;
+                        
+                        if (isLeft) {
+                            ctx.fillRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+                            ctx.strokeRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+                        } else {
+                            ctx.fillRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+                            ctx.strokeRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+                        }
+
+                        ctx.fillStyle = '#333';
+                        ctx.font = '11px Arial';
+                        ctx.textAlign = isLeft ? 'right' : 'left';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(labelText, isLeft ? textX - 5 : textX + 5, textY);
+                    });
+                    
+                    ctx.restore();
+                }
+            };
+
+            this.chart = new Chart(ctx, {
+                type: this.chart_type,
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Тип ошибки',
+                        backgroundColor: colors,
+                        borderColor: function(context) {
+                            const chart = context.chart;
+                            const meta = chart.getDatasetMeta(0);
+                            if (meta.data.length === 1) {
+                                return 'transparent';
+                            }
+                            return '#000000';
+                        },
+                        borderWidth: function(context) {
+                            const chart = context.chart;
+                            const meta = chart.getDatasetMeta(0);
+                            if (meta.data.length === 1) {
+                                return 0;
+                            }
+                            return 0.3;
+                        },
+                        data: []
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 100,
+                            right: 100,
+                            top: 100,
+                            bottom: 100
+                        }
+                    }
+                },
+                plugins: [lineLabelPlugin]
+            })
+        },
+        update_chart() {
+            if (this.chart) {
+                this.chart.data.labels = this.labels
+                this.chart.data.datasets[0].data = this.stars
+                this.chart.update()
+            }
+        },
+        get_data() {
+            var labels = []
+            var points = []
+            var type_stat = document.getElementById("selected_stat").value
+
+            let count = 0
+            let count_on_tokens = 0
+            for (let i=0; i<data_for_language.length; i++) {
+                count += data_for_language[i].count_data
+                count_on_tokens += data_for_language[i].count_data_on_tokens || 0
+            }
+
+            var sorted_data = [...data_for_language];
+            if (type_stat == 'абсолютная') {
+                sorted_data.sort((a, b) => b.count_data - a.count_data);
+            } else {
+                sorted_data.sort((a, b) => (b.count_data_on_tokens || 0) - (a.count_data_on_tokens || 0));
+            }
+
+            for (let i=0; i<sorted_data.length; i++) {
+                if (signature_app.selected_language_labels == 'Русском') {
+                    labels.push(sorted_data[i].tagtextrussian)
+                } else {
+                    labels.push(sorted_data[i].tagtext)
+                }
+
+                if (type_stat == 'абсолютная') {
+                    points.push(count > 0 ? (sorted_data[i].count_data * 100 / count) : 0)
+                } else {
+                    const value = sorted_data[i].count_data_on_tokens || 0
+                    points.push(count_on_tokens > 0 ? (value * 100 / count_on_tokens) : 0)
+                }
+            }
+
+            this.labels = labels
+            this.stars = points
+        }
+    }
+})
+	function on_change_font_size() {
+		var size = document.getElementById("font_size").value
+		Chart.defaults.font.size = parseInt(size)
+		update_data()
+	}
+	document.addEventListener('DOMContentLoaded', function() {
+		document.getElementById("error_group").style.display = 'none'
+		document.getElementById("error_student_surname").style.display = 'none'
+		document.getElementById("error_student_name").style.display = 'none'
+		
+		Chart.defaults.font.size = 16
+
+		update_legend_filters();
+	});
 </script>
 {%endblock script%}
+
+
+
