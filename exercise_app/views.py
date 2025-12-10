@@ -37,7 +37,8 @@ from .forms import (
     EditTextForm,
     AddErrorAnnotationForm,
     ExerciseTextTaskForm,
-    Group
+    Group,
+    AddMarkForm
 )
 
 '''
@@ -224,7 +225,7 @@ def review_teacher(request, idexercise=1):
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
     exercisetext = exercisereview.idexercisetext
     text = get_object_or_404(ExerciseText, idexercisetext=exercisetext.idexercisetext)
-    print("айди текста", exercisetext.idexercisetext)
+    # print("айди текста", exercisetext.idexercisetext)
 
     reviews = ExerciseFragmentReview.objects.filter(
         idexercisereview=exercisereview
@@ -233,21 +234,26 @@ def review_teacher(request, idexercise=1):
     processed_text = wrap_fragments_with_spans(text.exercisetext, reviews)
 
     in_time = False
-    # if exercise.exercisestatus:
-    #     in_time = datetime.date(exercise.deadline) < datetime.date(exercise.completiondate)
     if exercise.exercisestatus and exercise.completiondate:
         in_time = exercise.completiondate <= exercise.deadline
 
-    # print("="*50)
-    # print(text.exercisetext)
-    # print("="*50)
+    # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
+    if request.method == "POST" and "mark-form" in request.POST:
+        mark_form = AddMarkForm(request.POST, instance=exercise)
+        if mark_form.is_valid():
+            mark_form.save()
+            return redirect(request.path + f"?idexercise={exercise.idexercise}")
+    else:
+        mark_form = AddMarkForm(instance=exercise)
+
     context = {
         'exercise': exercise,
         'exercisereview': exercisereview,
         'text_metadata': text,
         'text': processed_text,
         'reviews': reviews,
-        'in_time': in_time
+        'in_time': in_time,
+        'mark_form': mark_form
     }
     return render(request, "review_teacher.html", context)
 
@@ -436,12 +442,24 @@ def grade_text(request, text_id=2379):
     else:
         annotation_form = AddErrorAnnotationForm()
 
+    # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
+    # if request.method == "POST" and "mark-form" in request.POST:
+    #     mark_form = AddMarkForm(request.POST, instance=exercise)
+    #     if mark_form.is_valid():
+    #         mark_form.save()
+    #         return redirect(request.path + f"?idexercise={exercise.idexercise}")
+    # else:
+    #     mark_form = AddMarkForm(instance=exercise)
+
+
     student = text.idstudent
     user = student.iduser
     group = student.idgroup
     text_type = text.idtexttype
 
     context = {
+        # ДАША РАСКОММЕНТИРУЙ КОГДА ДОБАВИШЬ УПРАЖНЕНИЕ
+        # "mark_form": mark_form,
         "text": text,
         "annotation_form": annotation_form,
         "sentence_data": sentence_data,

@@ -1,6 +1,5 @@
 # Миграции
 core_app/migrations/
-/core_app/migrations/
 **/migrations/
 
 # Byte-compiled / optimized / DLL files

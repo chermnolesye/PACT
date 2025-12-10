@@ -18,7 +18,7 @@ urlpatterns = [
     # Тут надо будет одно убрать позже
     path('review_text/', views.review_text, name='review_text'),
     path('review_text/<int:idexercisetext>/', views.review_text, name='review_text'),
-    path('review_teacher/', views.review_teacher, name='review_teacher'),
+    # path('review_teacher/', views.review_teacher, name='review_teacher'),
     path('review_teacher/<int:idexercise>/', views.review_teacher, name='review_teacher'),
 
     path('grade_text/', views.grade_text, name='grade_text'),

@@ -1,6 +1,6 @@
 from django import forms
 from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, Reason, 
-                             Student, User, Group, ExerciseGrading, ExerciseReview, 
+                             Student, User, Group, Exercise, ExerciseGrading, ExerciseReview, 
                              Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask
                             )
 import datetime
@@ -249,3 +249,23 @@ class ExerciseTextTaskForm(forms.ModelForm):
     class Meta:
         model = ExerciseTextTask
         fields = ['tasktitle', 'tasktext']
+
+class AddMarkForm(forms.ModelForm):
+    exercisemark = forms.ChoiceField(
+        choices=Exercise.TASK_RATES,
+        label="Оценка",
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    exercisemarkcomment = forms.CharField(
+        label='Комментарий',
+        widget=forms.Textarea()
+    )
+
+    class Meta:
+        model = Exercise
+        fields = [
+            'exercisemark',
+            'exercisemarkcomment'
+        ]
