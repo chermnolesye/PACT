@@ -10,59 +10,78 @@
 {% block content %}
 <div class="container">
     <h2 class="highlighted-header">Список упражнений</h2>
-    <div style="width:100%;height:45px;position:relative;">
-        <a href="{% url 'add_exercise' %}" class="button new_exercise_btn">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20.456 15.9085H15.9085M15.9085 15.9085H11.3609M15.9085 15.9085V11.3609M15.9085 15.9085V20.456M8.32924 2.77822C10.6326 1.44564 13.2474 0.745918 15.9085 0.750018C24.2805 0.750018 31.067 7.53646 31.067 15.9085C31.067 24.2805 24.2805 31.067 15.9085 31.067C7.53645 31.067 0.75 24.2805 0.75 15.9085C0.75 13.1481 1.48822 10.5575 2.7782 8.32925" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-            Новое упражнение
-        </a>
-    </div>
+    <div class="top_panel">
+        <div class="button new_exercise_btn">
+            <a href="{% url 'add_exercise' %}">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.456 15.9085H15.9085M15.9085 15.9085H11.3609M15.9085 15.9085V11.3609M15.9085 15.9085V20.456M8.32924 2.77822C10.6326 1.44564 13.2474 0.745918 15.9085 0.750018C24.2805 0.750018 31.067 7.53646 31.067 15.9085C31.067 24.2805 24.2805 31.067 15.9085 31.067C7.53645 31.067 0.75 24.2805 0.75 15.9085C0.75 13.1481 1.48822 10.5575 2.7782 8.32925" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                Новое упражнение
+            </a>
+        </div>
+        <div>
+            <form method="get" class="filter-form-singlefield">
+                <div class="filter-grid">
+                    {{ filter.form.exercisestatus }}
+                </div>
+            </form>
+        </div>
+        <form method="get" class="filter-formFIO">
+            <div class="search-bar">
+                {{ filter.form.student_name }}
 
-    <form method="get" class="filter-form">
-        <div class="filter-grid">
-            <div>
-                <label>{{ filter.form.exercisestatus.label }}</label>
-                {{ filter.form.exercisestatus }}
+                <button type="button" id="toggle" onclick="toggleFilterBlock()">
+                    <svg width="20" height="20" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M58.5025 28.3587C61.2675 26.8012 62.6529 26.0225 63.4083 24.7654C64.1666 23.5113 64.1666 21.9975 64.1666 18.97V16.9575C64.1666 13.09 64.1666 11.1533 62.8833 9.95167C61.6058 8.75 59.5437 8.75 55.4166 8.75H14.5833C10.4591 8.75 8.39706 8.75 7.11665 9.95167C5.83331 11.1533 5.83331 13.09 5.83331 16.9604V18.9729C5.83331 21.9975 5.83331 23.5113 6.59165 24.7654C7.34998 26.0196 8.72956 26.8012 11.4975 28.3587L19.9937 33.1421C21.8487 34.1863 22.7791 34.7083 23.4441 35.2858C24.8266 36.4846 25.6783 37.8963 26.0633 39.6317C26.25 40.46 26.25 41.4342 26.25 43.3796V51.1671C26.25 53.8183 26.25 55.1454 26.985 56.1779C27.72 57.2133 29.0266 57.7238 31.6341 58.7446C37.1146 60.8854 39.8533 61.9558 41.8016 60.7367C43.75 59.5204 43.75 56.735 43.75 51.1642V43.3767C43.75 41.4342 43.75 40.46 43.9366 39.6288C44.3029 37.9288 45.2256 36.3995 46.5587 35.2829" stroke="#0D6EFD" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <button type="submit" name="search" class="search">
+                    <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50.9583 50.9583L61.1666 61.1666M16.6875 6.53745C22.5094 3.17781 29.3541 2.04905 35.9465 3.36146C42.5389 4.67386 48.4294 8.33792 52.5208 13.6711C56.6122 19.0043 58.6254 25.6429 58.1854 32.3502C57.7455 39.0576 54.8823 45.3763 50.1293 50.1293C45.3763 54.8823 39.0576 57.7455 32.3502 58.1854C25.6429 58.6254 19.0043 56.6122 13.6711 52.5208C8.33792 48.4294 4.67386 42.5389 3.36146 35.9465C2.04905 29.3541 3.17781 22.5094 6.53745 16.6875" stroke="#FFFDFD" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                </button>
             </div>
-            
-            <div>
-                <label>{{ filter.form.exercisemark.label }}</label>
-                {{ filter.form.exercisemark }}
-            </div>
-            
-            <div>
+        </form>
+    </div>
+    <div style="width: 100%; display: none;" id="filters">
+        <form method="get" class="filter-form">
+            <div class="filter-grid">
                 <label>{{ filter.form.student_name.label }}</label>
                 {{ filter.form.student_name }}
-            </div>
-            
-            <div>
+
                 <label>{{ filter.form.idexercisetype.label }}</label>
                 {{ filter.form.idexercisetype }}
+
+                <div class="date_wrapper">
+                    <label>{{ filter.form.creationdate_after.label }}</label>
+                    {{ filter.form.creationdate_after }}
+
+                    <label>{{ filter.form.creationdate_before.label }}</label>
+                    {{ filter.form.creationdate_before }}
+                </div>
+
+                <div class="date_wrapper">
+                    <label>{{ filter.form.deadline_after.label }}</label>
+                    {{ filter.form.deadline_after }}
+
+                    <label>{{ filter.form.deadline_before.label }}</label>
+                    {{ filter.form.deadline_before }}
+                </div>
+
+                <label>{{ filter.form.exercisestatus.label }}</label>
+                {{ filter.form.exercisestatus }}
+
+                <label>{{ filter.form.exercisemark.label }}</label>
+                {{ filter.form.exercisemark }}
+
+
             </div>
 
-           <div>
-            <label>{{ filter.form.creationdate_after.label }}</label>
-            {{ filter.form.creationdate_after }}
-        </div>
-        <div>
-            <label>{{ filter.form.creationdate_before.label }}</label>
-            {{ filter.form.creationdate_before }}
-        </div>
-        
-        <div>
-            <label>{{ filter.form.deadline_after.label }}</label>
-            {{ filter.form.deadline_after }}
-        </div>
-        <div>
-            <label>{{ filter.form.deadline_before.label }}</label>
-            {{ filter.form.deadline_before }}
-        </div>        
-        </div>
-        
-        <button type="submit">Фильтровать</button>
-        <a href="{% url 'teacher_exercises' %}">Сбросить</a>
-    </form>
+            <button type="submit" class="button">Найти</button>
+            <a href="{% url 'teacher_exercises' %}">Сбросить</a>
+        </form>
+    </div>
 
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
@@ -280,7 +299,27 @@
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
 
+    function toggle() {
+        const filters = document.getElementById("filters")
+        if (filters.style.display == "block") {
+            filters.style.display = "none"
+        }
+        else {
+            filters.style.display = "block"
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        const formFIO = document.getElementsByClassName("filter-formFIO")[0];
+        const input = document.getElementById("id_student_name");
+        input.value = "";
+
+        document.getElementById('toggle').addEventListener('click', toggle);
+        const select_stat = document.getElementById('id_exercisestatus');
+        select_stat.addEventListener("change", function () {
+            document.getElementsByClassName("filter-form-singlefield")[0].submit();
+        });
+
         document.getElementById('confirmDelete').addEventListener('click', deleteExercise);
         document.getElementById('cancelDelete').addEventListener('click', closeModal);
         const editModal = document.getElementById('editExerciseModal');
