@@ -34,15 +34,22 @@
         </div>
         {% for exercise in exercises %}
         <div id="{{ exercise.exercise_data.idexercise }}" class="exercise-card
-             {% if exercise.exercise_data.exercisestatus %}{% if exercise.in_time %}green_background{% else %}red_background{% endif %}{% endif %}
+             {% if exercise.exercise_data.exercisestatus %}
+                {% if exercise.in_time %}green_background
+                {% else %}red_background
+                {% endif %}
+             {% else %}
+                {% if not exercise.in_time %}red_background
+                {% endif %}
+             {% endif %}
              ">
             <span class="full_name">
                 {% if exercise.exercise_data.exercisestatus %}
-                {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-                <a href="{% url 'grade_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
-                {% else %}
-                <a href="{% url 'review_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
-                {% endif %}
+                    {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
+                    <a href="{% url 'grade_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                    {% else %}
+                    <a>{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                    {% endif %}
                 {% else %}{{ exercise.exercise_data.idstudent.iduser.get_full_name }}{% endif %}
             </span>
             <span class="group">{{ exercise.exercise_data.idstudent.idgroup }}</span>
@@ -88,13 +95,17 @@
     </div>
 </div>
 
-<div id="deleteModal" class="modal modal-overlay" style="display: none;">
+<div id="deleteModal" class="modal modal-overlay">
     <div class="modal-content">
         <div class="modal-head">
             <h3>Подтверждение удаления</h3>
         </div>
         <div class="modal-inner">
-            <p>Вы уверены, что хотите удалить упражнение?</p>
+            <p style="margin-bottom:15px">Вы уверены, что хотите удалить упражнение?</p>
+            <label class="no-highlight">
+                ФИО студента, выполняющего упражнение:
+            </label>
+            <p id="FIOofExerciseDel"></p>
             <div class="modal-actions">
                 <button id="confirmDelete" class="btn button btn-danger">Удалить</button>
                 <button id="cancelDelete" class="btn button btn-secondary">Отмена</button>
@@ -119,7 +130,7 @@
             <label class="no-highlight">
                 ФИО студента, выполняющего упражнение:
             </label>
-            <p id="FIOofExercise"></p>
+            <p id="FIOofExerciseEdit"></p>
             <div class="vertical-level" style="margin-top:10px;">
                 <label for="{{ edit_form.creationdate.id_for_label }}" class="no-highlight">
                     {{ edit_form.creationdate.label }}
@@ -147,7 +158,11 @@
 
     function confirmDelete(el) {
         // exerciseToDelete = exerciseId;
-        exerciseToDelete = el.parentElement.id;
+        parent = el.parentElement;
+        name = parent.getElementsByClassName("full_name")[0].innerHTML;
+        document.getElementById('FIOofExerciseDel').innerHTML = name;
+
+        exerciseToDelete = parent.id;
         document.getElementById('deleteModal').style.display = 'flex';
     }
 
@@ -156,7 +171,7 @@
         exerciseToEdit = parent.id;
 
         name = parent.getElementsByClassName("full_name")[0].innerHTML;
-        document.getElementById('FIOofExercise').innerHTML = name;
+        document.getElementById('FIOofExerciseEdit').innerHTML = name;
 
         document.getElementById('editExerciseModal').style.display = 'flex';
         fetch("{% url 'load_exercise_data' %}?exerciseId=" + exerciseToEdit)

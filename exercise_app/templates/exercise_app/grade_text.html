@@ -11,10 +11,6 @@
 {% block content %}
 <div class="text-app-container">
 
-    <div class="text-header">
-        <h1 class="text-title">Иванов Иван Иванович</h1>
-    </div>
-
     <div class="menu-container">
         <!-- Блоки меню -->
         <div class="menu-block" data-target="view-content">
@@ -112,6 +108,9 @@
         </div>
     </div>
 
+    <div class="text-header-grad">
+        <h1 class="text-title">Иванов Иван Иванович</h1>
+    </div>
 
     <!-- НОВОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ -->
     <div class="modal-overlay" id="modal">
@@ -253,6 +252,7 @@
     <script>
         const chosen = [];
         document.addEventListener('DOMContentLoaded', function () {
+
             const deadline = document.getElementsByClassName('deadline')[0];
             const block = document.getElementsByClassName('menu-block-watch')[0];
             const currentDate = (new Date()).toLocaleDateString('ru-Ru', { day: 'numeric', month: 'long', year: 'numeric' });

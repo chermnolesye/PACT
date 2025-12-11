@@ -10,7 +10,6 @@
 
 {% block content %}   
     <div class="text-app-container">
-
         <div class="menu-container">
             <!-- Блоки меню -->
             <div class="menu-block" data-target="view-content">
@@ -483,6 +482,7 @@
 
         // Скрипт для отображения разметки (НЕ ДЫШАТЬ НА НЕГО!!!)
         document.addEventListener('DOMContentLoaded', function() {
+
             const languageRadios = document.querySelectorAll('input[name="language"]');
             const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
             const posCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');

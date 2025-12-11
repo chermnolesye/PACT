@@ -1,9 +1,8 @@
 
-.text-header {
+.text-header, .menu-container {
     width: 100%;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     background-color: #ffffff;
-    margin: 0px 10px;
     padding: 10px 20px;
 }
 
@@ -170,16 +169,12 @@ form {
 }
 
 .menu-container {
-    width: 100%;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    background-color: #ffffff;
+    width: calc(100% + 10px);
     display: flex;
     flex-direction: row;
-    align-items: stretch;
-    margin: 10px;
-    padding: 10px;
-    position: sticky;
-    top: 0px;
+    position: fixed;
+    top: 51px;
+    left: -10px;
     z-index: 800;
 }
 
@@ -660,6 +655,10 @@ label[for="id_iderrortag"] {
     margin-right: 0;
 }
 
+.text-header-grad, .text-header {
+    margin-top: 61px;
+}
+
 .popup-sidebyside {
     max-width: 300px; 
     width: 50%;
@@ -690,6 +689,12 @@ label[for="id_iderrortag"] {
 }
 
 @media (max-width: 660px) {
+    .text-header-grad{
+        margin-top: 168px;
+    }
+    .text-header {
+        margin-top: 273px;
+    }
     .main-template-container .menu-container > .menu-block:first-child {
         border-top-left-radius: unset;
         border-bottom-left-radius: unset;
@@ -703,7 +708,6 @@ label[for="id_iderrortag"] {
     }
     .main-template-container .menu-container {
         display: block;
-        position:relative;
     }
     .main-template-container .menu-content {
         margin-right: 10px
