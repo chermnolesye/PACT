@@ -18,6 +18,52 @@
             Новое упражнение
         </a>
     </div>
+
+    <form method="get" class="filter-form">
+        <div class="filter-grid">
+            <div>
+                <label>{{ filter.form.exercisestatus.label }}</label>
+                {{ filter.form.exercisestatus }}
+            </div>
+            
+            <div>
+                <label>{{ filter.form.exercisemark.label }}</label>
+                {{ filter.form.exercisemark }}
+            </div>
+            
+            <div>
+                <label>{{ filter.form.student_name.label }}</label>
+                {{ filter.form.student_name }}
+            </div>
+            
+            <div>
+                <label>{{ filter.form.idexercisetype.label }}</label>
+                {{ filter.form.idexercisetype }}
+            </div>
+
+           <div>
+            <label>{{ filter.form.creationdate_after.label }}</label>
+            {{ filter.form.creationdate_after }}
+        </div>
+        <div>
+            <label>{{ filter.form.creationdate_before.label }}</label>
+            {{ filter.form.creationdate_before }}
+        </div>
+        
+        <div>
+            <label>{{ filter.form.deadline_after.label }}</label>
+            {{ filter.form.deadline_after }}
+        </div>
+        <div>
+            <label>{{ filter.form.deadline_before.label }}</label>
+            {{ filter.form.deadline_before }}
+        </div>        
+        </div>
+        
+        <button type="submit">Фильтровать</button>
+        <a href="{% url 'teacher_exercises' %}">Сбросить</a>
+    </form>
+
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
         <div class="header-card">
@@ -66,7 +112,7 @@
             <span class="completion_date">-</span>
             {% endif %}
             {% if exercise.exercise_data.exercisemark %}
-            <span class="mark">{{ exercise.exercise_data.exercisemark }}</span>
+            <span class="mark">{{ exercise.exercise_data.get_exercisemark_display }}</span>
             {% else %}
             <span class="mark">-</span>
             {% endif %}

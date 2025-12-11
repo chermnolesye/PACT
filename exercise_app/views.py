@@ -9,6 +9,8 @@ from django.db.models import F
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django_filters.views import FilterView
+from .filters import ExerciseFilter, ReviewTextFilter
 import datetime
 from core_app.models import (
     ExerciseTextType,
@@ -62,24 +64,44 @@ def load_exercise_data(request):
 
 
 def teacher_exercises(request):
-    #exercise_to_edit = get_object_or_404(Exercise, idexercise=2)
-    edit_form = EditExerciseForm(initial={
-         'creationdate': datetime.date.today(),
-         'deadline': datetime.date.today(),
-    })
-
+    # print("GET параметры:", dict(request.GET))
+    exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.all())
+    exercises_queryset = exercise_filter.qs
     exercises_list = []
-    exercises = Exercise.objects.all()
-    for exercise in exercises:
+    for exercise in exercises_queryset:
         in_time = False
         if exercise.exercisestatus and exercise.completiondate:
             in_time = exercise.completiondate <= exercise.deadline
         else:
             in_time = datetime.date.today() <= exercise.deadline
-        exercises_dict = {'exercise_data' : exercise,
-                          'in_time':in_time}
+        
+        exercises_dict = {
+            'exercise_data': exercise,
+            'in_time': in_time
+        }
         exercises_list.append(exercises_dict)
-    context = {'exercises' : exercises_list,'edit_form': edit_form}
+
+    #exercise_to_edit = get_object_or_404(Exercise, idexercise=2)
+    edit_form = EditExerciseForm(initial={
+         'creationdate': datetime.date.today(),
+         'deadline': datetime.date.today(),
+    })
+    # exercises_list = []
+    # exercises = Exercise.objects.all()
+    # for exercise in exercises:
+    #     in_time = False
+    #     if exercise.exercisestatus and exercise.completiondate:
+    #         in_time = exercise.completiondate <= exercise.deadline
+    #     else:
+    #         in_time = datetime.date.today() <= exercise.deadline
+    #     exercises_dict = {'exercise_data' : exercise,
+    #                       'in_time':in_time}
+    #     exercises_list.append(exercises_dict)
+    context = {
+        'exercises' : exercises_list,
+        'filter': exercise_filter,
+        'edit_form': edit_form
+        }
 
     if request.method == "POST":
         if 'edit_text' in request.POST:
@@ -91,8 +113,7 @@ def teacher_exercises(request):
                 exercise_to_edit.save()
                 return redirect('teacher_exercises')
             else:
-                edit_form = EditExerciseForm(request.POST)
-
+                edit_form = EditExerciseForm(request.POST)       
     return render(request, 'teacher_exercises.html', context)
 
 @require_POST
@@ -280,10 +301,10 @@ def wrap_fragments_with_spans(text, reviews):
     return result
 
 def review_text_list(request):
-
-    texts = ExerciseText.objects.all()
-
-    context = {'texts' : texts}
+    reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())
+    texts = reviewtext_filter.qs
+    # texts = ExerciseText.objects.all()
+    context = {'texts' : texts, 'filter': reviewtext_filter}
     return render(request, 'review_text_list.html', context)
 
 def review_text(request, idexercisetext=2):

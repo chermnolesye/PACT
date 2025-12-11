@@ -18,6 +18,29 @@
             Новый текст
         </a>
     </div>
+
+    <form method="get" class="filter-form">
+        <div class="filter-grid">
+            <div>
+                <label>{{ filter.form.exercisetextname.label }}</label>
+                {{ filter.form.exercisetextname }}
+            </div>
+            
+            <div>
+                <label>{{ filter.form.author.label }}</label>
+                {{ filter.form.author }}
+            </div>
+            
+            <div>
+                <label>{{ filter.form.idexercisetexttype.label }}</label>
+                {{ filter.form.idexercisetexttype }}
+            </div>
+        </div>
+        
+        <button type="submit">Фильтровать</button>
+        <a href="{% url 'review_text_list' %}">Сбросить</a>
+    </form>
+
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
         <div class="header-card">
