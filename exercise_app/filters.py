@@ -1,5 +1,5 @@
 import django_filters
-from core_app.models import Exercise, ExerciseType, ExerciseTextType, ExerciseText
+from core_app.models import Exercise, ExerciseType, ExerciseTextType, ExerciseText, Text, TextType, Group, AcademicYear
 from django import forms
 from django.db.models import Q
 
@@ -106,3 +106,33 @@ class ReviewTextFilter(django_filters.FilterSet):
             'author', 
             'idexercisetexttype'
         ]
+
+class GradingTextFilter(django_filters.FilterSet):
+    header = django_filters.CharFilter(
+        field_name='header',
+        lookup_expr='icontains',
+        label='Название текста'
+    )
+    
+    # Фильтр по учебному году через студента -> группа -> учебный год
+    academic_year = django_filters.ModelChoiceFilter(
+        field_name='idstudent__idgroup__idayear',
+        queryset=AcademicYear.objects.all(),
+        label='Учебный год'
+    )
+    
+    group = django_filters.ModelChoiceFilter(
+        field_name='idstudent__idgroup',
+        queryset=Group.objects.all(),
+        label='Учебная группа'
+    )
+    
+    text_type = django_filters.ModelChoiceFilter(
+        field_name='idtexttype',
+        queryset=TextType.objects.all(),
+        label='Тип текста'
+    )
+        
+    class Meta:
+        model = Text
+        fields = ['header', 'academic_year', 'group', 'text_type']

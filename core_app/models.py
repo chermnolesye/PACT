@@ -139,7 +139,6 @@ class Group(models.Model):
     class Meta:
         db_table = 'tblgroup'
 
-    
     def __str__(self):
         return f"{self.groupname} ({self.idayear})"
 

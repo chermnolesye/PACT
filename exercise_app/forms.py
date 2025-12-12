@@ -162,6 +162,7 @@ class AddExerciseForm(forms.Form):
         label='Тип упражнения',
         widget=forms.RadioSelect
     )
+    
     year = forms.ModelChoiceField(
         queryset=AcademicYear.objects.all(),
         label='Учебный год',
@@ -191,7 +192,8 @@ class AddExerciseForm(forms.Form):
 
     # Поле для типа Grading
     grading_text = forms.ModelChoiceField(
-        queryset=Text.objects.all().order_by('idtext')[:10],
+        # queryset=Text.objects.all().order_by('idtext')[:10],
+        queryset=Text.objects.none(),
         label='Текст для поиска ошибок',
         required=False,
         widget=forms.HiddenInput()
@@ -210,13 +212,6 @@ class AddExerciseForm(forms.Form):
         label='Задание для рецензирования'
     )
     
-    # Это поле нужно для сохранения в базу
-    # review_exercisetext = forms.ModelChoiceField(
-    #     queryset=ExerciseText.objects.none(),
-    #     required=False,
-    #     widget=forms.HiddenInput()
-    # )
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.data:
@@ -237,11 +232,22 @@ class AddExerciseForm(forms.Form):
             
             # Для текстов оценивания
             if 'grading_text' in self.data:
+                # try:
+                #     grading_text_id = int(self.data.get('grading_text'))
+                #     self.fields['grading_text'].queryset = Text.objects.filter(idtext=grading_text_id)
+                # except (ValueError, TypeError):
+                #     self.fields['grading_text'].queryset = Text.objects.none()
                 try:
-                    grading_text_id = int(self.data.get('grading_text'))
-                    self.fields['grading_text'].queryset = Text.objects.filter(idtext=grading_text_id)
+                    text_id = int(self.data.get('grading_text'))
+                    text = Text.objects.filter(
+                        idtext=text_id,
+                        textgrade__isnull=False  # Только тексты с оценкой
+                    ).first()
+                    if text:
+                        self.fields['grading_text'].queryset = Text.objects.filter(idtext=text_id)
                 except (ValueError, TypeError):
                     self.fields['grading_text'].queryset = Text.objects.none()
+                
         
     def clean(self):
         cleaned_data = super().clean()
@@ -251,8 +257,18 @@ class AddExerciseForm(forms.Form):
             exercise_abbr = exercise_type.exerciseabbr
             
             if exercise_abbr == 'grading':
-                if not cleaned_data.get('grading_text'):
-                    self.add_error('grading_text', 'Для типа "Оценивание" необходимо выбрать текст')
+                # if not cleaned_data.get('grading_text'):
+                #     self.add_error('grading_text', 'Необходимо выбрать текст')
+                grading_text = cleaned_data.get('grading_text')
+                selected_student = cleaned_data.get('idstudent')
+                
+                if not grading_text:
+                    self.add_error('grading_text', 'Необходимо выбрать текст')
+                else:
+                    if not grading_text.textgrade:
+                        self.add_error('grading_text', 'Выбранный текст не имеет оценки')
+                    if selected_student and grading_text.idstudent == selected_student:
+                        self.add_error('grading_text', 'Нельзя выбрать текст того же студента, для которого создается упражнение')
             
             elif exercise_abbr == 'review':
                 review_text_id = cleaned_data.get('review_text_id')

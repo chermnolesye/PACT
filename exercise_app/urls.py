@@ -11,6 +11,7 @@ urlpatterns = [
     path('grading_student/', views.grading_student, name='grading_student'),
     path('texts/', views.get_review_texts, name='get_review_texts'),
     path('reviewtexts/<int:text_id>/tasks/', views.get_text_tasks, name='get_text_tasks'),
+    path('gradingtexts/', views.get_grading_texts, name='get_grading_texts'),
 
     path('add_review_text/', views.add_review_text, name='add_review_text'),
     path('teacher_exercises/', views.teacher_exercises, name='teacher_exercises'),

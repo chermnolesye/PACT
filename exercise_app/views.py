@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django_filters.views import FilterView
-from .filters import ExerciseFilter, ReviewTextFilter
+from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
 from core_app.models import (
     ExerciseTextType,
@@ -29,7 +29,10 @@ from core_app.models import (
     Error,
     ErrorToken,
     Sentence,
-    ExerciseTextTask
+    ExerciseTextTask,
+    AcademicYear,
+    Group,
+    TextType
 )
 from .forms import (
     AddExerciseForm,
@@ -156,12 +159,43 @@ def add_exercise(request):
 
     review_texts = ExerciseText.objects.all()
     grading_texts = Text.objects.all().order_by('idtext')[:10]
+    grading_filter = GradingTextFilter()
     context = {
         "form": form,
         "review_texts": review_texts,
         "grading_texts": grading_texts,
+        "academic_years": AcademicYear.objects.all(),  # Для фильтра "Учебный год"
+        "text_types": TextType.objects.all(),
     }
     return render(request, "add_exercise.html", context)
+
+def get_grading_texts(request):
+    try:
+        queryset = Text.objects.filter(textgrade__isnull=False)
+        exclude_student_id = request.GET.get('exclude_student')
+        if exclude_student_id:
+            try:
+                queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
+            except (ValueError, TypeError):
+                pass
+        filtered_texts = GradingTextFilter(request.GET, queryset=queryset)
+        texts = filtered_texts.qs.order_by('-createdate')
+        texts_data = [
+            {
+                'id': text.idtext,
+                'header': text.header,
+                'student': text.idstudent.get_full_name(),
+                'group': str(text.idstudent.idgroup),
+                'academic_year': str(text.idstudent.idgroup.idayear),
+                'text_type': str(text.idtexttype) if text.idtexttype else '',
+                'created_date': text.createdate.strftime('%d.%m.%Y') if text.createdate else '',
+                'grade': text.get_textgrade_display(),
+            }
+            for text in texts
+        ]
+        return JsonResponse(texts_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def get_review_texts(request):
     try:
