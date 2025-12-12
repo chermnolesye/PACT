@@ -1,4 +1,3 @@
-
 .text-header, .menu-container {
     width: 100%;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -195,6 +194,12 @@ form {
     color: var(--primary-color);
     cursor: default;
 }
+
+#gray_border {
+    border: 1px solid var(--grey-color);
+    color:black;
+}
+
 .menu-block {
     cursor: pointer;
 }
@@ -679,14 +684,6 @@ label[for="id_iderrortag"] {
 .teacher-mark {
     display: inline;
     margin-left: 10px;
-}
-
-.green_background {
-    background: #DEFFD6
-}
-
-.red_background {
-    background: #FFD6D6
 }
 
 .mistakes {

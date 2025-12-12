@@ -11,33 +11,49 @@
 
 {% block content %}
 <div class="text-app-container">
-
     <div class="menu-container">
         <!-- Блоки меню -->
-        <div class="menu-block" data-target="view-content">
+        <div class="menu-block" data-target="view-content" id="gray_border">
             <span>
                 Вид
                 <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
                 </svg>
             </span>
         </div>
 
         {% if exercise.exercisestatus %}
         {% if in_time %}
-        <div class="menu-block-watch green_background">
-            Дата завершения:&nbsp;{{ exercise.completiondate }}
+        <div class="menu-block green_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;{{ exercise.completiondate }}
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
         </div>
         {% else %}
-        <div class="menu-block-watch red_background">
-            Дата завершения:&nbsp;{{ exercise.completiondate }}
+        <div class="menu-block red_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;{{ exercise.completiondate }}
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
         </div>
         {% endif %}
         {% endif %}
         {% if exercise.exercisemark %}
-        <div class="menu-block-watch">Оценка:&nbsp;{{ exercise.get_exercisemark_display }}</div>
+        <div class="menu-block" id="gray_border" data-target="mark-content">
+            <span>
+                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
+            </span>
+            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+            </svg>
+        </div>
         {% else %}
-        <div class="menu-block-watch">Оценка:&nbsp;-</div>
+        <div class="menu-block-watch" id="gray_border">Оценка:&nbsp;-</div>
         {% endif %}
         <button class="rate-btn">Просмотреть статистику и оценить</button>
     </div>
@@ -116,7 +132,32 @@
                     <span class="slider"></span>
                 </label>
             </div>
+        </div>
+    </div>
 
+    <div class="menu-content" id="date-content">
+        <div class="menu-content-data">
+            <p>Дата выдачи:</p>
+            <p class="p-dark"> {{ exercise.creationdate }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Дата сдачи:</p>
+            <p class="p-dark"> {{ exercise.deadline }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Дата завершения:</p>
+            <p class="p-dark"> {{ exercise.completiondate }} </p>
+        </div>
+    </div>
+
+    <div class="menu-content" id="mark-content">
+        <div class="menu-content-data">
+            <p>Оценка:</p>
+            <p class="p-dark"> {{ exercise.get_exercisemark_display }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Комментарий:</p>
+            <p class="p-dark"> {{ exercise.exercisemarkcomment }} </p>
         </div>
     </div>
 
@@ -337,7 +378,7 @@
             const closePopupBtn = document.getElementById('close-popup');
             let list_tags = {};
 
-            
+
 
             async function fetchDataAsync(url, let_tags) {
                 const response = await fetch(url);
@@ -530,36 +571,35 @@
 
         // СКРИПТ ДЛЯ МОДАЛЬНОГО ОКНА ВЫСТАВЛЕНИЯ ОЦЕНКИ
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const rateBtn = document.querySelector('. '); // <- ПОМЕНЯЙ НАЗВАНИЕ 
-            // КЛАССА НА ТОТ ЧТО У ТВОЕЙ КНОПКИ ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
+        document.addEventListener('DOMContentLoaded', function () {
+            const rateBtn = document.querySelector('.rate-btn');
             const modal = document.getElementById('modal');
             const closeModal = document.querySelector('.close-modal');
             const backButton = document.querySelector('.grey-button');
 
             // Обработчики для модального окна
             if (backButton) {
-                backButton.addEventListener('click', function(e) {
+                backButton.addEventListener('click', function (e) {
                     e.preventDefault(); // Предотвращает отправку формы
                     modal.style.display = 'none';
                 });
             }
 
-            rateBtn.addEventListener('click', function(e) {
+            rateBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 document.querySelectorAll('.menu-content').forEach(c => {
-                        c.style.display = 'none';
+                    c.style.display = 'none';
                 });
                 modal.style.display = 'flex';
             });
 
-            closeModal.addEventListener('click', function() {
+            closeModal.addEventListener('click', function () {
                 modal.style.display = 'none';
             });
 
-            modal.addEventListener('click', function(e) {
+            modal.addEventListener('click', function (e) {
                 if (e.target === modal) {
-                modal.style.display = 'none';
+                    modal.style.display = 'none';
                 }
             });
         });
