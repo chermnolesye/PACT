@@ -396,11 +396,29 @@
     text-align: left;
 }
 
+#filters {
+   width: 80%;
+   display: none;
+}
+
 .date_wrapper input {
     max-width: 105px;
 }
 
+#id_exercisemarkcomment{
+    padding:5px;
+}
+
+@media (max-width:1000px) {
+    .exercises-texts, .top_panel, #filters {
+        width: 90%;
+    }
+}
+
 @media (max-width:750px) {
+    .exercises-texts, .top_panel, #filters {
+        width: 100%;
+    }
     .edit_delete_card {
         display: block;
     }
@@ -416,17 +434,6 @@
     .modal-content {
         max-width: 90%;
         min-width: unset;
-    }
-}
-
-@media (max-width:1000px) {
-    .exercises-texts, .top_panel {
-        width: 90%;
-    }
-}
-@media (max-width:700px) {
-    .exercises-texts, .top_panel {
-        width: 100%;
     }
 }
 
