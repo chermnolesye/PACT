@@ -72,12 +72,30 @@
                 <button class="close-review" id="closeReview">&#10006;</button>                
             </div>
 
-            <div class="student-review separator" id="review">
-            </div>
+            <div class="student-review separator" id="review"></div>
 
             <div class="teacher-comment">
                 <h3>Комментарий преподавателя</h3>
                 <div id="comment"> </div>
+            </div>
+
+             <form id="commentForm" style="display: none;">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea id="commentInput" class="form-control" rows="4" 
+                                placeholder="Введите ваш комментарий..."></textarea>
+                    <div id="commentError" class="error-message" style="color: red; display: none;"></div>
+                </div>
+                <div class="review-buttons">
+                    <button type="submit" class="button">Сохранить</button>
+                    <button type="button" class="button grey-button" id="cancelEdit">Отмена</button>
+                </div>
+            </form>
+                
+            <!-- Кнопки управления комментарием -->
+            <div class="review-buttons" id="commentControls">
+                <button type="button" class="button" id="editCommentBtn">Изменить</button>
+                <button type="button" class="button" id="addCommentBtn">Добавить комментарий</button>
             </div>
 
             <!-- <form id="create-comment-form">
@@ -222,6 +240,7 @@
                 openReviewPanel();
             });
         });
+        
 
         function handleClickOutside(event) {
             // Если панель открыта И клик был вне панели И не по выделенному фрагменту

@@ -31,7 +31,6 @@ from core_app.models import (
     Sentence,
     ExerciseTextTask
 )
-
 from .forms import (
     AddExerciseForm,
     AddExerciseTextForm,
@@ -40,7 +39,8 @@ from .forms import (
     AddErrorAnnotationForm,
     ExerciseTextTaskForm,
     Group,
-    AddMarkForm
+    AddMarkForm,
+    TeacherCommentForm
 )
 
 '''
@@ -62,9 +62,7 @@ def load_exercise_data(request):
         return JsonResponse(data)    
     return JsonResponse({})
 
-
 def teacher_exercises(request):
-    # print("GET параметры:", dict(request.GET))
     exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.all())
     exercises_queryset = exercise_filter.qs
     exercises_list = []
@@ -80,29 +78,15 @@ def teacher_exercises(request):
             'in_time': in_time
         }
         exercises_list.append(exercises_dict)
-
-    #exercise_to_edit = get_object_or_404(Exercise, idexercise=2)
     edit_form = EditExerciseForm(initial={
          'creationdate': datetime.date.today(),
          'deadline': datetime.date.today(),
     })
-    # exercises_list = []
-    # exercises = Exercise.objects.all()
-    # for exercise in exercises:
-    #     in_time = False
-    #     if exercise.exercisestatus and exercise.completiondate:
-    #         in_time = exercise.completiondate <= exercise.deadline
-    #     else:
-    #         in_time = datetime.date.today() <= exercise.deadline
-    #     exercises_dict = {'exercise_data' : exercise,
-    #                       'in_time':in_time}
-    #     exercises_list.append(exercises_dict)
     context = {
         'exercises' : exercises_list,
         'filter': exercise_filter,
         'edit_form': edit_form
         }
-
     if request.method == "POST":
         if 'edit_text' in request.POST:
             edit_form = EditExerciseForm(request.POST)
@@ -125,7 +109,6 @@ def delete_exercise_ajax(request, exercise_id):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
     
-
 def add_exercise(request):
     if request.method == 'POST':
         form = AddExerciseForm(request.POST)
@@ -145,25 +128,20 @@ def add_exercise(request):
                         deadline=form.cleaned_data['deadline'],
                         exercisestatus=False
                     )
-                    exercise.save()
-                    
+                    exercise.save()                    
                     # В зависимости от типа exerciseabbr заполняется одна из таблиц
                     exercise_type = exercise.idexercisetype.exerciseabbr
-                    
                     if exercise_type == 'grading':
                         ExerciseGrading.objects.create(
                             idexercise=exercise,
                             idtext=form.cleaned_data['grading_text']
-                        )
-                    
+                        )                    
                     elif exercise_type == 'review':
                         ExerciseReview.objects.create(
                             idexercise=exercise,
                             idexercisetext=form.cleaned_data['review_exercisetext']
-                        )
-                
-                return redirect('teacher_exercises')
-                
+                        )                
+                return redirect('teacher_exercises')               
             except Exception as e:
                 print(f'Ошибка: {str(e)}')
         else:
@@ -174,13 +152,10 @@ def add_exercise(request):
             print("=== END ERRORS ===")
     else:
         form = AddExerciseForm()
-
     context = {
         "form": form
     }
-
     return render(request, "add_exercise.html", context)
-
 
 def load_students(request):
     group_id = request.GET.get('group_id')
@@ -264,6 +239,13 @@ def review_teacher(request, idexercise=1):
     else:
         mark_form = AddMarkForm(instance=exercise)
 
+    fragment_forms = {}
+    for review in reviews:
+        fragment_forms[review.idexercisetextreview] = TeacherCommentForm(
+            instance=review,
+            prefix=f'comment_{review.idexercisetextreview}'
+        )
+
     context = {
         'exercise': exercise,
         'exercisereview': exercisereview,
@@ -271,7 +253,9 @@ def review_teacher(request, idexercise=1):
         'text': processed_text,
         'reviews': reviews,
         'in_time': in_time,
-        'mark_form': mark_form
+        'mark_form': mark_form,
+        'teacher_comment_form': TeacherCommentForm(),  # Пустая форма для AJAX
+        'fragment_forms': fragment_forms
     }
     return render(request, "review_teacher.html", context)
 
@@ -291,7 +275,7 @@ def wrap_fragments_with_spans(text, reviews):
             f'<span class="selection" '
             f'data-fragment-id="{fragment.idexercisetextreview}" '
             f'data-review="{fragment.review}" '
-            f'data-teacher-comment="{fragment.teachercomment}">'
+            f'data-teacher-comment="{fragment.teachercomment or ""}">'
         )
         print(f"offset before: {offset}")
         result = result[:start] + span_tag + result[start:end] + '</span>' + result[end:]
@@ -299,6 +283,24 @@ def wrap_fragments_with_spans(text, reviews):
         # offset += end
         print(f"offset after: {offset}, len span = {len(span_tag)}")
     return result
+
+def update_teacher_comment(request, fragment_id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        fragment = get_object_or_404(ExerciseFragmentReview, pk=fragment_id)
+        form = TeacherCommentForm(request.POST, instance=fragment)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({
+                'success': True,
+                'comment': fragment.teachercomment or '',
+                'message': 'Комментарий сохранен'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors
+            })
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 def review_text_list(request):
     reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())

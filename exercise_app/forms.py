@@ -1,7 +1,8 @@
 from django import forms
 from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, Reason, 
                              Student, User, Group, Exercise, ExerciseGrading, ExerciseReview, 
-                             Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask
+                             Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask,
+                             ExerciseFragmentReview
                             )
 import datetime
 from django.forms import formset_factory
@@ -269,3 +270,18 @@ class AddMarkForm(forms.ModelForm):
             'exercisemark',
             'exercisemarkcomment'
         ]
+
+class TeacherCommentForm(forms.ModelForm):
+    class Meta:
+        model = ExerciseFragmentReview
+        fields = ['teachercomment']
+        widgets = {
+            'teachercomment': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Введите комментарий'
+            })
+        }
+        labels = {
+            'teachercomment': 'Комментарий'
+        }

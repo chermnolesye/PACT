@@ -20,6 +20,7 @@ urlpatterns = [
     path('review_text/<int:idexercisetext>/', views.review_text, name='review_text'),
     # path('review_teacher/', views.review_teacher, name='review_teacher'),
     path('review_teacher/<int:idexercise>/', views.review_teacher, name='review_teacher'),
+    path('update_comment/<int:fragment_id>/', views.update_teacher_comment, name='update_comment'),
 
     path('grade_text/', views.grade_text, name='grade_text'),
    
