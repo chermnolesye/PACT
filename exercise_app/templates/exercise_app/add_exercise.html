@@ -10,7 +10,7 @@
 
 {% block content %}   
 
-<div class="container">
+<!-- <div class="container">
     <h2 class="highlighted-header">Добавление упражнения</h2>
     <form method="post" class="add_exercise_form">
         {% csrf_token %}
@@ -62,16 +62,16 @@
             {{ form.review_exercisetext }}
         </div>
 
-        <!-- <div style="display: none;">
+        <div style="display: none;">
         {{ form.grading_text }}
         {{ form.review_exercisetext }}
-    </div> -->
+    </div>
 
         <button type="submit" class="button">Создать упражнение</button>
     </form>
     
-</div>
-    <script>
+</div> -->
+    <!-- <script>
         document.addEventListener('DOMContentLoaded', function() {
         const groupSelect = document.getElementById("id_group");
         const yearSelect = document.getElementById("id_year");
@@ -129,6 +129,311 @@
             });
         });
     });
-    </script>
+    </script> -->
+
+<div class="container">
+    <h2 class="highlighted-header">Добавление упражнения</h2>
+    <form method="post" class="add_exercise_form" id="exerciseForm">
+        {% csrf_token %}
+
+        <div class="form-group">
+            {{ form.year.label_tag }}
+            {{ form.year }}
+        </div>
+
+        <div class="form-group">
+            {{ form.group.label_tag }}
+            {{ form.group }}
+        </div>
+
+        <div class="form-group">
+            {{ form.idstudent.label_tag }}
+            {{ form.idstudent }}
+        </div>
+
+        <div class="form-group">
+            {{ form.creationdate.label_tag }}
+            {{ form.creationdate }}
+        </div>
+
+        <div class="form-group">
+            {{ form.deadline.label_tag }}
+            {{ form.deadline }}
+        </div>
+
+        <div class="grouping-wrapper">
+            <label>Тип упражнения:</label>
+            <div class="grouping-options">
+                {% for choice in form.idexercisetype %}
+                <div>
+                    {{ choice.tag }}
+                    <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="grading-fields" style="display: none;">
+            {{ form.grading_text.label_tag }}
+            {{ form.grading_text }}
+        </div>
+
+        <div id="review-fields" style="display: none;">
+            <div class="form-group">
+                <label>Выберите текст для рецензирования:</label>
+                <div class="texts-list" id="texts-list">
+                    <div class="loading" id="texts-loading">
+                        Загрузка текстов...
+                    </div>
+                </div>
+                <div id="texts-error" class="error-message" style="display: none;"></div>
+            </div>
+
+            <div class="form-group" id="tasks-section" style="display: none;">
+                <label>Выберите задание:</label>
+                <div class="tasks-list" id="tasks-list">
+                </div>
+                <div id="tasks-error" class="error-message" style="display: none;"></div>
+            </div>
+
+            <div class="selected-info" id="selection-info" style="display: none;">
+                <h5>Выбрано:</h5>
+                <div id="selected-text-info">
+                    <strong>Текст:</strong> <span id="selected-text-name">Не выбран</span>
+                </div>
+                <div id="selected-task-info" style="margin-top: 8px;">
+                    <strong>Задание:</strong> <span id="selected-task-title">Не выбрано</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Скрытые поля для хранения выбранных значений -->
+        <div class="hidden-fields">
+            {{ form.grading_text }}
+            {{ form.review_text_id }}
+            {{ form.review_task_id }}
+            {{ form.review_exercisetext }}
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+            <p>{{ error }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <button type="submit" class="button">Создать упражнение</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const groupSelect = document.getElementById("id_group");
+    const yearSelect = document.getElementById("id_year");
+    const studentSelect = document.getElementById("id_idstudent");
+    const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
+    const gradingFields = document.getElementById('grading-fields');
+    const reviewFields = document.getElementById('review-fields');
+    
+    // Скрытые поля для review
+    const reviewTextIdInput = document.getElementById('id_review_text_id');
+    const reviewTaskIdInput = document.getElementById('id_review_task_id');
+    
+    // Элементы для списков
+    const textsList = document.getElementById('texts-list');
+    const tasksList = document.getElementById('tasks-list');
+    const tasksSection = document.getElementById('tasks-section');
+    const selectionInfo = document.getElementById('selection-info');
+    const selectedTextName = document.getElementById('selected-text-name');
+    const selectedTaskTitle = document.getElementById('selected-task-title');
+    
+    let selectedTextId = null;
+    let selectedTaskId = null;
+
+    // Загрузка групп по учебному году
+    yearSelect.addEventListener("change", function () {
+        const yearId = this.value;
+        if (!yearId) return;
+        
+        fetch("{% url 'load_groups' %}?yearId=" + yearId)
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                groupSelect.innerHTML = '<option value="">Выберите группу</option>';
+                data.groups.forEach(group => {
+                    const option = document.createElement("option");
+                    option.value = group.id;
+                    option.textContent = group.groupname;
+                    groupSelect.appendChild(option);
+                });
+            });
+    });
+
+    // Загрузка студентов по группе
+    groupSelect.addEventListener("change", function() {
+        const groupId = this.value;
+        if (!groupId) return;
+        
+        fetch("{% url 'load_students' %}?group_id=" + groupId)
+            .then(response => response.json())
+            .then(data => {
+                studentSelect.innerHTML = '<option value="">Выберите студента</option>';
+                data.students.forEach(student => {
+                    const option = document.createElement("option");
+                    option.value = student.id;
+                    option.textContent = student.name;
+                    studentSelect.appendChild(option);
+                });
+            });
+    });
+
+    exerciseTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            gradingFields.style.display = 'none';
+            reviewFields.style.display = 'none';            
+            resetReviewSelection();
+            
+            if (this.value === '1') {  // ID для grading
+                gradingFields.style.display = 'flex';
+            } else if (this.value === '2') {  // ID для review
+                reviewFields.style.display = 'flex';
+                loadTexts();
+            }
+        });
+    });
+    
+    // Функция сброса выбора для review
+    function resetReviewSelection() {
+        selectedTextId = null;
+        selectedTaskId = null;
+        reviewTextIdInput.value = '';
+        reviewTaskIdInput.value = '';
+        
+        tasksSection.style.display = 'none';
+        selectionInfo.style.display = 'none';
+        selectedTextName.textContent = 'Не выбран';
+        selectedTaskTitle.textContent = 'Не выбрано';
+        if (tasksList) tasksList.innerHTML = '';
+    }
+    
+    // Функция загрузки текстов
+    function loadTexts() {
+        textsList.innerHTML = '<div class="loading">Загрузка текстов...</div>';
+        
+        fetch("{% url 'get_review_texts' %}")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки текстов');
+                }
+                return response.json();
+            })
+            .then(texts => {
+                if (texts.length === 0) {
+                    textsList.innerHTML = '<div class="loading">Нет доступных текстов</div>';
+                    return;
+                }
+                
+                textsList.innerHTML = '';
+                texts.forEach(text => {
+                    const textItem = document.createElement('div');
+                    textItem.className = 'text-item';
+                    textItem.dataset.textId = text.id;
+                    textItem.innerHTML = `
+                        <h5>${text.name}</h5>
+                        <div class="text-meta">
+                            Автор: ${text.author} | Дата: ${text.load_date}
+                        </div>
+                    `;
+                    
+                    textItem.addEventListener('click', function() {
+                        document.querySelectorAll('.text-item').forEach(item => {
+                            item.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        selectedTextId = text.id;
+                        reviewTextIdInput.value = text.id;
+                        selectedTextName.textContent = text.name;
+                        loadTasks(text.id);
+                        selectionInfo.style.display = 'block';
+                    });
+                    
+                    textsList.appendChild(textItem);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки текстов:', error);
+                textsList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки текстов</div>';
+            });
+    }
+    
+    function loadTasks(textId) {
+        console.log('Загрузка заданий для textId:', textId);
+        console.log('Полный URL:', `/reviewtexts/${textId}/tasks/`);
+        tasksSection.style.display = 'block';
+        tasksList.innerHTML = '<div class="loading">Загрузка заданий...</div>';
+        
+        fetch(`/exercise/reviewtexts/${textId}/tasks/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки заданий');
+                }
+                return response.json();
+            })
+            .then(tasks => {
+                if (tasks.length === 0) {
+                    tasksList.innerHTML = '<div class="loading">Нет заданий для этого текста</div>';
+                    return;
+                }
+                
+                tasksList.innerHTML = '';
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item';
+                    taskItem.dataset.taskId = task.id;
+                    taskItem.innerHTML = `
+                        <h6>${task.title}</h6>
+                        <div class="task-text">${task.text}</div>
+                    `;
+                    
+                    taskItem.addEventListener('click', function() {
+                        document.querySelectorAll('.task-item').forEach(item => {
+                            item.classList.remove('selected');
+                        });
+
+                        this.classList.add('selected');
+                        selectedTaskId = task.id;
+                        reviewTaskIdInput.value = task.id;
+                        selectedTaskTitle.textContent = task.title;
+                    });
+                    
+                    tasksList.appendChild(taskItem);
+                });
+            })
+            .catch(error => {
+                console.error('Ошибка загрузки заданий:', error);
+                tasksList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки заданий</div>';
+            });
+    }
+    
+    // Валидация формы перед отправкой
+    document.getElementById('exerciseForm').addEventListener('submit', function(event) {
+        const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
+        
+        if (selectedRadio && selectedRadio.value === '2') {
+            if (!selectedTextId) {
+                event.preventDefault();
+                alert('выберите текст для рецензирования');
+                return;
+            }
+            
+            if (!selectedTaskId) {
+                event.preventDefault();
+                alert('выберите задание для рецензирования');
+                return;
+            }
+        }
+    });
+});
+</script>
 
 {% endblock %}

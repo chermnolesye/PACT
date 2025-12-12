@@ -139,8 +139,9 @@ def add_exercise(request):
                     elif exercise_type == 'review':
                         ExerciseReview.objects.create(
                             idexercise=exercise,
-                            idexercisetext=form.cleaned_data['review_exercisetext']
-                        )                
+                            idexercisetext=form.cleaned_data['review_exercisetext_obj'],
+                            idexercisetexttask=form.cleaned_data['review_task_obj']
+                        )            
                 return redirect('teacher_exercises')               
             except Exception as e:
                 print(f'Ошибка: {str(e)}')
@@ -152,10 +153,49 @@ def add_exercise(request):
             print("=== END ERRORS ===")
     else:
         form = AddExerciseForm()
+
+    review_texts = ExerciseText.objects.all()
+    grading_texts = Text.objects.all().order_by('idtext')[:10]
     context = {
-        "form": form
+        "form": form,
+        "review_texts": review_texts,
+        "grading_texts": grading_texts,
     }
     return render(request, "add_exercise.html", context)
+
+def get_review_texts(request):
+    try:
+        texts = ExerciseText.objects.all().order_by('-loaddate')
+        
+        texts_data = [
+            {
+                'id': text.idexercisetext,
+                'name': text.exercisetextname,
+                'author': text.author,
+                'load_date': text.loaddate.strftime('%d.%m.%Y'),
+            }
+            for text in texts
+        ]
+        
+        return JsonResponse(texts_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+def get_text_tasks(request, text_id):
+    try:
+        tasks = ExerciseTextTask.objects.filter(idexercisetext=text_id)
+        print(len(tasks))
+        tasks_data = [
+            {
+                'id': task.idexercisetexttask,
+                'title': task.tasktitle,
+                'text': task.tasktext
+            }
+            for task in tasks
+        ]
+        return JsonResponse(tasks_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def load_students(request):
     group_id = request.GET.get('group_id')
