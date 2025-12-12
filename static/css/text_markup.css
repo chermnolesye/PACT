@@ -33,6 +33,11 @@ form {
     font-size: 28px;
     margin: 10px 0px;
 }
+.text-subtitle {
+    color: var(--primary-color);
+    font-size: 24px;
+    margin: 10px 0px;
+}
 
 .sentence {
     display: flex;

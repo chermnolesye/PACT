@@ -397,10 +397,18 @@ def get_count_end(count):
     БЕК ДАШИ
 '''
 
-def grade_text(request, text_id=2379):
-    text_id = request.GET.get("text_id")
+def grade_text(request, idexercise=2):
+    exercise = get_object_or_404(Exercise, idexercise=idexercise)
+    
+    in_time = False
+    if exercise.exercisestatus and exercise.completiondate:
+        in_time = exercise.completiondate <= exercise.deadline
+
+    exercise_grading = get_object_or_404(ExerciseGrading, idexercise=idexercise)
+    
+    text_id = exercise_grading.idtext
     if text_id:
-        text = get_object_or_404(Text, idtext=text_id)
+        text = get_object_or_404(Text, idtext=text_id.idtext)
     else:
         text = Text.objects.first()
 
@@ -463,14 +471,13 @@ def grade_text(request, text_id=2379):
         annotation_form = AddErrorAnnotationForm()
 
     # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
-    # if request.method == "POST" and "mark-form" in request.POST:
-    #     mark_form = AddMarkForm(request.POST, instance=exercise)
-    #     if mark_form.is_valid():
-    #         mark_form.save()
-    #         return redirect(request.path + f"?idexercise={exercise.idexercise}")
-    # else:
-    #     mark_form = AddMarkForm(instance=exercise)
-
+    if request.method == "POST" and "mark-form" in request.POST:
+         mark_form = AddMarkForm(request.POST, instance=exercise)
+         if mark_form.is_valid():
+             mark_form.save()
+             return redirect(request.path + f"?idexercise={exercise.idexercise}")
+    else:
+         mark_form = AddMarkForm(instance=exercise)
 
     student = text.idstudent
     user = student.iduser
@@ -478,11 +485,13 @@ def grade_text(request, text_id=2379):
     text_type = text.idtexttype
 
     context = {
-        # ДАША РАСКОММЕНТИРУЙ КОГДА ДОБАВИШЬ УПРАЖНЕНИЕ
-        # "mark_form": mark_form,
+        "mark_form": mark_form,
         "text": text,
         "annotation_form": annotation_form,
         "sentence_data": sentence_data,
+        "exercise": exercise,
+        "exercise_grading":exercise_grading,
+        "in_time":in_time,
         "selected_markup": selected_markup,
         "author": f"{user.lastname} {user.firstname}",
         "group": group.groupname,

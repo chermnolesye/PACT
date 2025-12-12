@@ -111,9 +111,9 @@
             <span class="full_name">
                 {% if exercise.exercise_data.exercisestatus %}
                     {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-                    <a href="{% url 'grade_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                    <a href="{% url 'grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
                     {% else %}
-                    <a>{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                    <a href="{% url 'review_teacher' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
                     {% endif %}
                 {% else %}{{ exercise.exercise_data.idstudent.iduser.get_full_name }}{% endif %}
             </span>
