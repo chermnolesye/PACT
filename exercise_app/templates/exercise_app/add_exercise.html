@@ -5,13 +5,29 @@
 {% block title %}Добавление упражнения{% endblock %}
 
 {% block extra_head %}
-    <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+<link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
 {% endblock %}
 
 {% block content %}
 
 <div class="container">
     <h2 class="highlighted-header">Добавление упражнения</h2>
+    <div class="chosen_params">
+        <p>Выберите текст по которому будет выполнять упражнение "<span class="exercise_type"></span>":</p>
+        <uL>
+            <li id="exercise_type_id" style="opacity:0;"></li>
+            <li>ФИО: <span class="chosen_fio"></span></li>
+            <li>Группа: <span class="chosen_group"></span> (<span class="chosen_year"></span>)</li>
+            <li>Начиная с: <span class="chosen_date_s"></span></li>
+            <li>По дату: <span class="chosen_date_f"></span></li>
+        </uL>
+        <button id="open_edit">
+            <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.2721 4.28366L20.6225 2.93032C21.6977 1.8547 23.1562 1.25027 24.6771 1.25C26.198 1.24973 27.6567 1.85363 28.7323 2.92886C29.8079 4.0041 30.4123 5.46258 30.4126 6.98346C30.4129 8.50434 29.809 9.96304 28.7337 11.0387L27.3833 12.392M19.2721 4.28366C19.2721 4.28366 19.4412 7.15366 21.9758 9.68824C24.5104 12.2228 27.3833 12.392 27.3833 12.392M19.2721 4.28366L6.84708 16.7087C6.00124 17.5487 5.58124 17.9716 5.21958 18.4353C4.79374 18.9837 4.42916 19.5728 4.12874 20.2028C3.87499 20.7337 3.68833 21.2966 3.31208 22.4253L2.10749 26.042L1.71666 27.2116M27.3833 12.392L14.9583 24.817C14.1125 25.6628 13.6925 26.0828 13.2287 26.4445C12.6804 26.8703 12.0912 27.2349 11.4612 27.5353C10.9304 27.7891 10.3675 27.9757 9.23874 28.352L5.62208 29.5566L4.45249 29.9474M1.71666 27.2116L1.32874 28.3841C1.23839 28.6562 1.22551 28.9482 1.29157 29.2272C1.35762 29.5063 1.49999 29.7614 1.70277 29.9642C1.90554 30.167 2.16072 30.3094 2.43977 30.3754C2.71882 30.4415 3.01075 30.4286 3.28291 30.3382L4.45249 29.9474M1.71666 27.2116L4.45249 29.9474" stroke="#0d6efd" stroke-width="2.2" />
+            </svg>
+        </button>
+    </div>
+
     <form method="post" class="add_exercise_form" id="exerciseForm">
         {% csrf_token %}
 
@@ -52,7 +68,17 @@
             </div>
         </div>
 
-        <div id="grading-fields" style="display: none;">
+        <p id="errMsg">
+            <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
+                <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
+                <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
+                <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
+            </svg>
+            Заполните все поля перед переходом к выбору текста!
+        </p>
+        <button type="button" class="button" id="btn_next">Перейти к выбору теста</button>
+
+        <div id="grading-fields" style="display:none;">
             <div class="card mb-3">
                 <div class="card-header">
                     <h5>Фильтры для выбора текста</h5>
@@ -61,20 +87,20 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="grading_header">Название текста:</label>
-                            <input type="text" id="grading_header" class="form-control" 
-                                placeholder="Поиск по названию...">
+                            <input type="text" id="grading_header" class="form-control"
+                                   placeholder="Поиск по названию...">
                         </div>
                         <div class="col-md-6">
                             <label for="grading_academic_year">Учебный год:</label>
                             <select id="grading_academic_year" class="form-control">
                                 <option value="">Все годы</option>
                                 {% for year in academic_years %}
-                                <option value="{{ year.idayear }}">{{ year.academicyearname }}</option>
+                                <option value="{{ year.idayear }}">{{ year.title }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="grading_group">Учебная группа:</label>
@@ -92,7 +118,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <button type="button" id="apply_grading_filters" class="btn btn-primary">
                         Применить фильтры
                     </button>
@@ -101,7 +127,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <div class="card">
                 <div class="card-header">
                     <h5>Выберите текст для оценивания</h5>
@@ -115,7 +141,7 @@
                             <p class="text-muted">Примените фильтры для загрузки текстов</p>
                         </div>
                     </div>
-                    
+
                     <div id="selected-grading-text" class="mt-3 p-3 border rounded" style="display: none;">
                         <h6>Выбранный текст:</h6>
                         <p id="selected-grading-text-info" class="mb-0"></p>
@@ -129,7 +155,7 @@
         </div>
 
         <div id="review-fields" style="display: none;">
-            <div class="form-group">
+            <div class="review-group">
                 <label>Выберите текст для рецензирования:</label>
                 <div class="texts-list" id="texts-list">
                     <div class="loading" id="texts-loading">
@@ -139,15 +165,15 @@
                 <div id="texts-error" class="error-message" style="display: none;"></div>
             </div>
 
-            <div class="form-group" id="tasks-section" style="display: none;">
-                <label>Выберите задание:</label>
-                <div class="tasks-list" id="tasks-list">
-                </div>
-                <div id="tasks-error" class="error-message" style="display: none;"></div>
-            </div>
+            <!--<div class="review-group" id="tasks-section" style="display: none;">
+                    <label>Выберите задание:</label>
+                    <div class="tasks-list" id="tasks-list">
+                    </div>
+                    <div id="tasks-error" class="error-message" style="display: none;"></div>
+                </div>-->
 
             <div class="selected-info" id="selection-info" style="display: none;">
-                <h5>Выбрано:</h5>
+                <div class="chosen_text_header">Выбрано:</div>
                 <div id="selected-text-info">
                     <strong>Текст:</strong> <span id="selected-text-name">Не выбран</span>
                 </div>
@@ -170,116 +196,144 @@
             {% endfor %}
         </div>
         {% endif %}
-        <button type="submit" class="button">Создать упражнение</button>
+        <button type="submit" class="button" style="display:none;" id="submit_btn">Создать упражнение</button>
     </form>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const groupSelect = document.getElementById("id_group");
-    const yearSelect = document.getElementById("id_year");
-    const studentSelect = document.getElementById("id_idstudent");
-    const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
-    const gradingFields = document.getElementById('grading-fields');
-    const reviewFields = document.getElementById('review-fields');
-    
-    // Скрытые поля для review
-    const reviewTextIdInput = document.getElementById('id_review_text_id');
-    const reviewTaskIdInput = document.getElementById('id_review_task_id');
-    
-    // Элементы для списков
-    const textsList = document.getElementById('texts-list');
-    const tasksList = document.getElementById('tasks-list');
-    const tasksSection = document.getElementById('tasks-section');
-    const selectionInfo = document.getElementById('selection-info');
-    const selectedTextName = document.getElementById('selected-text-name');
-    const selectedTaskTitle = document.getElementById('selected-task-title');
-    
-    let selectedTextId = null;
-    let selectedTaskId = null;
+    document.addEventListener('DOMContentLoaded', function () {
 
-    // Загрузка групп по учебному году
-    yearSelect.addEventListener("change", function () {
-        const yearId = this.value;
-        if (!yearId) return;
-        
-        fetch("{% url 'load_groups' %}?yearId=" + yearId)
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                groupSelect.innerHTML = '<option value="">Выберите группу</option>';
-                data.groups.forEach(group => {
-                    const option = document.createElement("option");
-                    option.value = group.id;
-                    option.textContent = group.groupname;
-                    groupSelect.appendChild(option);
+        const groupSelect = document.getElementById("id_group");
+        const yearSelect = document.getElementById("id_year");
+        const studentSelect = document.getElementById("id_idstudent");
+        const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
+        const gradingFields = document.getElementById('grading-fields');
+        const reviewFields = document.getElementById('review-fields');
+
+        // Скрытые поля для review
+        const reviewTextIdInput = document.getElementById('id_review_text_id');
+        const reviewTaskIdInput = document.getElementById('id_review_task_id');
+
+        // Элементы для списков
+        const textsList = document.getElementById('texts-list');
+        const tasksList = document.getElementById('tasks-list');
+        const tasksSection = document.getElementById('tasks-section');
+        const selectionInfo = document.getElementById('selection-info');
+        const selectedTextName = document.getElementById('selected-text-name');
+        const selectedTaskTitle = document.getElementById('selected-task-title');
+
+        let selectedTextId = null;
+        let selectedTaskId = null;
+
+        // Загрузка групп по учебному году
+        yearSelect.addEventListener("change", function () {
+            const chosen_year_el = document.querySelector(".chosen_year")
+            chosen_year_el.innerHTML = this.options[this.selectedIndex].innerHTML;
+            const yearId = this.value;
+            if (!yearId) return;
+
+            fetch("{% url 'load_groups' %}?yearId=" + yearId)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    groupSelect.innerHTML = '<option value="">Выберите группу</option>';
+                    data.groups.forEach(group => {
+                        const option = document.createElement("option");
+                        option.value = group.id;
+                        option.textContent = group.groupname;
+                        groupSelect.appendChild(option);
+                    });
                 });
-            });
-    });
+        });
 
-    // Загрузка студентов по группе
-    groupSelect.addEventListener("change", function() {
-        const groupId = this.value;
-        if (!groupId) return;
-        
-        fetch("{% url 'load_students' %}?group_id=" + groupId)
-            .then(response => response.json())
-            .then(data => {
-                studentSelect.innerHTML = '<option value="">Выберите студента</option>';
-                data.students.forEach(student => {
-                    const option = document.createElement("option");
-                    option.value = student.id;
-                    option.textContent = student.name;
-                    studentSelect.appendChild(option);
+        // Загрузка студентов по группе
+        groupSelect.addEventListener("change", function () {
+            const chosen_group_el = document.querySelector(".chosen_group")
+            console.log(this.options[this.selectedIndex].innerHTML)
+            if (this.options[this.selectedIndex].innerHTML != "Выберите группу") {
+                chosen_group_el.innerHTML = this.options[this.selectedIndex].innerHTML;
+            }
+            else {
+                chosen_group_el.innerHTML = "";
+                const chosen_fio_el = document.querySelector(".chosen_fio")
+                chosen_fio_el.innerHTML = "";
+            }
+            const groupId = this.value;
+            if (!groupId) return;
+
+            fetch("{% url 'load_students' %}?group_id=" + groupId)
+                .then(response => response.json())
+                .then(data => {
+                    studentSelect.innerHTML = '<option value="">Выберите студента</option>';
+                    data.students.forEach(student => {
+                        const option = document.createElement("option");
+                        option.value = student.id;
+                        option.textContent = student.name;
+                        studentSelect.appendChild(option);
+                    });
                 });
-            });
-    });
+        });
 
-    exerciseTypeRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            gradingFields.style.display = 'none';
-            reviewFields.style.display = 'none';            
-            resetReviewSelection();
-            
-            if (this.value === '1') {  // код для grading
-                gradingFields.style.display = 'flex';
-                loadGradingTexts();
-            } else if (this.value === '2') {  // код для review
-                reviewFields.style.display = 'flex';
-                loadTexts();
+        studentSelect.addEventListener("change", function () {
+            const chosen_fio_el = document.querySelector(".chosen_fio")
+            if (this.options[this.selectedIndex].innerHTML != "Выберите студента") {
+                chosen_fio_el.innerHTML = this.options[this.selectedIndex].innerHTML;
+            }
+            else {
+                chosen_fio_el.innerHTML = "";
             }
         });
-    });
 
-    // Элементы для Grading
-    const gradingTextsList = document.getElementById('grading-texts-list');
-    const selectedGradingTextInfo = document.getElementById('selected-grading-text-info');
-    const selectedGradingTextDiv = document.getElementById('selected-grading-text');
-    const gradingTextHidden = document.getElementById('id_grading_text');
-    let selectedGradingTextId = null;
+        const date_inp_s = document.getElementById("id_creationdate");
+        date_inp_s.addEventListener("change", function () {
+            const chosen_date_s = document.querySelector(".chosen_date_s")
+            chosen_date_s.innerHTML = (new Date(this.value)).toLocaleString('ru-Ru', { day: "numeric", month: "long", year: "numeric" });
+        });
 
-    // Функция загрузки текстов для Grading
-    function loadGradingTexts() {
-        if (!gradingTextsList) return;
-        const selectedStudentId = document.getElementById('id_idstudent')?.value;
-        if (!selectedStudentId) {
-            gradingTextsList.innerHTML = `
+        const date_inp_f = document.getElementById("id_deadline");
+        date_inp_f.addEventListener("change", function () {
+            const chosen_date_f = document.querySelector(".chosen_date_f")
+            chosen_date_f.innerHTML = (new Date(this.value)).toLocaleString('ru-Ru', { day: "numeric", month: "long", year: "numeric" });
+        });
+
+        exerciseTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function () {
+                const exercise_type = document.querySelector(".exercise_type")
+                const exercise_type_id = document.getElementById("exercise_type_id")
+                exercise_type.innerHTML = this.parentElement.querySelector("label").innerHTML
+                exercise_type_id.innerHTML = this.value
+            });
+        });
+
+        // Элементы для Grading
+        const gradingTextsList = document.getElementById('grading-texts-list');
+        const selectedGradingTextInfo = document.getElementById('selected-grading-text-info');
+        const selectedGradingTextDiv = document.getElementById('selected-grading-text');
+        const gradingTextHidden = document.getElementById('id_grading_text');
+        let selectedGradingTextId = null;
+
+        // Функция загрузки текстов для Grading
+        function loadGradingTexts() {
+            if (!gradingTextsList) return;
+            const selectedStudentId = document.getElementById('id_idstudent')?.value;
+            if (!selectedStudentId) {
+                gradingTextsList.innerHTML = `
                 <div class="alert alert-warning">
                     Сначала выберите студента в форме выше
                 </div>
             `;
-            return;
-        }
-        
-        const params = new URLSearchParams({
-            'exclude_student': selectedStudentId,
-            'header': document.getElementById('grading_header')?.value || '',
-            'academic_year': document.getElementById('grading_academic_year')?.value || '',
-            'group': document.getElementById('grading_group')?.value || '',
-            'text_type': document.getElementById('grading_text_type')?.value || ''
-        });
-        
-        gradingTextsList.innerHTML = `
+                return;
+            }
+
+            const params = new URLSearchParams({
+                'exclude_student': selectedStudentId,
+                'header': document.getElementById('grading_header')?.value || '',
+                'academic_year': document.getElementById('grading_academic_year')?.value || '',
+                'group': document.getElementById('grading_group')?.value || '',
+                'text_type': document.getElementById('grading_text_type')?.value || ''
+            });
+
+            gradingTextsList.innerHTML = `
             <div class="text-center p-3">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Загрузка...</span>
@@ -287,268 +341,329 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Загрузка текстов...</p>
             </div>
         `;
-        
-        fetch(`/exercise/gradingtexts/?${params}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Ошибка загрузки текстов: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(texts => {
-                console.log('Получено текстов для оценивания:', texts.length);
-                
-                if (texts.length === 0) {
-                    gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
-                    return;
-                }
-                
-                gradingTextsList.innerHTML = '';
-                texts.forEach(text => {
-                    const textItem = document.createElement('div');
-                    textItem.className = 'list-group-item list-group-item-action grading-text-item';
-                    textItem.dataset.textId = text.id;
-                    textItem.innerHTML = `
+
+            fetch(`/exercise/gradingtexts/?${params}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Ошибка загрузки текстов: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(texts => {
+                    console.log('Получено текстов для оценивания:', texts.length);
+
+                    if (texts.length === 0) {
+                        gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
+                        return;
+                    }
+
+                    gradingTextsList.innerHTML = '';
+                    texts.forEach(text => {
+                        const textItem = document.createElement('div');
+                        textItem.className = 'list-group-item list-group-item-action grading-text-item';
+                        textItem.dataset.textId = text.id;
+                        textItem.innerHTML = `
                         <div class="d-flex w-100 justify-content-between">
                             <h6 class="mb-1">${text.header}</h6>
                             <small>Оценка: ${text.grade}</small>
                         </div>
                         <p class="mb-1">
                             <strong>Студент:</strong> ${text.student}<br>
-                            <strong>Группа:</strong> ${text.group} | 
+                            <strong>Группа:</strong> ${text.group} |
                             <strong>Год:</strong> ${text.academic_year}<br>
-                            <strong>Тип:</strong> ${text.text_type} | 
+                            <strong>Тип:</strong> ${text.text_type} |
                             <strong>Дата:</strong> ${text.created_date}
                         </p>
                     `;
-                    
-                    textItem.addEventListener('click', function() {
-                        document.querySelectorAll('.grading-text-item').forEach(item => {
-                            item.classList.remove('active');
-                        });
 
-                        this.classList.add('active');
+                        textItem.addEventListener('click', function () {
+                            document.querySelectorAll('.grading-text-item').forEach(item => {
+                                item.classList.remove('active');
+                            });
 
-                        selectedGradingTextId = text.id;
-                        if (gradingTextHidden) {
-                            gradingTextHidden.value = text.id;
-                        }
+                            this.classList.add('active');
 
-                        if (selectedGradingTextInfo) {
-                            selectedGradingTextInfo.innerHTML = `
+                            selectedGradingTextId = text.id;
+                            if (gradingTextHidden) {
+                                gradingTextHidden.value = text.id;
+                            }
+
+                            if (selectedGradingTextInfo) {
+                                selectedGradingTextInfo.innerHTML = `
                                 <strong>${text.header}</strong><br>
                                 Студент: ${text.student}<br>
                                 Группа: ${text.group}, Учебный год: ${text.academic_year}<br>
                                 Тип: ${text.text_type}, Оценка: ${text.grade}
                             `;
-                        }
-                        
-                        if (selectedGradingTextDiv) {
-                            selectedGradingTextDiv.style.display = 'block';
-                        }
+                            }
+
+                            if (selectedGradingTextDiv) {
+                                selectedGradingTextDiv.style.display = 'block';
+                            }
+                        });
+
+                        gradingTextsList.appendChild(textItem);
                     });
-                    
-                    gradingTextsList.appendChild(textItem);
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки текстов для оценивания:', error);
+                    gradingTextsList.innerHTML = '<div class="alert alert-danger">Ошибка загрузки текстов: ' + error.message + '</div>';
                 });
-            })
-            .catch(error => {
-                console.error('Ошибка загрузки текстов для оценивания:', error);
-                gradingTextsList.innerHTML = '<div class="alert alert-danger">Ошибка загрузки текстов: ' + error.message + '</div>';
-            });
-    }
-
-    // Загрузка групп для фильтра Grading
-    document.getElementById('grading_academic_year')?.addEventListener('change', function() {
-        const yearId = this.value;
-        const groupSelect = document.getElementById('grading_group');
-        
-        if (!yearId) {
-            groupSelect.innerHTML = '<option value="">Все группы</option>';
-            return;
         }
-        
-        fetch(`{% url 'load_groups' %}?yearId=${yearId}`)
-            .then(response => response.json())
-            .then(groups => {
+
+        // Загрузка групп для фильтра Grading
+        document.getElementById('grading_academic_year')?.addEventListener('change', function () {
+            const yearId = this.value;
+            const groupSelect = document.getElementById('grading_group');
+
+            if (!yearId) {
                 groupSelect.innerHTML = '<option value="">Все группы</option>';
-                groups.forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group.id;
-                    option.textContent = group.groupname;
-                    groupSelect.appendChild(option);
+                return;
+            }
+
+            fetch(`{% url 'load_groups' %}?yearId=${yearId}`)
+                .then(response => response.json())
+                .then(groups => {
+                    groupSelect.innerHTML = '<option value="">Все группы</option>';
+                    groups.forEach(group => {
+                        const option = document.createElement('option');
+                        option.value = group.id;
+                        option.textContent = group.groupname;
+                        groupSelect.appendChild(option);
+                    });
                 });
-            });
-    });
-
-    // Обработчики кнопок фильтров
-    document.getElementById('apply_grading_filters')?.addEventListener('click', loadGradingTexts);
-
-    document.getElementById('reset_grading_filters')?.addEventListener('click', function() {
-        document.getElementById('grading_header').value = '';
-        document.getElementById('grading_academic_year').value = '';
-        document.getElementById('grading_group').value = '';
-        document.getElementById('grading_text_type').value = '';
-        selectedGradingTextId = null;
-        if (gradingTextHidden) {
-            gradingTextHidden.value = '';
-        }
-        if (selectedGradingTextDiv) {
-            selectedGradingTextDiv.style.display = 'none';
-        }
-        
-        document.querySelectorAll('.grading-text-item').forEach(item => {
-            item.classList.remove('active');
         });
-    });
 
-    // Обновление текстов при изменении студента
-    document.getElementById('id_idstudent')?.addEventListener('change', function() {
-        const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
-        if (selectedRadio && selectedRadio.value === '1') {
-            loadGradingTexts();
+        // Обработчики кнопок фильтров
+        document.getElementById('apply_grading_filters')?.addEventListener('click', loadGradingTexts);
+
+        document.getElementById('reset_grading_filters')?.addEventListener('click', function () {
+            document.getElementById('grading_header').value = '';
+            document.getElementById('grading_academic_year').value = '';
+            document.getElementById('grading_group').value = '';
+            document.getElementById('grading_text_type').value = '';
+            selectedGradingTextId = null;
+            if (gradingTextHidden) {
+                gradingTextHidden.value = '';
+            }
+            if (selectedGradingTextDiv) {
+                selectedGradingTextDiv.style.display = 'none';
+            }
+
+            document.querySelectorAll('.grading-text-item').forEach(item => {
+                item.classList.remove('active');
+            });
+        });
+
+        // Обновление текстов при изменении студента
+        //document.getElementById('id_idstudent')?.addEventListener('change', function () {
+        //    const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
+        //    if (selectedRadio && selectedRadio.value === '1') {
+        //        loadGradingTexts();
+        //    } if (selectedRadio && selectedRadio.value === '2') {
+        //        loadReviewTexts();
+        //    }
+        //});
+
+        // Функция сброса выбора для review
+        function resetReviewSelection() {
+            selectedTextId = null;
+            selectedTaskId = null;
+            reviewTextIdInput.value = '';
+            reviewTaskIdInput.value = '';
+
+            tasksSection.style.display = 'none';
+            selectionInfo.style.display = 'none';
+            selectedTextName.textContent = 'Не выбран';
+            selectedTaskTitle.textContent = 'Не выбрано';
+            if (tasksList) tasksList.innerHTML = '';
         }
-    });
-    
-    // Функция сброса выбора для review
-    function resetReviewSelection() {
-        selectedTextId = null;
-        selectedTaskId = null;
-        reviewTextIdInput.value = '';
-        reviewTaskIdInput.value = '';
-        
-        tasksSection.style.display = 'none';
-        selectionInfo.style.display = 'none';
-        selectedTextName.textContent = 'Не выбран';
-        selectedTaskTitle.textContent = 'Не выбрано';
-        if (tasksList) tasksList.innerHTML = '';
-    }
-    
-    // Функция загрузки текстов для рецензирования
-    function loadTexts() {
-        textsList.innerHTML = '<div class="loading">Загрузка текстов...</div>';
-        
-        fetch("{% url 'get_review_texts' %}")
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Ошибка загрузки текстов');
-                }
-                return response.json();
-            })
-            .then(texts => {
-                if (texts.length === 0) {
-                    textsList.innerHTML = '<div class="loading">Нет доступных текстов</div>';
-                    return;
-                }
-                
-                textsList.innerHTML = '';
-                texts.forEach(text => {
-                    const textItem = document.createElement('div');
-                    textItem.className = 'text-item';
-                    textItem.dataset.textId = text.id;
-                    textItem.innerHTML = `
-                        <h5>${text.name}</h5>
-                        <div class="text-meta">
-                            Автор: ${text.author} | Дата: ${text.load_date}
+
+        // Функция загрузки текстов для рецензирования
+        function loadTexts() {
+            textsList.innerHTML = '<div class="loading">Загрузка текстов...</div>';
+
+            fetch("{% url 'get_review_texts' %}")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки текстов');
+                    }
+                    return response.json();
+                })
+                .then(texts => {
+                    if (texts.length === 0) {
+                        textsList.innerHTML = '<div class="loading">Нет доступных текстов</div>';
+                        return;
+                    }
+
+                    textsList.innerHTML = '';
+                    texts.forEach(text => {
+                        const textItem = document.createElement('div');
+                        textItem.className = 'text-item';
+                        textItem.dataset.textId = text.id;
+                        textItem.innerHTML = `
+                        <div class="review_text_header"><p>${text.name}</p></div>
+                        <div>
+                            <div class="text-meta">
+                                Автор: ${text.author}
+                            </div>
+                            <div class="text-meta">
+                                Дата: ${text.load_date}
+                            </div>
+                            <div class="review-group" id="tasks-section" style="display: none;">
+                                <label>Выберите задание:</label>
+                                <ul class="tasks-list" id="tasks-list">
+                                </ul>
+                                <div id="tasks-error" class="error-message" style="display: none;"></div>
+                            </div>
                         </div>
                     `;
-                    
-                    textItem.addEventListener('click', function() {
-                        document.querySelectorAll('.text-item').forEach(item => {
-                            item.classList.remove('selected');
+
+                        textsList.appendChild(textItem);
+                        textItem.querySelector(".review_text_header").addEventListener('click', function () {
+                            document.querySelectorAll('.text-item').forEach(item => {
+                                item.querySelector(".review_text_header").classList.remove('selected');
+                                item.querySelector("#tasks-section").style.display = "none";
+                            });
+                            textItem.querySelector(".review_text_header").classList.add('selected');
+                            selectedTextId = text.id;
+                            reviewTextIdInput.value = text.id;
+                            selectedTextName.textContent = text.name;
+                            loadTasks(text.id, textItem.querySelector("#tasks-section"), textItem.querySelector("#tasks-list"));
+                            selectionInfo.style.display = 'block';
                         });
-                        this.classList.add('selected');
-                        selectedTextId = text.id;
-                        reviewTextIdInput.value = text.id;
-                        selectedTextName.textContent = text.name;
-                        loadTasks(text.id);
-                        selectionInfo.style.display = 'block';
                     });
-                    
-                    textsList.appendChild(textItem);
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки текстов:', error);
+                    textsList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки текстов</div>';
                 });
-            })
-            .catch(error => {
-                console.error('Ошибка загрузки текстов:', error);
-                textsList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки текстов</div>';
-            });
-    }
-    
-    function loadTasks(textId) {
-        console.log('Загрузка заданий для textId:', textId);
-        console.log('Полный URL:', `/reviewtexts/${textId}/tasks/`);
-        tasksSection.style.display = 'block';
-        tasksList.innerHTML = '<div class="loading">Загрузка заданий...</div>';
-        
-        fetch(`/exercise/reviewtexts/${textId}/tasks/`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Ошибка загрузки заданий');
-                }
-                return response.json();
-            })
-            .then(tasks => {
-                if (tasks.length === 0) {
-                    tasksList.innerHTML = '<div class="loading">Нет заданий для этого текста</div>';
+        }
+
+        function loadTasks(textId, tasksSection, tasksList) {
+            console.log('Загрузка заданий для textId:', textId);
+            console.log('Полный URL:', `/reviewtexts/${textId}/tasks/`);
+
+            tasksSection.style.display = 'block';
+            tasksList.innerHTML = '<div class="loading">Загрузка заданий...</div>';
+
+            fetch(`/exercise/reviewtexts/${textId}/tasks/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки заданий');
+                    }
+                    return response.json();
+                })
+                .then(tasks => {
+                    if (tasks.length === 0) {
+                        tasksList.innerHTML = '<div class="loading">Нет заданий для этого текста</div>';
+                        return;
+                    }
+
+                    tasksList.innerHTML = '';
+                    tasks.forEach(task => {
+                        const taskItem = document.createElement('li');
+                        taskItem.className = 'task-item';
+                        taskItem.dataset.taskId = task.id;
+                        taskItem.innerHTML = `
+                        <span class="review_task_header">${task.title}</span>: ${task.text}
+                        
+                    `;
+
+                        taskItem.addEventListener('click', function () {
+                            document.querySelectorAll('.task-item').forEach(item => {
+                                item.classList.remove('selected_gray');
+                            });
+
+                            this.classList.add('selected_gray');
+                            selectedTaskId = task.id;
+                            reviewTaskIdInput.value = task.id;
+                            selectedTaskTitle.textContent = task.title;
+                        });
+
+                        tasksList.appendChild(taskItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка загрузки заданий:', error);
+                    tasksList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки заданий</div>';
+                });
+        }
+
+        // Валидация формы перед отправкой
+        document.getElementById('exerciseForm').addEventListener('submit', function (event) {
+            const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
+
+            if (selectedRadio && selectedRadio.value === '1') {
+                if (!selectedGradingTextId) {
+                    event.preventDefault();
+                    alert('выберите текст для поиска ошибок');
                     return;
                 }
-                
-                tasksList.innerHTML = '';
-                tasks.forEach(task => {
-                    const taskItem = document.createElement('div');
-                    taskItem.className = 'task-item';
-                    taskItem.dataset.taskId = task.id;
-                    taskItem.innerHTML = `
-                        <h6>${task.title}</h6>
-                        <div class="task-text">${task.text}</div>
-                    `;
-                    
-                    taskItem.addEventListener('click', function() {
-                        document.querySelectorAll('.task-item').forEach(item => {
-                            item.classList.remove('selected');
-                        });
+            }
 
-                        this.classList.add('selected');
-                        selectedTaskId = task.id;
-                        reviewTaskIdInput.value = task.id;
-                        selectedTaskTitle.textContent = task.title;
-                    });
-                    
-                    tasksList.appendChild(taskItem);
-                });
+            if (selectedRadio && selectedRadio.value === '2') {
+                if (!selectedTextId) {
+                    event.preventDefault();
+                    alert('выберите текст для рецензирования');
+                    return;
+                }
+
+                if (!selectedTaskId) {
+                    event.preventDefault();
+                    alert('выберите задание для рецензирования');
+                    return;
+                }
+            }
+        });
+
+        document.getElementById("btn_next").addEventListener("click", function () {
+
+            const chosen_year_el = document.querySelector(".chosen_year")
+            const chosen_group_el = document.querySelector(".chosen_group")
+            const chosen_fio_el = document.querySelector(".chosen_fio")
+            const chosen_date_s = document.querySelector(".chosen_date_s")
+            const chosen_date_f = document.querySelector(".chosen_date_f")
+            const exercise_type_id = document.getElementById("exercise_type_id")
+            if (!chosen_year_el.innerHTML || !chosen_group_el.innerHTML || !chosen_fio_el.innerHTML
+                || !chosen_date_s.innerHTML ||  !chosen_date_f.innerHTML ||  !exercise_type_id.innerHTML) {
+                document.getElementById("errMsg").style.display = "block";
+            }
+            else {
+                const gradingFields = document.getElementById('grading-fields');
+                const reviewFields = document.getElementById('review-fields');
+                const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
+                document.querySelectorAll('.form-group').forEach(el => {
+                    el.style.display = 'none';
+                })
+                document.querySelector('.grouping-wrapper').style.display = 'none';
+                document.getElementById('btn_next').style.display = 'none';
+                document.getElementById("errMsg").style.display = "none";
+                document.getElementById('submit_btn').style.display = 'inline-block';
+                document.querySelector('.chosen_params').style.display = 'block';
+                console.log(exercise_type_id.innerHTML)
+                if (exercise_type_id.innerHTML === '1') {  // код для grading
+                    gradingFields.style.display = 'block';
+                    loadGradingTexts();
+                } else if (exercise_type_id.innerHTML === '2') {  // код для review
+                    reviewFields.style.display = 'block';
+                    loadTexts();
+                }
+            };
+        });
+        document.getElementById("open_edit").addEventListener("click", function () {
+            document.getElementById('grading-fields').style.display = 'none';
+            document.getElementById('review-fields').style.display = 'none';
+            document.querySelectorAll('.form-group').forEach(el => {
+                el.style.display = 'flex';
             })
-            .catch(error => {
-                console.error('Ошибка загрузки заданий:', error);
-                tasksList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки заданий</div>';
-            });
-    }
-    
-    // Валидация формы перед отправкой
-    document.getElementById('exerciseForm').addEventListener('submit', function(event) {
-        const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
-        
-        if (selectedRadio && selectedRadio.value === '1') {
-            if (!selectedGradingTextId) {
-                event.preventDefault();
-                alert('выберите текст для поиска ошибок');
-                return;
-            }
-        }
-
-        if (selectedRadio && selectedRadio.value === '2') {
-            if (!selectedTextId) {
-                event.preventDefault();
-                alert('выберите текст для рецензирования');
-                return;
-            }
-            
-            if (!selectedTaskId) {
-                event.preventDefault();
-                alert('выберите задание для рецензирования');
-                return;
-            }
-        }
+            document.querySelector('.grouping-wrapper').style.display = 'flex';
+            document.getElementById('btn_next').style.display = 'inline-block';
+            document.getElementById('submit_btn').style.display = 'none';
+            document.querySelector('.chosen_params').style.display = 'none';
+        })
+        loadTexts();
     });
-});
 </script>
 
 {% endblock %}

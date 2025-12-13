@@ -7,7 +7,7 @@
 
 .add_exercise_form {
     width: 90%;
-    max-width: 500px;
+    max-width: 550px;
 }
 
     .add_exercise_form .form-group, #grading-fields, #review-fields {
@@ -18,16 +18,22 @@
         margin-bottom: 10px;
     }
 
-        .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label {
+        .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #grading-fields label {
             width: 130px;
             text-align: start;
             display: flex;
             color: var(--grey-color);
         }
 
-
         .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
             width: calc(100% - 140px);
+        }
+
+        #review-fields label {
+            text-align: start;
+            display: flex;
+            color: var(--grey-color);
+            margin-bottom: 10px;
         }
 
 .grouping-wrapper {
@@ -70,8 +76,9 @@
         border-bottom-right-radius: var(--border-radius);
         border-bottom-left-radius: var(--border-radius);
     }
+
     .exercises-texts .header-card {
-        text-align:start;
+        text-align: start;
     }
 
 .header-card {
@@ -352,6 +359,111 @@
     width: 80%;
 }
 
+.texts-list, #selection-info {
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    width: 100%;
+}
+
+    .texts-list .text-meta {
+        text-align: start;
+        margin: 5px 5px 5px 10px;
+    }
+
+#selection-info{
+    margin-top:10px;
+}
+#selected-text-info {
+    padding: 5px 5px 0;
+    text-align:start;
+}
+#selected-task-info {
+    padding: 0 5px 5px;
+    text-align: start;
+}
+
+#tasks-section {
+    margin: 10px 5px 5px 10px;
+}
+
+#tasks-section label {
+    margin-bottom: 0;
+    color:black;
+}
+
+.task-item {
+    width: 100%;
+    display: flex;
+    padding: 3px;
+}
+
+.review_task_header {
+    font-weight: 800;
+    max-width: 40%;
+    display: flex;
+}
+
+.task-text {
+    display: flex;
+}
+
+.selected {
+    background: var(--primary-color) !important;
+    color: white;
+}
+
+.selected_gray {
+    background: var(--e-grey) !important;
+}
+
+.review_text_header {
+    background: var(--e-grey);
+    padding: 10px 5px;
+}
+.chosen_text_header {
+    background: var(--grey-color);
+    padding: 10px 5px;
+    color:white;
+}
+
+.chosen_params {
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    padding: var(--primary-padding);
+    max-width: 90%;
+    width: 550px;
+    position: relative;
+    display: none;
+}
+
+    .chosen_params :first-child {
+        margin-bottom: 10px;
+    }
+
+    .chosen_params li {
+        text-align: start;
+        margin-left: 40px;
+    }
+
+    .chosen_params button {
+        height: 30px;
+        width: 30px;
+        background: none;
+        border: none;
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+    }
+
+#errMsg {
+    display: none;
+    margin-bottom: 10px;
+}
+
+.grouping-options div label ::before {
+    border: 2px solid red;
+}
+
 .filter-form {
     align-content: start;
     border: 1px solid rgba(0, 0, 0, .15);
@@ -397,16 +509,16 @@
 }
 
 #filters {
-   width: 80%;
-   display: none;
+    width: 80%;
+    display: none;
 }
 
 .date_wrapper input {
     max-width: 105px;
 }
 
-#id_exercisemarkcomment{
-    padding:5px;
+#id_exercisemarkcomment {
+    padding: 5px;
 }
 
 @media (max-width:1000px) {
@@ -419,6 +531,7 @@
     .exercises-texts, .top_panel, #filters {
         width: 100%;
     }
+
     .edit_delete_card {
         display: block;
     }
