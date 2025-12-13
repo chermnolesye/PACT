@@ -24,7 +24,8 @@ urlpatterns = [
     
     path('review_teacher/', views.review_teacher, name='review_teacher'),
     path('review_teacher/<int:idexercise>/', views.review_teacher, name='review_teacher'),
-    path('update_comment/<int:fragment_id>/', views.update_teacher_comment, name='update_comment'),
+    path('fragment/<int:fragment_id>/update-comment/', views.update_teacher_comment, name='update_teacher_comment'),
+    path('fragment/<int:fragment_id>/delete-comment/', views.delete_teacher_comment, name='delete_teacher_comment'),
 
     path('grade_text/', views.grade_text, name='grade_text'),
     path('grade_text/<int:idexercise>/', views.grade_text, name='grade_text'),

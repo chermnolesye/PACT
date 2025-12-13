@@ -62,10 +62,22 @@
     display: flex;
     flex-direction: column;
     max-height: 100%;
-    overflow: hidden;
-    border-left: 2px solid black;
+    /* overflow: hidden; */
+    /* border-left: 2px solid black; */
     padding: 20px;
-    overflow-y: auto;
+    /* overflow-y: auto; */
+}
+
+.r-divider {
+    position: fixed;
+    left: 58%;
+    top: 60px;
+    bottom: 10px;
+    width: 2px;
+    background: black;
+    z-index: 10;
+    pointer-events: none;
+    margin: 0px 5px;
 }
 
 .comment {
@@ -102,7 +114,7 @@
     background-color: #ffffff;
     flex-direction: row;
     position: sticky;
-    top: 61px;
+    top: 60px;
     z-index: 800;
     margin: 0;
 }
@@ -145,10 +157,14 @@
 .review-body {
     display: flex;
     margin: 10px;
-
-    height: calc(100vh - 100px);
+    margin-bottom: 40px;
+    height: calc(100vh - 200px);
+    max-height: calc(100vh - 200px);
+    overflow: visible;
     gap: 20px;
     transition: all 0.4s ease-in-out;
+
+    align-items: stretch;
 }
 
 .review-text-container {
@@ -157,7 +173,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    max-height: 100%;
     transition: all 0.4s ease-in-out;
 }
 
@@ -165,7 +180,6 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    max-height: 100%;
     transition: all 0.4s ease-in-out;
 }
 
@@ -173,11 +187,10 @@
     text-align: justify;
     white-space: normal; 
     line-height: 1.5;
-
     flex: 1;
     padding: 10px;
-    max-height: 100%;
-    overflow-y: auto;
+
+    white-space: pre-line;
 }
 
 .review-container {
@@ -192,7 +205,7 @@
     transform: translateX(100%);
     opacity: 0;
     transition: all 0.4s ease-in-out;
-    margin-top: 100px;
+    margin-top: 160px;
     position: fixed;
     right: 0;
     top: 0;
@@ -364,4 +377,73 @@
     margin: 5px 0px;
     width: 100%;
     box-sizing: border-box;
+}
+
+.add_exercise_text_form {
+    max-width: 80%;
+    width: 1200px;
+    margin: 0 auto;
+    padding: var(--primary-padding);
+}
+
+.form-fieldset {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 10px;
+    background: white;
+}
+
+.fieldset-legend {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    padding: 12px 20px;
+    background: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid #e0e0e0;
+    width: 100%;
+    margin: 0;
+}
+
+.fieldset-content {
+    padding: 24px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+}
+
+.form-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.form-col input,
+.form-col select,
+.form-col textarea {
+    width: 100%;
+    box-sizing: border-box;
+    align-self: stretch;
+}
+
+.form-col.full-width {
+    flex: 0 0 100%;
+}
+
+.form-label {
+    display: block;
+    margin: 8px 0px;
+    color: var(--grey-color);
+}
+
+.add_exercise_text_form textarea {
+    min-height: 300px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
 }

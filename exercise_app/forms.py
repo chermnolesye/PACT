@@ -407,6 +407,7 @@ class AddMarkForm(forms.ModelForm):
 
     exercisemarkcomment = forms.CharField(
         label='Комментарий',
+        required=False,
         widget=forms.Textarea()
     )
 

@@ -283,9 +283,8 @@ def add_review_text(request):
                     exercisetext=form.cleaned_data['exercisetext'].strip()
                 )
                 exercise_text.save()
-                
-                print('Текст добавлен')
-                return redirect('add_review_text')
+                # return redirect('add_review_text')
+                return redirect('review_text', idexercisetext=exercise_text.idexercisetext)
                 
             except Exception as e:
                 print("Form errors:", {str(e)}) 
@@ -304,6 +303,7 @@ def review_teacher(request, idexercise=1):
     reviews = ExerciseFragmentReview.objects.filter(
         idexercisereview=exercisereview
     ).order_by('startposition')
+    total_reviews = reviews.count()
 
     processed_text = wrap_fragments_with_spans(text.exercisetext, reviews)
 
@@ -326,17 +326,27 @@ def review_teacher(request, idexercise=1):
             instance=review,
             prefix=f'comment_{review.idexercisetextreview}'
         )
-
+    
     context = {
         'exercise': exercise,
         'exercisereview': exercisereview,
         'text_metadata': text,
         'text': processed_text,
         'reviews': reviews,
+        'total_reviews': total_reviews,
         'in_time': in_time,
         'mark_form': mark_form,
         'teacher_comment_form': TeacherCommentForm(),  # Пустая форма для AJAX
-        'fragment_forms': fragment_forms
+        'fragment_forms': fragment_forms,
+        'fragments_json': json.dumps([  # Добавляем JSON с данными фрагментов
+            {
+                'id': r.idexercisetextreview,
+                'review': r.review,
+                'teachercomment': r.teachercomment or '',
+                'has_comment': bool(r.teachercomment)
+            }
+            for r in reviews
+        ])
     }
     return render(request, "review_teacher.html", context)
 
@@ -366,21 +376,41 @@ def wrap_fragments_with_spans(text, reviews):
     return result
 
 def update_teacher_comment(request, fragment_id):
+    if request.method == 'POST':
+        fragment = get_object_or_404(ExerciseFragmentReview, pk=fragment_id)
+        # Проверяем AJAX запрос
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = TeacherCommentForm(request.POST, instance=fragment)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({
+                    'success': True,
+                    'comment': fragment.teachercomment or '',
+                    'has_comment': bool(fragment.teachercomment),
+                    'message': 'Комментарий сохранен'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors
+                })
+        else:
+            form = TeacherCommentForm(request.POST, instance=fragment)
+            if form.is_valid():
+                form.save()
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def delete_teacher_comment(request, fragment_id):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         fragment = get_object_or_404(ExerciseFragmentReview, pk=fragment_id)
-        form = TeacherCommentForm(request.POST, instance=fragment)
-        if form.is_valid():
-            form.save()
-            return JsonResponse({
-                'success': True,
-                'comment': fragment.teachercomment or '',
-                'message': 'Комментарий сохранен'
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            })
+        fragment.teachercomment = ''
+        fragment.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Комментарий удален',
+            'has_comment': False
+        })
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 def review_text_list(request):

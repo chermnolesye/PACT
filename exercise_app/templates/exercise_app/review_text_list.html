@@ -69,7 +69,17 @@
         <div id="{{ text.idexercisetext }}" class="exercise-card"
              onclick="window.location.href='{% url 'review_text' text.idexercisetext %}'"
              style="cursor: pointer;">
-            <span class="text_name">{{ text.exercisetextname }}</span>
+            <span class="text_name svg-title">
+                <svg width="40" height="40" viewBox="0 0 63 81" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0.5" y="0.5" width="62" height="80" rx="4.5" fill="#0D6EFD" fill-opacity="0.17" stroke="black"/>
+                    <line x1="9" y1="31.8506" x2="50" y2="31.8506" stroke="#0D6EFD" stroke-width="3"/>
+                    <line x1="9" y1="23.5" x2="44" y2="23.5" stroke="black" stroke-width="3"/>
+                    <line x1="9" y1="15.5" x2="50" y2="15.5" stroke="black" stroke-width="3"/>
+                    <rect x="10" y="53" width="39" height="13.0309" rx="4" fill="#F8F9FA" stroke="#0D6EFD" stroke-width="2"/>
+                    <line x1="15.8334" y1="56.0103" x2="43.1667" y2="56.0103" stroke="#464646" stroke-width="2"/>
+                    <line x1="16" y1="61" x2="43.3333" y2="61" stroke="#464646" stroke-width="2"/>
+                </svg>
+                {{ text.exercisetextname }}</span>
             <span class="author">{{ text.author }}</span>
             <span class="text_type">{{ text.idexercisetexttype.exercisetexttypename }}</span>
             <span class="out_date">{{ text.loaddate }}</span>

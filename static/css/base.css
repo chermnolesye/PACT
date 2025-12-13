@@ -61,6 +61,11 @@ html, body {
     margin-left: 5px;
 }
 
+.svg-title {
+    display: flex;
+    align-items: center;
+}
+
 .horizontal-level {
     display: flex;
     align-items: center;
