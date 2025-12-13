@@ -25,7 +25,8 @@
             color: var(--grey-color);
         }
 
-        .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
+        .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select,
+        .grading-field input {
             width: calc(100% - 140px);
         }
 
@@ -35,6 +36,21 @@
             color: var(--grey-color);
             margin-bottom: 10px;
         }
+
+
+#grading-fields label{
+    margin-bottom:10px;
+}
+
+.grading-field{
+    display:flex;
+}
+.form-control {
+    margin: 0 0 10px 5px;
+}
+#reset_grading_filters{
+    cursor:pointer;
+}
 
 .grouping-wrapper {
     display: flex;
@@ -135,7 +151,6 @@
 .new_exercise_btn {
     height: 45px;
     padding: 5px;
-    width: 190px;
     margin-left: 0px;
 }
 
@@ -363,7 +378,16 @@
     width: 80%;
 }
 
-.texts-list, #selection-info {
+#selected-info-grading-body, #selected-grading-text-info {
+    padding: 5px 10px 15px 10px;
+}
+
+    #selected-grading-text-info p {
+        font-size: 20px;
+        margin-bottom:5px;
+    }
+
+.texts-list, #selection-info, #selected-info-grading, #selected-grading-text {
     border: 1px solid rgba(0, 0, 0, .15);
     border-radius: var(--border-radius);
     width: 100%;
@@ -374,8 +398,8 @@
         margin: 5px 5px 5px 10px;
     }
 
-#selection-info{
-    margin-top:10px;
+#selection-info, .selected-info {
+    margin-top: 10px;
 }
 #selected-text-info {
     padding: 5px 5px 0;
@@ -406,6 +430,10 @@
     max-width: 40%;
     display: flex;
 }
+.grading_text_header {
+    font-weight: 800;
+    max-width: 40%;
+}
 
 .task-text {
     display: flex;
@@ -423,11 +451,30 @@
 .review_text_header {
     background: var(--e-grey);
     padding: 10px 5px;
+    border-radius: 7px 7px 0 0;
+}
+.header-text {
+    background: var(--e-grey);
+    padding: 10px 5px;
+}
+.grading-text-item {
+    margin-bottom: 10px;
 }
 .chosen_text_header {
     background: var(--grey-color);
     padding: 10px 5px;
-    color:white;
+    color: white;
+    border-radius: 7px 7px 0 0;
+}
+#grading-fields {
+    max-width: 100%;
+    width: 750px;
+}
+#exercise_card {
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    padding: var(--primary-padding);
+    position: relative;
 }
 
 .chosen_params {
@@ -435,7 +482,7 @@
     border-radius: var(--border-radius);
     padding: var(--primary-padding);
     max-width: 90%;
-    width: 550px;
+    width: 750px;
     position: relative;
     display: none;
 }
@@ -444,9 +491,9 @@
         margin-bottom: 10px;
     }
 
-    .chosen_params li {
+    .chosen_params li, #selected-grading-text-info li, .grading-text-item-info {
         text-align: start;
-        margin-left: 40px;
+        margin-left: 20px;
     }
 
     .chosen_params button {
@@ -458,10 +505,17 @@
         right: 5px;
         bottom: 5px;
     }
-
+.grading-text-item-info{
+    margin-top: 5px;
+}
 #errMsg {
     display: none;
     margin-bottom: 10px;
+}
+
+#errMsgFilters {
+    margin: 10px 10px;
+    display: none;
 }
 
 .grouping-options div label ::before {

@@ -79,18 +79,15 @@
         <button type="button" class="button" id="btn_next">Перейти к выбору теста</button>
 
         <div id="grading-fields" style="display:none;">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5>Фильтры для выбора текста</h5>
-                </div>
+            <div class="card " id="exercise_card">
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                    <div class="row">
+                        <div class="grading-field">
                             <label for="grading_header">Название текста:</label>
                             <input type="text" id="grading_header" class="form-control"
                                    placeholder="Поиск по названию...">
                         </div>
-                        <div class="col-md-6">
+                        <div class="grading-field">
                             <label for="grading_academic_year">Учебный год:</label>
                             <select id="grading_academic_year" class="form-control">
                                 <option value="">Все годы</option>
@@ -101,14 +98,14 @@
                         </div>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
+                    <div class="row ">
+                        <div class="grading-field">
                             <label for="grading_group">Учебная группа:</label>
                             <select id="grading_group" class="form-control">
                                 <option value="">Все группы</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="grading-field">
                             <label for="grading_text_type">Тип текста:</label>
                             <select id="grading_text_type" class="form-control">
                                 <option value="">Все типы</option>
@@ -118,39 +115,47 @@
                             </select>
                         </div>
                     </div>
-
-                    <button type="button" id="apply_grading_filters" class="btn btn-primary">
+                    <button type="button" id="apply_grading_filters" class="button btn-primary">
                         Применить фильтры
                     </button>
-                    <button type="button" id="reset_grading_filters" class="btn btn-secondary">
+                    <a id="reset_grading_filters">
                         Сбросить
-                    </button>
+                    </a>
                 </div>
             </div>
+            <div id="selected-info-grading" style="margin-top:10px;">
+                <div class="review_text_header">Список текстов:</div>
+                <div id="selected-info-grading-body">
+                    <p id="errMsgFilters">
+                        <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
+                            <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
+                            <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
+                            <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
+                        </svg>
+                        Примените фильтры для загрузки текстов!
+                    </p>
 
-            <div class="card">
-                <div class="card-header">
-                    <h5>Выберите текст для оценивания</h5>
-                    <small class="text-muted">
-                        Показаны только тексты с оценкой. Тексты выбранного студента исключены.
-                    </small>
-                </div>
-                <div class="card-body">
-                    <div id="grading-texts-list" class="list-group" style="max-height: 400px; overflow-y: auto;">
-                        <div class="text-center p-3">
-                            <p class="text-muted">Примените фильтры для загрузки текстов</p>
+                    <div class="card-header">
+                        <label id="text-grading-label" style="width:100%; margin-top:10px; display:none;">
+                            Показаны только тексты с оценкой. Тексты выбранного студента исключены.
+                        </label>
+                    </div>
+                    <div class="card-body">
+                        <div id="grading-texts-list" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center">
+
+                            </div>
                         </div>
                     </div>
-
-                    <div id="selected-grading-text" class="mt-3 p-3 border rounded" style="display: none;">
-                        <h6>Выбранный текст:</h6>
-                        <p id="selected-grading-text-info" class="mb-0"></p>
-                    </div>
-
-                    <div style="display: none;">
-                        {{ form.grading_text }}
-                    </div>
                 </div>
+            </div>
+            <div class="selected-info" id="selected-grading-text" style="display: none;">
+                <div class="chosen_text_header">Выбранный текст:</div>
+                <div id="selected-grading-text-info"></div>
+            </div>
+
+            <div style="display: none;">
+                {{ form.grading_text }}
             </div>
         </div>
 
@@ -249,7 +254,7 @@
         // Загрузка студентов по группе
         groupSelect.addEventListener("change", function () {
             const chosen_group_el = document.querySelector(".chosen_group")
-            console.log(this.options[this.selectedIndex].innerHTML)
+
             if (this.options[this.selectedIndex].innerHTML != "Выберите группу") {
                 chosen_group_el.innerHTML = this.options[this.selectedIndex].innerHTML;
             }
@@ -314,12 +319,20 @@
 
         // Функция загрузки текстов для Grading
         function loadGradingTexts() {
+            document.getElementById("grading-texts-list").style.display = "block";
             if (!gradingTextsList) return;
             const selectedStudentId = document.getElementById('id_idstudent')?.value;
             if (!selectedStudentId) {
                 gradingTextsList.innerHTML = `
-                <div class="alert alert-warning">
-                    Сначала выберите студента в форме выше
+                <div id="alert-warning">
+                    <p id="errMsgFilters">
+                        <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
+                            <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
+                            <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
+                            <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
+                        </svg>
+                        Сначала выберите студента в форме выше!
+                    </p>
                 </div>
             `;
                 return;
@@ -338,7 +351,6 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Загрузка...</span>
                 </div>
-                <p>Загрузка текстов...</p>
             </div>
         `;
 
@@ -363,37 +375,38 @@
                         textItem.className = 'list-group-item list-group-item-action grading-text-item';
                         textItem.dataset.textId = text.id;
                         textItem.innerHTML = `
-                        <div class="d-flex w-100 justify-content-between">
-                            <h6 class="mb-1">${text.header}</h6>
-                            <small>Оценка: ${text.grade}</small>
+                        <p class="header-text">${text.header}</p>
+                        <div class="grading-text-item-info">
+                            <p><span class="grading_text_header">Студент:</span> ${text.student}</p>
+                            <p><span class="grading_text_header">Группа:</span> ${text.group}</p>
+                            <p><span class="grading_text_header">Тип текста:</span> ${text.text_type}</p>
+                            <p><span class="grading_text_header">Дата написания:</span> ${text.created_date}</p>
+                            <p><span class="grading_text_header">Оценка:</span> ${text.grade}</p>
                         </div>
-                        <p class="mb-1">
-                            <strong>Студент:</strong> ${text.student}<br>
-                            <strong>Группа:</strong> ${text.group} |
-                            <strong>Год:</strong> ${text.academic_year}<br>
-                            <strong>Тип:</strong> ${text.text_type} |
-                            <strong>Дата:</strong> ${text.created_date}
-                        </p>
                     `;
 
                         textItem.addEventListener('click', function () {
                             document.querySelectorAll('.grading-text-item').forEach(item => {
-                                item.classList.remove('active');
+                                item.getElementsByClassName('header-text')[0].classList.remove('selected');
                             });
-
-                            this.classList.add('active');
+                            this.getElementsByClassName('header-text')[0].classList.add('selected');
 
                             selectedGradingTextId = text.id;
                             if (gradingTextHidden) {
                                 gradingTextHidden.value = text.id;
                             }
+                            
 
                             if (selectedGradingTextInfo) {
+                                selectedGradingTextDiv.getElementsByClassName('chosen_text_header')[0].innerHTML = `Выбранный текст: ${text.header}`
+                                
                                 selectedGradingTextInfo.innerHTML = `
-                                <strong>${text.header}</strong><br>
-                                Студент: ${text.student}<br>
-                                Группа: ${text.group}, Учебный год: ${text.academic_year}<br>
-                                Тип: ${text.text_type}, Оценка: ${text.grade}
+                                <ul>
+                                    <li>Студент: ${text.student}</li>
+                                    <li>Группа: ${text.group}</li>
+                                    <li>Тип: ${text.text_type}</li>
+                                    <li>Оценка: ${text.grade}</li>
+                                </ul>
                             `;
                             }
 
@@ -436,35 +449,49 @@
         });
 
         // Обработчики кнопок фильтров
-        document.getElementById('apply_grading_filters')?.addEventListener('click', loadGradingTexts);
+        document.getElementById('apply_grading_filters')?.addEventListener('click', function () {
+            loadGradingTexts();
+            if (!document.getElementById("alert-warning")){
+                document.getElementById("text-grading-label").style.display = "block";
+            }
+            document.getElementById("errMsgFilters").style.display = "none";
+        });
 
         document.getElementById('reset_grading_filters')?.addEventListener('click', function () {
+            document.getElementById("grading-texts-list").style.display = "none";
+            document.getElementById("text-grading-label").style.display = "none";
             document.getElementById('grading_header').value = '';
             document.getElementById('grading_academic_year').value = '';
             document.getElementById('grading_group').value = '';
             document.getElementById('grading_text_type').value = '';
-            selectedGradingTextId = null;
+
+            /*selectedGradingTextId = null;
             if (gradingTextHidden) {
                 gradingTextHidden.value = '';
             }
             if (selectedGradingTextDiv) {
                 selectedGradingTextDiv.style.display = 'none';
-            }
+            }*/
 
-            document.querySelectorAll('.grading-text-item').forEach(item => {
-                item.classList.remove('active');
-            });
+            //document.querySelectorAll('.grading-text-item').forEach(item => {
+            //    item.getElementsByClassName('header-text')[0].classList.remove('selected');
+            //});
+
+            loadGradingTexts();
+            if (!document.getElementById("alert-warning")) {
+                document.getElementById("text-grading-label").style.display = "block";
+            }
         });
 
         // Обновление текстов при изменении студента
-        //document.getElementById('id_idstudent')?.addEventListener('change', function () {
-        //    const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
-        //    if (selectedRadio && selectedRadio.value === '1') {
-        //        loadGradingTexts();
-        //    } if (selectedRadio && selectedRadio.value === '2') {
-        //        loadReviewTexts();
-        //    }
-        //});
+        document.getElementById('id_idstudent')?.addEventListener('change', function () {
+            const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
+            if (selectedRadio && selectedRadio.value === '1') {
+                loadGradingTexts();
+            } if (selectedRadio && selectedRadio.value === '2') {
+                loadReviewTexts();
+            }
+        });
 
         // Функция сброса выбора для review
         function resetReviewSelection() {
@@ -525,6 +552,8 @@
                             document.querySelectorAll('.text-item').forEach(item => {
                                 item.querySelector(".review_text_header").classList.remove('selected');
                                 item.querySelector("#tasks-section").style.display = "none";
+                                document.querySelector("#id_review_task_id").removeAttribute("value");
+                                document.querySelector("#selected-task-info").querySelector("span").innerHTML = "Не выбрано";
                             });
                             textItem.querySelector(".review_text_header").classList.add('selected');
                             selectedTextId = text.id;
@@ -568,7 +597,7 @@
                         taskItem.dataset.taskId = task.id;
                         taskItem.innerHTML = `
                         <span class="review_task_header">${task.title}</span>: ${task.text}
-                        
+
                     `;
 
                         taskItem.addEventListener('click', function () {
@@ -593,12 +622,13 @@
 
         // Валидация формы перед отправкой
         document.getElementById('exerciseForm').addEventListener('submit', function (event) {
+            
             const selectedRadio = document.querySelector('input[name="idexercisetype"]:checked');
 
             if (selectedRadio && selectedRadio.value === '1') {
                 if (!selectedGradingTextId) {
                     event.preventDefault();
-                    alert('выберите текст для поиска ошибок');
+                    alert('Выберите текст для поиска ошибок');
                     return;
                 }
             }
@@ -606,13 +636,13 @@
             if (selectedRadio && selectedRadio.value === '2') {
                 if (!selectedTextId) {
                     event.preventDefault();
-                    alert('выберите текст для рецензирования');
+                    alert('Выберите текст для рецензирования');
                     return;
                 }
 
                 if (!selectedTaskId) {
                     event.preventDefault();
-                    alert('выберите задание для рецензирования');
+                    alert('Выберите задание для рецензирования');
                     return;
                 }
             }
@@ -627,7 +657,7 @@
             const chosen_date_f = document.querySelector(".chosen_date_f")
             const exercise_type_id = document.getElementById("exercise_type_id")
             if (!chosen_year_el.innerHTML || !chosen_group_el.innerHTML || !chosen_fio_el.innerHTML
-                || !chosen_date_s.innerHTML ||  !chosen_date_f.innerHTML ||  !exercise_type_id.innerHTML) {
+                || !chosen_date_s.innerHTML || !chosen_date_f.innerHTML || !exercise_type_id.innerHTML) {
                 document.getElementById("errMsg").style.display = "block";
             }
             else {
@@ -642,7 +672,7 @@
                 document.getElementById("errMsg").style.display = "none";
                 document.getElementById('submit_btn').style.display = 'inline-block';
                 document.querySelector('.chosen_params').style.display = 'block';
-                console.log(exercise_type_id.innerHTML)
+
                 if (exercise_type_id.innerHTML === '1') {  // код для grading
                     gradingFields.style.display = 'block';
                     loadGradingTexts();
@@ -650,6 +680,7 @@
                     reviewFields.style.display = 'block';
                     loadTexts();
                 }
+                document.getElementById("exerciseForm").style.maxWidth = "750px"
             };
         });
         document.getElementById("open_edit").addEventListener("click", function () {
@@ -662,6 +693,7 @@
             document.getElementById('btn_next').style.display = 'inline-block';
             document.getElementById('submit_btn').style.display = 'none';
             document.querySelector('.chosen_params').style.display = 'none';
+            document.getElementById("exerciseForm").style.maxWidth = "550px"
         })
         loadTexts();
     });
