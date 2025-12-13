@@ -235,6 +235,10 @@
     width: 100% !important;
 }
 
+.exercises-texts .exercise-card:hover {
+    background-color: var(--e-grey);
+}
+
 .delete_card, .edit_card {
     cursor: pointer;
 }

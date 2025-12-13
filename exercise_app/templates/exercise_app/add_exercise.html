@@ -421,12 +421,13 @@
                 return;
             }
 
-            fetch(`{% url 'load_groups' %}?yearId=${yearId}`)
+            fetch("{% url 'load_groups' %}?yearId=" + yearId)
                 .then(response => response.json())
-                .then(groups => {
-                    groupSelect.innerHTML = '<option value="">Все группы</option>';
-                    groups.forEach(group => {
-                        const option = document.createElement('option');
+                .then(data => {
+                    console.log(data);
+                    groupSelect.innerHTML = '<option value="">Выберите группу</option>';
+                    data.groups.forEach(group => {
+                        const option = document.createElement("option");
                         option.value = group.id;
                         option.textContent = group.groupname;
                         groupSelect.appendChild(option);

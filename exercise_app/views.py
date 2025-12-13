@@ -67,7 +67,14 @@ def load_exercise_data(request):
 
 def teacher_exercises(request):
     exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.all())
-    exercises_queryset = exercise_filter.qs
+    # exercises_queryset = exercise_filter.qs
+    exercises_queryset = exercise_filter.qs.order_by(
+        '-completiondate', # последние завершенные первыми
+        '-exercisemark', # сначала без оценки
+        '-exercisestatus',  # сдано -> не сдано
+        'creationdate',  # сначала созданные раньше
+        '-deadline',      # ближайшие дедлайны первыми
+    )
     exercises_list = []
     for exercise in exercises_queryset:
         in_time = False
@@ -159,7 +166,6 @@ def add_exercise(request):
 
     review_texts = ExerciseText.objects.all()
     grading_texts = Text.objects.all().order_by('idtext')[:10]
-    grading_filter = GradingTextFilter()
     context = {
         "form": form,
         "review_texts": review_texts,
@@ -175,6 +181,7 @@ def get_grading_texts(request):
         exclude_student_id = request.GET.get('exclude_student')
         if exclude_student_id:
             try:
+                # ВОЗМОЖНО, на курсы ниже тоже нужно исключать тексты
                 queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
             except (ValueError, TypeError):
                 pass
@@ -378,7 +385,7 @@ def update_teacher_comment(request, fragment_id):
 
 def review_text_list(request):
     reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())
-    texts = reviewtext_filter.qs
+    texts = reviewtext_filter.qs.order_by('-loaddate')
     # texts = ExerciseText.objects.all()
     context = {'texts' : texts, 'filter': reviewtext_filter}
     return render(request, 'review_text_list.html', context)
