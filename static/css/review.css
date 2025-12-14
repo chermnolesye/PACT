@@ -1,12 +1,4 @@
 
-:root {
-    --e-green: #CCFFCC;
-    --e-red: #FFCCCC;
-	--e-grey: #DAE0E4;
-    --e-grey2: #D9D9D9;
-    --e-purple: #EACFFF;
-}
-
 .grey-block {
     background-color: var(--e-grey);
 }
@@ -71,7 +63,7 @@
 .r-divider {
     position: fixed;
     left: 58%;
-    top: 60px;
+    top: 120px;
     bottom: 10px;
     width: 2px;
     background: black;
@@ -114,9 +106,24 @@
     background-color: #ffffff;
     flex-direction: row;
     position: sticky;
-    top: 60px;
+    top: 50px;
     z-index: 800;
-    margin: 0;
+    padding: 20px 0px;
+    /* box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55); */
+    overflow: visible;
+
+}
+
+.review-menu > *:first-child {
+    border-top-left-radius: var(--border-radius);
+    border-bottom-left-radius: var(--border-radius);
+    margin-left: 5px;
+}
+
+.review-menu > *:last-child {
+    border-top-right-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    margin-right: 5px;
 }
 
 .underline {
@@ -132,21 +139,58 @@
 
 .review-menu-block {
     padding: 15px;
-    margin: 10px 5px;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
-    border-radius: var(--border-radius);
     position: relative;
+    border: 1px solid var(--grey-color);
+    margin: -1px;
+    gap: 8px;
+}
+
+.review-menu-block-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding: var(--primary-padding);
+    background-color: white;
+    border: 1px solid var(--grey-color);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+    z-index: 1000;
+}
+
+.review-menu-block-dropdown.show {
+    display: block;
+}
+
+.dropdown-btn.active {
+    transform: rotate(180deg);
+}
+
+.dropdown-container {
+    position: relative;
+}
+
+.dropdown-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 6px;
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.dropdown-btn:hover {
+    color: var(--secondary-color);
 }
 
 .review-menu-button {
     font-size: 16px;
-    border: 1px solid black;
+    border: 1px solid var(--grey-color);
     background-color: white;
     padding: 15px;
-    margin: 10px 5px;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.55);
     cursor: pointer;
-    border-radius: var(--border-radius);
     position: relative;
 }
 
@@ -201,11 +245,10 @@
     border-left: 2px solid black;
     background: white;
     padding: var(--primary-padding);
-    /* max-height: 100%; */
     transform: translateX(100%);
     opacity: 0;
     transition: all 0.4s ease-in-out;
-    margin-top: 160px;
+    margin-top: 120px;
     position: fixed;
     right: 0;
     top: 0;
@@ -225,7 +268,6 @@
     position: absolute;
     top: 15px;
     right: 50px;
-    /* margin-bottom: 20px; */
     background: none;
     border: none;
     font-size: 24px;
@@ -243,8 +285,37 @@
     width: 60%;
 }
 
+#commentForm, #commentDisplay {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+
+    & > * {
+        margin-bottom: 1.25rem;
+    }
+    
+    & > *:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.teacher-comment {
+    width: 100%;
+}
+
+.teacher-comment h3 {
+    margin-bottom: var(--primary-padding);
+}
+
+#commentForm textarea {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
 .review-buttons {
     display: flex;
+    gap: 10px;
 }
 
 .review-buttons button {
@@ -252,9 +323,9 @@
     background-color: white;
     color: #000;
     border-radius: 20px;
-    padding: 5px 10px;
-    margin: 5px;
+    padding: 0px 10px;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .review-buttons button:hover {
@@ -332,9 +403,6 @@
     overflow: hidden;
     transition: max-height 0.3s ease-out;
     opacity: 0;
-    /* overflow-y: scroll;
-    scrollbar-width: none;
-    -ms-overflow-style: none; */
 }
 
 .task-content::-webkit-scrollbar {

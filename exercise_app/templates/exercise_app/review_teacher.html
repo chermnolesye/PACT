@@ -14,30 +14,46 @@
 <div class="main-container">
 
     <div class="review-menu">
+        <button type="button" class="review-menu-button"
+            onclick="window.location.href = '{% url 'teacher_exercises' %}'">
+            К упражнениям
+        </button>
+
         <div class="review-menu-block grey-block">
             Студент: {{ exercise.idstudent.iduser.get_full_name }}
          </div>
 
          <div class="review-menu-block grey-block">
-            Выделено рецензий: {{ total_reviews }}
+            Выделено рецензий: <span class="bold">{{ total_reviews }}</span>
          </div>
 
-         <div class="review-menu-block grey-block">
+         <!-- <div class="review-menu-block grey-block">
             Дата создания: {{ exercise.creationdate }}
          </div>
 
          <div class="review-menu-block grey-block">
             Срок сдачи: {{ exercise.deadline }}
-         </div>
+         </div> -->
 
          {% if exercise.exercisestatus %}
             {% if in_time %}
-            <div class="review-menu-block green-block">
+            <div class="review-menu-block green-block dropdown-container">
                 Дата сдачи: {{ exercise.completiondate }}
+                <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
+
+                <div class="review-menu-block-dropdown">
+                    <div><span class="no-highlight">Дата создания:</span> {{ exercise.creationdate }}</div>
+                    <div><span class="no-highlight">Срок сдачи:</span> {{ exercise.deadline }}</div>
+                </div>
             </div>
             {% else %}
-            <div class="review-menu-block red-block">
+            <div class="review-menu-block red-block dropdown-container">
                 Дата сдачи: {{ exercise.completiondate }}
+                <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
+                <div class="review-menu-block-dropdown">
+                    <div>Дата создания: {{ exercise.creationdate }}</div>
+                    <div>Срок сдачи: {{ exercise.deadline }}</div>
+                </div>
             </div>
             {% endif %}
         {% endif %}
@@ -92,16 +108,13 @@
                 <!-- Форма для редактирования/добавления комментария -->
                 <form id="commentForm" style="display: none;">
                     {% csrf_token %}
-                    <input type="hidden" id="fragmentId" value="">
-                    <div class="form-group">
-                        <textarea id="commentInput" class="form-control" rows="4" 
+                        <input type="hidden" id="fragmentId" value="">
+                        <textarea id="commentInput" class="form-control" rows="5" 
                                 placeholder="Введите ваш комментарий..."></textarea>
-                        <div id="commentError" class="error-message" display: none;"></div>
-                    </div>
-                    <div class="review-buttons">
-                        <button type="submit" class="button">Сохранить</button>
-                        <button type="button" class="button grey-button" id="cancelComment">Отмена</button>
-                    </div>
+                        <div class="review-buttons">
+                            <button type="submit" class="button">Сохранить</button>
+                            <button type="button" class="button grey-button" id="cancelComment">Отмена</button>
+                        </div>
                 </form>
             </div>
         </div>
@@ -135,7 +148,7 @@
 
                 <div class="grade-buttons">
                     <button type="submit" name="mark-form" class="button" onclick="addAnnotation()">Сохранить</button>
-                    <button type="button" class="button grey-button">Назад</button>
+                    <button type="button" class="button grey-button" id="backModalBtn">Назад</button>
                 </div>
             </form>
         </div>
@@ -144,12 +157,54 @@
 </div>
 
 <script>
+    function toggleDropdown(button) {
+        // родительский контейнер и выпадающее меню
+        const container = button.closest('.dropdown-container');
+        const dropdown = container.querySelector('.review-menu-block-dropdown');
+        const isActive = dropdown.classList.contains('show');        
+        // Закрываем все другие выпадающие меню
+        document.querySelectorAll('.review-menu-block-dropdown.show').forEach(item => {
+            if (item !== dropdown) {
+                item.classList.remove('show');
+                item.previousElementSibling?.classList?.remove('active');
+            }
+        });
+        dropdown.classList.toggle('show');
+        button.classList.toggle('active');
+        if (!isActive) {
+            setTimeout(() => {
+                document.addEventListener('click', closeDropdownOnClickOutside);
+            }, 0);
+        }
+    }
+
+    function closeDropdownOnClickOutside(event) {
+        const dropdowns = document.querySelectorAll('.review-menu-block-dropdown.show');
+        let shouldClose = true;
+        dropdowns.forEach(dropdown => {
+            const container = dropdown.closest('.dropdown-container');
+            if (container && container.contains(event.target)) {
+                shouldClose = false;
+            }
+        });
+        if (shouldClose) {
+            dropdowns.forEach(dropdown => {
+                dropdown.classList.remove('show');
+                const btn = dropdown.closest('.dropdown-container')?.querySelector('.dropdown-btn');
+                if (btn) btn.classList.remove('active');
+            });
+            document.removeEventListener('click', closeDropdownOnClickOutside);
+        }
+    }
+</script>
+
+<script>
     // Скрипт для модального окна
     document.addEventListener('DOMContentLoaded', function() {
         const rateBtn = document.querySelector('.rate-btn');
         const modal = document.getElementById('modal');
         const closeModal = document.querySelector('.close-modal');
-        const backButton = document.querySelector('.grey-button');
+        const backButton = document.getElementById('backModalBtn');
 
         if (backButton) {
             backButton.addEventListener('click', function(e) {
@@ -189,7 +244,6 @@
         const commentInput = document.getElementById('commentInput');
         const fragmentIdInput = document.getElementById('fragmentId');
         const commentControls = document.getElementById('commentControls');
-        const commentError = document.getElementById('commentError');
         const cancelComment = document.getElementById('cancelComment');
         
         let currentFragmentId = null;
@@ -215,16 +269,13 @@
                 commentText.textContent = fragment.teachercomment;
                 commentText.classList.remove('text-muted');
             } else {
-                commentText.textContent = 'Комментарий отсутствует';
+                commentText.textContent = 'Комментарий отсутствует.';
                 commentText.classList.add('text-muted');
             }
             updateCommentButtons(fragment.has_comment);
             commentForm.style.display = 'none';
             commentDisplay.style.display = 'block';
-            commentControls.style.display = 'flex';            
-            // Очищаем ошибки
-            commentError.style.display = 'none';
-            commentError.textContent = '';
+            commentControls.style.display = 'flex';
         }
         
         // Функция обновления кнопок в зависимости от наличия комментария
@@ -265,8 +316,6 @@
             const fragmentId = fragmentIdInput.value;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;            
             if (!comment) {
-                commentError.textContent = 'Введите комментарий';
-                commentError.style.display = 'block';
                 return;
             }            
             fetch(`/exercise/fragment/${fragmentId}/update-comment/`, {
@@ -286,30 +335,24 @@
                     // Обновления локальных данных
                     fragmentsData[fragmentId].teachercomment = data.comment;
                     fragmentsData[fragmentId].has_comment = data.has_comment;                    
-                    // Обновлениеотображения
+                    // Обновление отображения
                     displayFragmentComment(fragmentId);                    
                     // Обновление атрибута в HTML
                     const span = document.querySelector(`.selection[data-fragment-id="${fragmentId}"]`);
                     if (span) {
                         span.setAttribute('data-teacher-comment', data.comment || '');
                     }                    
-                    // alert(data.message || 'Комментарий сохранен');
-                } else {
-                    commentError.textContent = 'Ошибка: ' + (data.errors || 'Не удалось сохранить');
-                    commentError.style.display = 'block';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                commentError.textContent = 'Произошла ошибка при сохранении';
-                commentError.style.display = 'block';
             });
         });
         
         function deleteComment() {
-            if (!confirm('Удалить комментарий к этому фрагменту?')) {
-                return;
-            }            
+            // if (!confirm('Удалить комментарий к этому фрагменту?')) {
+            //     return;
+            // }            
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;            
             fetch(`/exercise/fragment/${currentFragmentId}/delete-comment/`, {
                 method: 'POST',
