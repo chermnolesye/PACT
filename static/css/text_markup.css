@@ -245,7 +245,7 @@ form {
     background-color: var(--secondary-color);
   }
 
-.menu-container > .menu-block:first-child {
+.menu-container > .menu-block:first-child, .menu-container > .menu-block-watch:first-child {
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
 }
@@ -692,12 +692,12 @@ label[for="id_iderrortag"] {
 
 @media (max-width: 660px) {
     .text-header-grad{
-        margin-top: 168px;
+        margin-top: 258px !important;
     }
     .text-header {
         margin-top: 273px;
     }
-    .main-template-container .menu-container > .menu-block:first-child {
+    .main-template-container .menu-container > .menu-block:first-child, .menu-container > .menu-block-watch:first-child {
         border-top-left-radius: unset;
         border-bottom-left-radius: unset;
     }

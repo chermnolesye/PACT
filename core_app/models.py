@@ -382,7 +382,7 @@ class ExerciseGrading(models.Model):
 
 class ExerciseErrorToken(models.Model):
     idexerciseerrortoken = models.AutoField(primary_key=True)
-    position = models.IntegerField()
+    idexercisegrading = models.ForeignKey('ExerciseGrading', on_delete=models.CASCADE, db_column='idexercisegrading')
     idexerciseerror = models.ForeignKey('ExerciseError', on_delete=models.CASCADE, db_column='idexerciseerror')
     idtoken = models.ForeignKey('Token', on_delete=models.CASCADE, db_column='idtoken')
 
@@ -397,8 +397,8 @@ class ExerciseError(models.Model):
     correct = models.TextField(blank=True, null=True) 
     comment = models.TextField(blank=True)
     iderrorlevel = models.ForeignKey('ErrorLevel', on_delete=models.CASCADE, db_column='iderrorlevel')
-    Reason = models.ForeignKey('Reason', on_delete=models.CASCADE, db_column='idreason')
-    Errortag = models.ForeignKey('ErrorTag', on_delete=models.CASCADE, db_column='iderrortag')
+    idreason = models.ForeignKey('Reason', on_delete=models.CASCADE, blank=True, null=True, db_column='idreason')  
+    iderrortag = models.ForeignKey('ErrorTag', on_delete=models.CASCADE, db_column='iderrortag')  
 
     class Meta:
         db_table = 'tblexerciseerror'

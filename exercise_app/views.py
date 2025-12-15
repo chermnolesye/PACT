@@ -557,6 +557,29 @@ def grade_text(request, idexercise=2):
                         "error_reason": error.idreason.reasonname if error.idreason else "Не указано",
                         "idtagparent": error.iderrortag.idtagparent,
                     })
+            
+            exercise_error_tokens = token.exerciseerrortoken_set.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=idexercise)
+            
+            exercise_errors_list = []
+
+            for eet in exercise_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    exercise_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if error.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
 
             tokens_data.append({
                 "token_id": token.idtoken,
@@ -567,6 +590,7 @@ def grade_text(request, idexercise=2):
                 "pos_tag_color": pos_tag_color,
                 "token_order_number": token.tokenordernumber,
                 "errors": errors_list,
+                "exercise_errors": exercise_errors_list,
             })
 
         sentence_data.append({
@@ -604,21 +628,8 @@ def grade_text(request, idexercise=2):
         "exercise_grading":exercise_grading,
         "in_time":in_time,
         "selected_markup": selected_markup,
-        "author": f"{user.lastname} {user.firstname}",
-        "group": group.groupname,
-        "create_date": text.createdate,
-        "text_type": text_type.texttypename if text_type else "Не указано",
-        "self_rating": text.get_selfrating_display() if text.selfrating else "Нет данных",
-        "self_assesment": text.get_selfassesment_display() if text.selfassesment else "Нет данных",
-        "fio": get_teacher_fio(request),
-        "textgrade": text.get_textgrade_display() if text.textgrade else "Нет данных",
-        "completeness": text.get_completeness_display() if text.completeness else "Нет данных",
-        "structure": text.get_structure_display() if text.structure else "Нет данных",
-        "coherence": text.get_coherence_display() if text.coherence else "Нет данных",
         "poscheckflag": text.poscheckflag,
         "errorcheckflag": text.errorcheckflag,
-        "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано", 
-        "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
     }
     return render(request, "grade_text.html", context)
 

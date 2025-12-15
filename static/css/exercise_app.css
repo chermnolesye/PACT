@@ -38,18 +38,20 @@
         }
 
 
-#grading-fields label{
-    margin-bottom:10px;
+        #grading-fields label {
+            margin-bottom: 10px;
+        }
+
+.grading-field {
+    display: flex;
 }
 
-.grading-field{
-    display:flex;
-}
 .form-control {
     margin: 0 0 10px 5px;
 }
-#reset_grading_filters{
-    cursor:pointer;
+
+#reset_grading_filters {
+    cursor: pointer;
 }
 
 .grouping-wrapper {
@@ -384,7 +386,7 @@
 
     #selected-grading-text-info p {
         font-size: 20px;
-        margin-bottom:5px;
+        margin-bottom: 5px;
     }
 
 .texts-list, #selection-info, #selected-info-grading, #selected-grading-text {
@@ -401,10 +403,12 @@
 #selection-info, .selected-info {
     margin-top: 10px;
 }
+
 #selected-text-info {
     padding: 5px 5px 0;
-    text-align:start;
+    text-align: start;
 }
+
 #selected-task-info {
     padding: 0 5px 5px;
     text-align: start;
@@ -414,10 +418,10 @@
     margin: 10px 5px 5px 10px;
 }
 
-#tasks-section label {
-    margin-bottom: 0;
-    color:black;
-}
+    #tasks-section label {
+        margin-bottom: 0;
+        color: black;
+    }
 
 .task-item {
     width: 100%;
@@ -430,6 +434,7 @@
     max-width: 40%;
     display: flex;
 }
+
 .grading_text_header {
     font-weight: 800;
     max-width: 40%;
@@ -453,23 +458,28 @@
     padding: 10px 5px;
     border-radius: 7px 7px 0 0;
 }
+
 .header-text {
     background: var(--e-grey);
     padding: 10px 5px;
 }
+
 .grading-text-item {
     margin-bottom: 10px;
 }
+
 .chosen_text_header {
     background: var(--grey-color);
     padding: 10px 5px;
     color: white;
     border-radius: 7px 7px 0 0;
 }
+
 #grading-fields {
     max-width: 100%;
     width: 750px;
 }
+
 #exercise_card {
     border: 1px solid rgba(0, 0, 0, .15);
     border-radius: var(--border-radius);
@@ -505,9 +515,11 @@
         right: 5px;
         bottom: 5px;
     }
-.grading-text-item-info{
+
+.grading-text-item-info {
     margin-top: 5px;
 }
+
 #errMsg {
     display: none;
     margin-bottom: 10px;
@@ -579,13 +591,65 @@
     padding: 5px;
 }
 
+#mark-form-grading {
+    display: flex;
+    flex-direction: column;
+    padding: var(--primary-padding);
+    width: 100%;
+}
+
+    #statistics, #mark-form-grading .form-fields {
+        width: 90%;
+    }
+
+        #statistics label {
+            color: var(--grey-color);
+        }
+
+        #statistics p {
+            margin-left:10px;
+        }
+
+.return_btn{
+    padding:5px;
+}
+    .return_btn a, .return_btn svg {
+        display: inline;
+        color:black;
+    }
+.type {
+    display:flex;
+    align-items:center;
+}
+
+@media (max-width: 1010px) {
+    .return_btn svg {
+        display: none;
+    }
+}
+
 @media (max-width:1000px) {
     .exercises-texts, .top_panel, #filters {
         width: 90%;
     }
 }
 
+@media (max-width:970px) {
+    .text-header-grad {
+        margin-top: 10%;
+    }
+}
+@media (max-width:800px) {
+    .text-header-grad {
+        margin-top: 12%;
+    }
+}
+
 @media (max-width:750px) {
+
+    .text-header-grad {
+        margin-top: 15%;
+    }
     .exercises-texts, .top_panel, #filters {
         width: 100%;
     }
