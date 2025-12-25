@@ -180,12 +180,13 @@ class AddExerciseForm(forms.Form):
     )
     
     creationdate = forms.DateField(
-        initial=datetime.date.today,
+        initial=(datetime.date.today()).isoformat(),
         label='Дата создания',
         widget=forms.DateInput(attrs={'type': 'date'})
     )
     
     deadline = forms.DateField(
+        initial=(datetime.date.today()).isoformat(),
         label='Срок сдачи',
         widget=forms.DateInput(attrs={'type': 'date'})
     )

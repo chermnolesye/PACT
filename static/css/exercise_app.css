@@ -30,7 +30,7 @@
             width: calc(100% - 140px);
         }
 
-        #review-fields label {
+        #review-fields label, #label {
             text-align: start;
             display: flex;
             color: var(--grey-color);
@@ -400,7 +400,7 @@
         margin: 5px 5px 5px 10px;
     }
 
-#selection-info, .selected-info {
+#selection-info, .selected-info-g, .selected-info-r {
     margin-top: 10px;
 }
 
@@ -444,18 +444,17 @@
     display: flex;
 }
 
-.selected {
-    background: var(--primary-color) !important;
+.selected, .selected_gray {
+    background: var(--secondary-grey-color) !important;
     color: white;
-}
-
-.selected_gray {
-    background: var(--e-grey) !important;
 }
 
 .review_text_header {
     background: var(--e-grey);
     padding: 10px 5px;
+}
+
+:nth-child(1 of .text-item) .review_text_header {
     border-radius: 7px 7px 0 0;
 }
 
@@ -469,16 +468,29 @@
 }
 
 .chosen_text_header {
-    background: var(--grey-color);
     padding: 10px 5px;
-    color: white;
     border-radius: 7px 7px 0 0;
 }
 
-#grading-fields {
-    max-width: 100%;
-    width: 750px;
+.wrapChosen {
+    display: flex;
+    width:550px;
+    gap: 20px;
+    max-width:90%;
 }
+
+    .wrapChosen > div {
+        flex: 1 0 0;
+    }
+
+    .wrapChosen #selection-info {
+        min-width: unset;
+    }
+
+    .wrapChosen #submit_button {
+        margin: 10px auto;
+    }
+
 
 #exercise_card {
     border: 1px solid rgba(0, 0, 0, .15);
@@ -491,10 +503,8 @@
     border: 1px solid rgba(0, 0, 0, .15);
     border-radius: var(--border-radius);
     padding: var(--primary-padding);
-    max-width: 90%;
-    width: 750px;
     position: relative;
-    display: none;
+    height: max-content;
 }
 
     .chosen_params :first-child {
@@ -506,7 +516,7 @@
         margin-left: 20px;
     }
 
-    .chosen_params button {
+    .chosen_params button, #grading-fields .card-body #toggle {
         height: 30px;
         width: 30px;
         background: none;
@@ -607,19 +617,21 @@
         }
 
         #statistics p {
-            margin-left:10px;
+            margin-left: 10px;
         }
 
-.return_btn{
-    padding:5px;
+.return_btn {
+    padding: 5px;
 }
+
     .return_btn a, .return_btn svg {
         display: inline;
-        color:black;
+        color: black;
     }
+
 .type {
-    display:flex;
-    align-items:center;
+    display: flex;
+    align-items: center;
 }
 
 @media (max-width: 1010px) {
@@ -639,6 +651,7 @@
         margin-top: 10%;
     }
 }
+
 @media (max-width:800px) {
     .text-header-grad {
         margin-top: 12%;
@@ -646,10 +659,24 @@
 }
 
 @media (max-width:750px) {
+    .wrapChosen {
+        display: block;
+        width:100%;
+    }
+
+    .wrapChosen div {
+        max-width:unset;
+        width: 100%;
+    }
+    .add_exercise_form {
+        max-width:unset;
+        width: 100%;
+    }
 
     .text-header-grad {
         margin-top: 15%;
     }
+
     .exercises-texts, .top_panel, #filters {
         width: 100%;
     }
