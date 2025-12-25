@@ -56,6 +56,26 @@ class ExerciseFilter(django_filters.FilterSet):
         widget=forms.DateInput(attrs={'type': 'date'})
     )
     
+    check_status = django_filters.BooleanFilter(
+        method='filter_check',
+        label='Статус проверки',
+        widget=forms.Select(choices=[
+            ('', 'Все'),
+            (True, 'Проверенные'),
+            (False, 'Нероверенные')
+        ])
+    )
+
+    # Кастомный фильтр для статуса проверки
+    def filter_check(self, queryset, name, value):
+        if value is True:
+            # Проверенные - те, у которые сданы и есть оценка
+            return queryset.filter(exercisestatus=True, exercisemark__isnull=False)
+        elif value is False:
+            # Непроверенные - те, которые сданы(их можно проверить) и оценки нет
+            return queryset.filter(exercisestatus=True, exercisemark__isnull=True)
+        return queryset
+
     # Кастомный фильтр для студента
     def filter_student(self, queryset, name, value):
         return queryset.filter(
@@ -74,7 +94,8 @@ class ExerciseFilter(django_filters.FilterSet):
             'deadline_after',
             'deadline_before',
             'creationdate_after',
-            'creationdate_before'
+            'creationdate_before',
+            'check_status'
         ]
 
 class ReviewTextFilter(django_filters.FilterSet):

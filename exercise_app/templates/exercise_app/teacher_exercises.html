@@ -26,6 +26,7 @@
                 </div>
             </form>
         </div>
+
         <form method="get" class="filter-formFIO">
             <div class="search-bar">
                 {{ filter.form.student_name }}
@@ -52,6 +53,9 @@
 
                 <label>{{ filter.form.idexercisetype.label }}</label>
                 {{ filter.form.idexercisetype }}
+
+                <label>{{ filter.form.check_status.label }}</label>
+                {{ filter.form.check_status }}
 
                 <div class="date_wrapper">
                     <label>{{ filter.form.creationdate_after.label }}</label>
