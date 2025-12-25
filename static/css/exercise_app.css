@@ -6,7 +6,7 @@
 }
 
 .add_exercise_form {
-    width: 90%;
+    width: 100%;
     max-width: 550px;
 }
 
@@ -632,6 +632,10 @@
 .type {
     display: flex;
     align-items: center;
+}
+
+#open_filter_btn {
+    background: var(--grey-color);
 }
 
 @media (max-width: 1010px) {
