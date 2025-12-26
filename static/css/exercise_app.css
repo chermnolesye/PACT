@@ -475,11 +475,10 @@
 .wrapChosen {
     display: flex;
     width:550px;
-    gap: 20px;
     max-width:90%;
 }
 
-    .wrapChosen > div {
+    .wrapChosen #chosen_group, .wrapChosen #add_form_fields {
         flex: 1 0 0;
     }
 
@@ -636,6 +635,16 @@
 
 #open_filter_btn {
     background: var(--grey-color);
+}
+
+#arrows{
+    width:40px;
+}
+
+#arrows button {
+    display: block;
+    background:none;
+    border:none;
 }
 
 @media (max-width: 1010px) {
