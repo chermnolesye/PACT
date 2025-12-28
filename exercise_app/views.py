@@ -83,10 +83,11 @@ def teacher_exercises(request):
             in_time = exercise.completiondate <= exercise.deadline
         else:
             in_time = datetime.date.today() <= exercise.deadline
-        
+        removable = datetime.date.today() < exercise.creationdate
         exercises_dict = {
             'exercise_data': exercise,
-            'in_time': in_time
+            'in_time': in_time,
+            'removable': removable
         }
         exercises_list.append(exercises_dict)
     edit_form = EditExerciseForm(initial={
@@ -624,6 +625,9 @@ def grade_text(request, idexercise=2):
     group = student.idgroup
     text_type = text.idtexttype
 
+    print("====== отладка =====")
+    print(exercise_errors_list)
+    print(errors_list)
     context = {
         "mark_form": mark_form,
         "text": text,

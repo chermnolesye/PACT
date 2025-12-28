@@ -250,20 +250,34 @@
                     <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
                 </svg>
             </button>
-            <button onclick="confirmDelete(this)" class="delete_card">
+            <!-- <button onclick="confirmDelete(this)" class="delete_card">
                 <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
                 </svg>
-            </button>
+            </button> -->
+            {% if exercise.removable %}
+                <button onclick="confirmDelete(this)" class="delete_card">
+                    <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                </button>
+            {% else %}
+                <span></span>
+            {% endif %}
             <span class="edit_delete_card">
                 <button id="editExerciseButton" onclick="openEditModal(this)">
                     <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
                     </svg>
                 </button>
+                    <!-- <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
+                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                    </svg> -->
+                {% if exercise.removable %}
                     <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
                         <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
                     </svg>
+                {% endif %}
             </span>
         </div>
         {% endfor %}
@@ -541,11 +555,13 @@
             .then(data => {
                 if (data.success) {
                     document.getElementById(exerciseToDelete).remove();
-                    alert('Упражнение успешно удалено');
-                } else {
-                    alert('Ошибка при удалении');
+                    // alert('Упражнение успешно удалено');
                 }
+                //  else {
+                //     alert('Ошибка при удалении');
+                // }
                 closeModal();
+                location.reload();
             })
             .catch(error => {
                 console.error('Error:', error);
