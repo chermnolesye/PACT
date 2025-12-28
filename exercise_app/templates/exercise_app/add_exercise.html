@@ -13,173 +13,189 @@
 <div class="container">
     <h2 class="highlighted-header">Добавление упражнения</h2>
     <div class="wrapChosen">
-        <form method="post" class="add_exercise_form" id="exerciseForm">
-            {% csrf_token %}
-            <!--<div style="display:none">-->
-            <div class="form-group">
-                {{ form.year.label_tag }}
-                {{ form.year }}
-            </div>
-
-            <div class="form-group">
-                {{ form.group.label_tag }}
-                {{ form.group }}
-            </div>
-
-            <div class="form-group">
-                {{ form.idstudent.label_tag }}
-                {{ form.idstudent }}
-            </div>
-
-            <div class="form-group">
-                {{ form.creationdate.label_tag }}
-                {{ form.creationdate }}
-            </div>
-
-            <div class="form-group">
-                {{ form.deadline.label_tag }}
-                {{ form.deadline }}
-            </div>
-
-            <div class="grouping-wrapper">
-                <label>Тип упражнения:</label>
-                <div class="grouping-options">
-                    {% for choice in form.idexercisetype %}
-                    <div>
-                        {{ choice.tag }}
-                        <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
-                    </div>
-                    {% endfor %}
+        <div id="add_form_fields">
+            <button type="button" class="button" style="display:none;" id="open_filter_btn">Открыть фильтры</button>
+            <form method="post" class="add_exercise_form" id="exerciseForm">
+                {% csrf_token %}
+                <!--<div style="display:none">-->
+                <div class="form-group">
+                    {{ form.year.label_tag }}
+                    {{ form.year }}
                 </div>
-            </div>
 
-            <p id="errMsg">
-                <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
-                    <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
-                    <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
-                    <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
-                </svg>
-                Заполните все поля перед переходом к выбору текста!
-            </p>
-            <button type="button" class="button" id="btn_next">Перейти к выбору теста</button>
-            <!--<\div>-->
+                <div class="form-group">
+                    {{ form.group.label_tag }}
+                    {{ form.group }}
+                </div>
 
-            <div id="grading-fields" style="display:none;">
-                <div class="card " id="exercise_card">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="grading-field">
-                                <label for="grading_header">Название текста:</label>
-                                <input type="text" id="grading_header" class="form-control"
-                                       placeholder="Поиск по названию...">
-                            </div>
-                            <div class="grading-field">
-                                <label for="grading_academic_year">Учебный год:</label>
-                                <select id="grading_academic_year" class="form-control">
-                                    <option value="">Все годы</option>
-                                    {% for year in academic_years %}
-                                    <option value="{{ year.idayear }}">{{ year.title }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                <div class="form-group">
+                    {{ form.idstudent.label_tag }}
+                    {{ form.idstudent }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.creationdate.label_tag }}
+                    {{ form.creationdate }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.deadline.label_tag }}
+                    {{ form.deadline }}
+                </div>
+
+                <div class="grouping-wrapper">
+                    <label>Тип упражнения:</label>
+                    <div class="grouping-options">
+                        {% for choice in form.idexercisetype %}
+                        <div>
+                            {{ choice.tag }}
+                            <label for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
                         </div>
-
-                        <div class="row ">
-                            <div class="grading-field">
-                                <label for="grading_group">Учебная группа:</label>
-                                <select id="grading_group" class="form-control">
-                                    <option value="">Все группы</option>
-                                </select>
-                            </div>
-                            <div class="grading-field">
-                                <label for="grading_text_type">Тип текста:</label>
-                                <select id="grading_text_type" class="form-control">
-                                    <option value="">Все типы</option>
-                                    {% for text_type in text_types %}
-                                    <option value="{{ text_type.idtexttype }}">{{ text_type.texttypename }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <button type="button" id="apply_grading_filters" class="button btn-primary" style="display:inline-block">
-                            Применить фильтры
-                        </button>
-                        <a id="reset_grading_filters">
-                            Сбросить
-                        </a>
-
-                        <button id="toggle" type="button">
-                            <svg width="24" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M58.5025 28.3587C61.2675 26.8012 62.6529 26.0225 63.4083 24.7654C64.1666 23.5113 64.1666 21.9975 64.1666 18.97V16.9575C64.1666 13.09 64.1666 11.1533 62.8833 9.95167C61.6058 8.75 59.5437 8.75 55.4166 8.75H14.5833C10.4591 8.75 8.39706 8.75 7.11665 9.95167C5.83331 11.1533 5.83331 13.09 5.83331 16.9604V18.9729C5.83331 21.9975 5.83331 23.5113 6.59165 24.7654C7.34998 26.0196 8.72956 26.8012 11.4975 28.3587L19.9937 33.1421C21.8487 34.1863 22.7791 34.7083 23.4441 35.2858C24.8266 36.4846 25.6783 37.8963 26.0633 39.6317C26.25 40.46 26.25 41.4342 26.25 43.3796V51.1671C26.25 53.8183 26.25 55.1454 26.985 56.1779C27.72 57.2133 29.0266 57.7238 31.6341 58.7446C37.1146 60.8854 39.8533 61.9558 41.8016 60.7367C43.75 59.5204 43.75 56.735 43.75 51.1642V43.3767C43.75 41.4342 43.75 40.46 43.9366 39.6288C44.3029 37.9288 45.2256 36.3995 46.5587 35.2829" stroke="#0D6EFD" stroke-width="4" stroke-linecap="round"></path>
-                            </svg>
-                        </button>
+                        {% endfor %}
                     </div>
                 </div>
-                <div id="selected-info-grading" style="margin-top:10px;">
-                    <div style="padding: 10px 5px;">Список текстов:</div>
-                    <div id="selected-info-grading-body">
-                        <p id="errMsgFilters">
-                            <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
-                                <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
-                                <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
-                                <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
-                            </svg>
-                            Примените фильтры для загрузки текстов!
-                        </p>
 
-                        <div class="card-header">
-                            <label id="text-grading-label" style="width:100%; margin-top:10px; display:none;">
-                                Показаны только тексты с оценкой. Тексты выбранного студента исключены.
-                            </label>
-                        </div>
+                <p id="errMsg">
+                    <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
+                        <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
+                        <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
+                        <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
+                    </svg>
+                    Заполните все поля перед переходом к выбору текста!
+                </p>
+                <button type="button" class="button" id="btn_next">Перейти к выбору теста</button>
+                <!--<\div>-->
+                <div id="grading-fields" style="display:none;">
+                    <div class="card" id="exercise_card">
                         <div class="card-body">
-                            <div id="grading-texts-list" class="list-group" style="max-height: 400px; overflow-y: auto;">
-                                <div class="text-center">
+                            <div class="row">
+                                <div class="grading-field">
+                                    <label for="grading_header">Название текста:</label>
+                                    <input type="text" id="grading_header" class="form-control"
+                                           placeholder="Поиск по названию...">
+                                </div>
+                                <div class="grading-field">
+                                    <label for="grading_academic_year">Учебный год:</label>
+                                    <select id="grading_academic_year" class="form-control">
+                                        <option value="">Все годы</option>
+                                        {% for year in academic_years %}
+                                        <option value="{{ year.idayear }}">{{ year.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
 
+                            <div class="row ">
+                                <div class="grading-field">
+                                    <label for="grading_group">Учебная группа:</label>
+                                    <select id="grading_group" class="form-control">
+                                        <option value="">Все группы</option>
+                                    </select>
+                                </div>
+                                <div class="grading-field">
+                                    <label for="grading_text_type">Тип текста:</label>
+                                    <select id="grading_text_type" class="form-control">
+                                        <option value="">Все типы</option>
+                                        {% for text_type in text_types %}
+                                        <option value="{{ text_type.idtexttype }}">{{ text_type.texttypename }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="button" id="apply_grading_filters" class="button btn-primary" style="display:inline-block">
+                                Применить фильтры
+                            </button>
+                            <a id="reset_grading_filters">
+                                Сбросить
+                            </a>
+
+                            <button id="toggle" type="button">
+                                <svg width="24" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M58.5025 28.3587C61.2675 26.8012 62.6529 26.0225 63.4083 24.7654C64.1666 23.5113 64.1666 21.9975 64.1666 18.97V16.9575C64.1666 13.09 64.1666 11.1533 62.8833 9.95167C61.6058 8.75 59.5437 8.75 55.4166 8.75H14.5833C10.4591 8.75 8.39706 8.75 7.11665 9.95167C5.83331 11.1533 5.83331 13.09 5.83331 16.9604V18.9729C5.83331 21.9975 5.83331 23.5113 6.59165 24.7654C7.34998 26.0196 8.72956 26.8012 11.4975 28.3587L19.9937 33.1421C21.8487 34.1863 22.7791 34.7083 23.4441 35.2858C24.8266 36.4846 25.6783 37.8963 26.0633 39.6317C26.25 40.46 26.25 41.4342 26.25 43.3796V51.1671C26.25 53.8183 26.25 55.1454 26.985 56.1779C27.72 57.2133 29.0266 57.7238 31.6341 58.7446C37.1146 60.8854 39.8533 61.9558 41.8016 60.7367C43.75 59.5204 43.75 56.735 43.75 51.1642V43.3767C43.75 41.4342 43.75 40.46 43.9366 39.6288C44.3029 37.9288 45.2256 36.3995 46.5587 35.2829" stroke="#0D6EFD" stroke-width="4" stroke-linecap="round"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="selected-info-grading" style="margin-top:10px;">
+                        <div style="padding: 10px 5px;">Список текстов:</div>
+                        <div id="selected-info-grading-body">
+                            <p id="errMsgFilters">
+                                <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
+                                    <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
+                                    <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
+                                    <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
+                                </svg>
+                                Примените фильтры для загрузки текстов!
+                            </p>
+
+                            <div class="card-header">
+                                <label id="text-grading-label" style="width:100%; margin-top:10px; display:none;">
+                                    Показаны только тексты с оценкой. Тексты выбранного студента исключены.
+                                </label>
+                            </div>
+                            <div class="card-body">
+                                <div id="grading-texts-list" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="text-center">
+
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div style="display: none;">
-                    {{ form.grading_text }}
+                    <div style="display: none;">
+                        {{ form.grading_text }}
+                    </div>
                 </div>
-            </div>
-            <div id="review-fields" style="display: none;">
-                <div class="review-group">
-                    <label>Выберите текст для рецензирования:</label>
-                    <div class="texts-list" id="texts-list">
-                        <div class="loading" id="texts-loading">
-                            Загрузка текстов...
+                <div id="review-fields" style="display: none;">
+                    <div class="review-group">
+                        <label>Выберите текст для рецензирования:</label>
+                        <div class="texts-list" id="texts-list">
+                            <div class="loading" id="texts-loading">
+                                Загрузка текстов...
+                            </div>
                         </div>
+                        <div id="texts-error" class="error-message" style="display: none;"></div>
                     </div>
-                    <div id="texts-error" class="error-message" style="display: none;"></div>
+
+                    <!--<div class="review-group" id="tasks-section" style="display: none;">
+                <label>Выберите задание:</label>
+                <div class="tasks-list" id="tasks-list">
+                </div>
+                <div id="tasks-error" class="error-message" style="display: none;"></div>
+            </div>-->
                 </div>
 
-                <!--<div class="review-group" id="tasks-section" style="display: none;">
-                    <label>Выберите задание:</label>
-                    <div class="tasks-list" id="tasks-list">
-                    </div>
-                    <div id="tasks-error" class="error-message" style="display: none;"></div>
-                </div>-->
-            </div>
+                <div class="hidden-fields">
+                    {{ form.review_text_id }}
+                    {{ form.review_task_id }}
+                    {{ form.review_exercisetext }}
+                </div>
 
-            <div class="hidden-fields">
-                {{ form.review_text_id }}
-                {{ form.review_task_id }}
-                {{ form.review_exercisetext }}
-            </div>
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <button class="button" style="display:none;" id="submit_btn">Создать упражнение</button>
+            </form>
+        </div>
 
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger">
-                {% for error in form.non_field_errors %}
-                <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-            {% endif %}
-            <button class="button" style="display:none;" id="submit_btn">Создать упражнение</button>
-        </form>
+        <div id="arrows" style="display:none;">
+            <button id="btn_arrow_add">
+                <svg width="40" viewBox="0 0 105 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path id="arrow_add" d="M79.1195 50.4643C80.1813 51.6138 80.1813 53.3862 79.1195 54.5357L44.2037 92.3332C42.3509 94.3388 39 93.0279 39 90.2976V14.7024C39 11.9721 42.3509 10.6612 44.2037 12.6668L79.1195 50.4643Z" fill="#0D6EFD" />
+                </svg>
+            </button>
+            <button id="btn_arrow_remove">
+                <svg width="40" viewBox="0 0 105 105" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path id="arrow_remove" d="M25.8805 50.4643C24.8187 51.6138 24.8187 53.3862 25.8805 54.5357L60.7963 92.3332C62.6491 94.3388 66 93.0279 66 90.2976V14.7024C66 11.9721 62.6491 10.6612 60.7963 12.6668L25.8805 50.4643Z" fill="#0D6EFD" />
+                </svg>
+            </button>
+        </div>
+
         <div style="display: none" id="chosen_group">
             <label id="label">Выбранные параметры для создания упражнения:</label>
             <div class="chosen_params">
@@ -217,32 +233,20 @@
 </div>
 
 <script>
-
-    function toggle() {
-        const btn = document.getElementById("apply_grading_filters")
-        const btn2 = document.getElementById("reset_grading_filters")
-        if (btn.style.display == "inline-block") {
-            btn.style.display = "none"
-            btn2.style.display = "none"
-            document.getElementById("grading_academic_year").parentElement.style.display = "none"
-            document.getElementById("grading_group").parentElement.style.display = "none"
-            document.getElementById("grading_text_type").parentElement.style.display = "none"
-            document.getElementById("grading_header").style.width = "calc(100% - 160px)"
-            console.log(document.getElementById("grading_header"))
-        }
-        else {
-            btn.style.display = "inline-block"
-            btn2.style.display = "inline-block"
-            document.getElementById("grading_academic_year").parentElement.style.display = "flex"
-            document.getElementById("grading_group").parentElement.style.display = "flex"
-            document.getElementById("grading_text_type").parentElement.style.display = "flex"
-            document.getElementById("grading_header").style.width = "calc(100% - 140px)"
-        }
-    }
-
     document.addEventListener('DOMContentLoaded', function () {
 
-        document.getElementById('toggle').addEventListener('click', toggle);
+        document.getElementById('toggle').addEventListener('click', function () {
+            document.getElementById("toggle").style.display = "none"
+            document.getElementById("exercise_card").style.display = "none"
+            document.getElementById("open_filter_btn").style.display = 'block'
+        });
+
+
+        document.getElementById('open_filter_btn').addEventListener('click', function () {
+            document.getElementById("toggle").style.display = "inline-block"
+            document.getElementById("exercise_card").style.display = "block"
+            document.getElementById("open_filter_btn").style.display = 'none'
+        });
 
         const date_inp_s = document.getElementById("id_creationdate");
         document.querySelector(".chosen_date_s").innerHTML = (new Date(date_inp_s.value)).toLocaleString('ru-Ru', { day: "numeric", month: "long", year: "numeric" });
@@ -354,6 +358,20 @@
         const selectedGradingTextDiv = document.getElementById('selected-grading-text');
         const gradingTextHidden = document.getElementById('id_grading_text');
         let selectedGradingTextId = null;
+        let text_g_data = {
+            id:null,
+            header: "",
+            student: "",
+            group:"",
+            text_type:"",
+            grade:""
+        }
+        let text_r_data = {
+            id_task: null,
+            id_text: null,
+            text_name: "",
+            task_title: ""
+        }
 
         // Функция загрузки текстов для Grading
         function loadGradingTexts() {
@@ -423,35 +441,20 @@
                         </div>
                     `;
 
+
                         textItem.addEventListener('click', function () {
                             document.querySelectorAll('.grading-text-item').forEach(item => {
                                 item.getElementsByClassName('header-text')[0].classList.remove('selected');
                             });
                             this.getElementsByClassName('header-text')[0].classList.add('selected');
 
-                            selectedGradingTextId = text.id;
+                            text_g_data["id"] = text.id;
+                            text_g_data["header"] = text.header;
+                            text_g_data["student"] = text.student;
+                            text_g_data["group"] = text.group;
+                            text_g_data["text_type"] = text.text_type;
+                            text_g_data["grade"] = text.grade;
                             
-                            if (gradingTextHidden) {
-                                gradingTextHidden.value = text.id;
-                            }
-                            
-
-                            if (selectedGradingTextInfo) {
-                                selectedGradingTextDiv.getElementsByClassName('chosen_text_header')[0].innerHTML = `Выбранный текст: ${text.header}`
-                                
-                                selectedGradingTextInfo.innerHTML = `
-                                <ul>
-                                    <li>Студент: ${text.student}</li>
-                                    <li>Группа: ${text.group}</li>
-                                    <li>Тип: ${text.text_type}</li>
-                                    <li>Оценка: ${text.grade}</li>
-                                </ul>
-                            `;
-                            }
-
-                            if (selectedGradingTextDiv) {
-                                selectedGradingTextDiv.style.display = 'block';
-                            }
                         });
 
                         gradingTextsList.appendChild(textItem);
@@ -462,6 +465,57 @@
                     gradingTextsList.innerHTML = '<div class="alert alert-danger">Ошибка загрузки текстов: ' + error.message + '</div>';
                 });
         }
+
+        document.getElementById("btn_arrow_add").addEventListener('click', function () {
+            if (text_g_data["id"]) {
+                selectedGradingTextId = text_g_data["id"]
+                if (gradingTextHidden) {
+                    gradingTextHidden.value = selectedGradingTextId;
+                }
+                if (selectedGradingTextInfo) {
+                    selectedGradingTextDiv.getElementsByClassName('chosen_text_header')[0].innerHTML = `Выбранный текст: ${text_g_data["header"]}`
+
+                    selectedGradingTextInfo.innerHTML = `
+                    <ul>
+                        <li>Студент: ${text_g_data["student"]}</li>
+                        <li>Группа: ${text_g_data["group"]}</li>
+                        <li>Тип: ${text_g_data["text_type"]}</li>
+                        <li>Оценка: ${text_g_data["grade"]}</li>
+                    </ul>
+                    `;
+                }
+
+                if (selectedGradingTextDiv) {
+                    selectedGradingTextDiv.style.display = 'block';
+                }
+            }
+            if (text_r_data["id_text"]) {
+                selectedTextId = text_r_data["id_text"];
+                reviewTextIdInput.value = text_r_data["id_text"];
+                selectedTextName.textContent = text_r_data["text_name"];
+                selectionInfo.style.display = 'block';
+                if (text_r_data["id_task"]) {
+                    reviewTaskIdInput.value = text_r_data["id_task"];
+                    selectedTaskTitle.textContent = text_r_data["task_title"];
+                    selectedTaskId = text_r_data["id_task"];
+                }
+                else {
+                    selectedTaskTitle.textContent = "Не выбрано";
+                    selectedTaskId = null;
+                }
+            }
+        });
+        document.getElementById("btn_arrow_remove").addEventListener('click', function () {
+            if (selectedGradingTextDiv) {
+                selectedGradingTextDiv.style.display = 'none';
+                selectedGradingTextId = null;
+            }
+            if (selectionInfo.style.display == 'block') {
+                selectionInfo.style.display = 'none';
+                selectedTextId = null;
+                selectedTaskId = null;
+            }
+        });
 
         // Загрузка групп для фильтра Grading
         document.getElementById('grading_academic_year')?.addEventListener('change', function () {
@@ -592,15 +646,20 @@
                                 item.querySelector(".review_text_header").classList.remove('selected');
                                 item.querySelector("#tasks-section").style.display = "none";
                                 document.querySelector("#id_review_task_id").removeAttribute("value");
-                                document.querySelector("#selected-task-info").querySelector("span").innerHTML = "Не выбрано";
+                                //document.querySelector("#selected-task-info").querySelector("span").innerHTML = "Не выбрано";
                             });
                             textItem.querySelector(".review_text_header").classList.add('selected');
-                            selectedTextId = text.id;
-                            selectedTaskId = null;
-                            reviewTextIdInput.value = text.id;
-                            selectedTextName.textContent = text.name;
+
+                            //selectedTextId = text.id;
+                            //selectedTaskId = null;
+                            //reviewTextIdInput.value = text.id;
+                            text_r_data["id_text"] = text.id;
+                            text_r_data["text_name"] = text.name;
+                            text_r_data["id_task"] = null;
                             loadTasks(text.id, textItem.querySelector("#tasks-section"), textItem.querySelector("#tasks-list"));
-                            selectionInfo.style.display = 'block';
+
+                            //selectedTextName.textContent = text.name;
+                            //selectionInfo.style.display = 'block';
                         });
                     });
                 })
@@ -646,9 +705,11 @@
                             });
 
                             this.classList.add('selected_gray');
-                            selectedTaskId = task.id;
-                            reviewTaskIdInput.value = task.id;
-                            selectedTaskTitle.textContent = task.title;
+                            text_r_data["id_task"] = task.id;
+                            text_r_data["task_title"] = task.title;
+                            //selectedTaskId = task.id;
+                            //reviewTaskIdInput.value = task.id;
+                            //selectedTaskTitle.textContent = task.title;
                         });
 
                         tasksList.appendChild(taskItem);
@@ -692,8 +753,35 @@
             document.getElementById('exerciseForm').submit();
         });
 
-        document.getElementById("btn_next").addEventListener("click", function () {
+        window.addEventListener('resize', function () {
+            const arrows = document.getElementById("arrows")
+            if (arrows.style.display != "none") {
+                if (window.innerWidth < 750) {
+                    arrows.style.display = "flex"
+                    arrows.style.gap = "10px"
+                    document.getElementById("arrow_add").setAttribute('transform', 'rotate(90, 50, 50)');
+                    document.getElementById("arrow_remove").setAttribute('transform', 'rotate(90, 50, 50)');
+                }
+                else {
+                    arrows.style.display = "block"
+                    arrows.style.gap = "0px"
+                    document.getElementById("arrow_add").removeAttribute('transform');
+                    document.getElementById("arrow_remove").removeAttribute('transform');
+                }
+            }
+        });
 
+        document.getElementById("btn_next").addEventListener("click", function () {
+            if (window.innerWidth < 750) {
+                document.getElementById("arrows").style.display = "flex"
+                document.getElementById("arrows").style.gap = "10px"
+                document.getElementById("arrow_add").setAttribute('transform', 'rotate(90, 50, 50)');
+                document.getElementById("arrow_remove").setAttribute('transform', 'rotate(90, 50, 50)');
+            }
+            else {
+                document.getElementById("arrows").style.display = "block"
+                document.getElementById("arrows").style.gap = "0px"
+            }
             const chosen_year_el = document.querySelector(".chosen_year")
             const chosen_group_el = document.querySelector(".chosen_group")
             const chosen_fio_el = document.querySelector(".chosen_fio")
@@ -716,7 +804,7 @@
                 document.getElementById("errMsg").style.display = "none";
                 document.getElementById('submit_button').style.display = 'block';
                 document.getElementById('chosen_group').style.display = 'block';
-                document.querySelector('.wrapChosen').style.width = '86%';
+                document.querySelector('.wrapChosen').style.width = '90%';
 
                 if (exercise_type_id.innerHTML === '1') {  // код для grading
                     gradingFields.style.display = 'block';
@@ -732,6 +820,33 @@
             };
         });
         document.getElementById("open_edit").addEventListener("click", function () {
+            text_g_data = {
+                id: null,
+                header: "",
+                student: "",
+                group: "",
+                text_type: "",
+                grade: ""
+            }
+            text_r_data = {
+                id_task: null,
+                id_text: null,
+            }
+
+            document.getElementById("selected-grading-text-info").innerHTML = 'Текст не выбран';
+            document.getElementById("selected-grading-text").querySelector(".chosen_text_header").innerHTML = 'Выбранный текст:';
+            selectedGradingTextId = null;
+
+            selectedTextName.textContent = "Не выбрано";
+            selectedTaskTitle.textContent = "Не выбрано";
+            selectedTextId = null;
+            selectedTaskId = null;
+
+            document.getElementById("arrows").style.display = "none"
+            document.getElementById("toggle").style.display = "inline-block"
+            document.getElementById("exercise_card").style.display = "block"
+            document.getElementById("open_filter_btn").style.display = 'none'
+
             document.getElementById('grading-fields').style.display = 'none';
             document.getElementById('review-fields').style.display = 'none';
             document.querySelectorAll('.form-group').forEach(el => {
