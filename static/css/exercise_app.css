@@ -232,6 +232,7 @@
 .header-card .full_name, .header-card .group, .header-card .type {
     text-align: left;
     flex: 2;
+    vertical-align: middle;
 }
 
 .exercise-card .out_date, .exercise-card .deadline,
@@ -240,7 +241,8 @@
 .header-card .completion_date, .header-card .mark {
     text-align: left;
     flex: 1;
-    width: 100%
+    width: 100%;
+    vertical-align: middle;
 }
 
 .exercise-card .text_name, .exercise-card .author, .exercise-card .out_date, .exercise-card .text_type {
@@ -632,6 +634,14 @@
 .type {
     display: flex;
     align-items: center;
+}
+
+.sort-btn {
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 5px;
+    border-radius: var(--border-radius);
 }
 
 @media (max-width: 1010px) {

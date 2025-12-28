@@ -65,6 +65,7 @@ def load_exercise_data(request):
         return JsonResponse(data)    
     return JsonResponse({})
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def teacher_exercises(request):
     exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.all())
     # exercises_queryset = exercise_filter.qs
@@ -118,7 +119,8 @@ def delete_exercise_ajax(request, exercise_id):
         exercise.delete()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
-    
+
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')    
 def add_exercise(request):
     if request.method == 'POST':
         form = AddExerciseForm(request.POST)
@@ -267,7 +269,7 @@ def load_groups(request):
 '''
     БЕК КАТИ
 '''
-
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def add_review_text(request):
     if request.method == 'POST':
         form = AddExerciseTextForm(request.POST)
@@ -293,6 +295,7 @@ def add_review_text(request):
     
     return render(request, 'add_review_text.html', {'form': form})
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_teacher(request, idexercise=1):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
@@ -413,6 +416,7 @@ def delete_teacher_comment(request, fragment_id):
         })
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_text_list(request):
     reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())
     texts = reviewtext_filter.qs.order_by('-loaddate')
@@ -420,6 +424,7 @@ def review_text_list(request):
     context = {'texts' : texts, 'filter': reviewtext_filter}
     return render(request, 'review_text_list.html', context)
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_text(request, idexercisetext=2):
     text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
     tasks = ExerciseTextTask.objects.filter(idexercisetext=idexercisetext)
@@ -507,7 +512,7 @@ def get_count_end(count):
 '''
     БЕК ДАШИ
 '''
-
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def grade_text(request, idexercise=2):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     

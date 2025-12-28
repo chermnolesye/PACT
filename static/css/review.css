@@ -195,7 +195,9 @@
 }
 
 .review-menu-button:hover {
-    box-shadow: 0 0.25rem 0.5rem #3886fbc6;
+    /* box-shadow: 0 0.25rem 0.5rem #3886fbc6; */
+    background-color: var(--secondary-color);
+    color: white;   
 }
 
 .review-body {

@@ -90,13 +90,43 @@
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
         <div class="header-card">
-            <div class="full_name">ФИО</div>
+            <!-- <div class="full_name">ФИО</div>
             <div class="group">Группа</div>
             <div class="type">Тип упражнения</div>
             <div class="out_date">Дата выдачи</div>
             <div class="deadline">Дата сдачи</div>
             <div class="completion_date">Дата завершения</div>
-            <div class="mark">Оценка</div>
+            <div class="mark">Оценка</div> -->
+
+           <div class="full_name">
+                ФИО 
+                <button class="sort-btn" data-sort="full_name" data-type="text">&#8595;&#8593;</button>                
+            </div>
+            <div class="group">
+                Группа 
+                <button class="sort-btn" data-sort="group" data-type="text">&#8595;&#8593;</button>
+            </div>
+            <div class="type">
+                Тип упражнения 
+                <button class="sort-btn" data-sort="type" data-type="text">&#8595;&#8593;</button>
+            </div>
+            <div class="out_date">
+                Дата выдачи 
+                <button class="sort-btn" data-sort="out_date" data-type="date">&#8595;&#8593;</button>
+            </div>
+            <div class="deadline">
+                Дата сдачи 
+                <button class="sort-btn" data-sort="deadline" data-type="date">&#8595;&#8593;</button>
+            </div>
+            <div class="completion_date">
+                Дата завершения 
+                <button class="sort-btn" data-sort="completion_date" data-type="date">&#8595;&#8593;</button>
+            </div>
+            <div class="mark">
+                Оценка 
+                <button class="sort-btn" data-sort="mark" data-type="mark">&#8595;&#8593;</button>
+            </div>
+
             <div class="edit_card">Редактировать задание</div>
             <div class="delete_card">Удалить задание</div>
             <div class="edit_delete_card">Управление</div>
@@ -142,13 +172,30 @@
                 Рецензирование
             </span>
             {% endif %}
-            <span class="out_date">{{ exercise.exercise_data.creationdate }}</span>
+            <!-- <span class="out_date">{{ exercise.exercise_data.creationdate }}</span>
             <span class="deadline">{{ exercise.exercise_data.deadline }}</span>
             {% if exercise.exercise_data.completiondate %}
             <span class="completion_date">{{ exercise.exercise_data.completiondate }}</span>
             {% else %}
             <span class="completion_date">-</span>
+            {% endif %} -->
+
+            <span class="out_date" data-original-date="{{ exercise.exercise_data.creationdate|date:'Y-m-d' }}">
+                {{ exercise.exercise_data.creationdate }}
+            </span>
+            
+            <span class="deadline" data-original-date="{{ exercise.exercise_data.deadline|date:'Y-m-d' }}">
+                {{ exercise.exercise_data.deadline }}
+            </span>
+            
+            {% if exercise.exercise_data.completiondate %}
+            <span class="completion_date" data-original-date="{{ exercise.exercise_data.completiondate|date:'Y-m-d' }}">
+                {{ exercise.exercise_data.completiondate }}
+            </span>
+            {% else %}
+            <span class="completion_date" data-original-date="">-</span>
             {% endif %}
+
             {% if exercise.exercise_data.exercisemark %}
             <span class="mark">{{ exercise.exercise_data.get_exercisemark_display }}</span>
             {% else %}
@@ -236,6 +283,173 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.exercises');
+        
+        let originalCards = Array.from(container.querySelectorAll('.exercise-card'));
+        let currentSort = { column: null, direction: null };
+        
+        function getValueByClass(card, className) {
+            const element = card.querySelector('.' + className);
+            if (!element) return null;
+
+            const text = element.textContent.trim();  
+            if (className.includes('date')) {
+                const originalDate = element.getAttribute('data-original-date');
+                if (!originalDate || originalDate === '') return null;                
+                // YYYY-MM-DD
+                const date = new Date(originalDate);
+                return isNaN(date.getTime()) ? null : date;
+            }  else if (className === 'mark') {
+                return parseMark(text);
+            } else if (className === 'group') {
+                return parseGroup(text);
+            } else {
+                return text;
+            }
+        }
+
+        function parseGroup(groupStr) {
+            if (!groupStr) return { number: null, year: null, full: groupStr };
+
+            const cleaned = groupStr.trim();
+            const match = cleaned.match(/(\d+)(?:\s*\((\d{4})\/(\d{4})\))?/);
+            
+            if (!match) return { number: null, year: null, full: groupStr };
+            
+            const number = parseInt(match[1], 10);
+            let year = null;
+
+            if (match[2] && match[3]) {
+                year = parseInt(match[2], 10);
+            }
+            
+            return {
+                number: isNaN(number) ? null : number,
+                year: year,
+                full: groupStr
+            };
+        }
+
+        function parseMark(markStr) {
+            if (!markStr || markStr === '-') return null;
+
+            const numMatch = markStr.match(/(\d+)/);
+            if (numMatch) return parseInt(numMatch[1], 10);
+            return null;
+        }
+        
+        function compareValues(a, b, column, type) {
+            if (a === null && b === null) return 0;
+            if (a === null) return 1; // Прочерки в конец
+            if (b === null) return -1;
+
+            if (column === 'group' && type === 'text') {
+                // Сначала сравниваем по году
+                if (a.year !== b.year) {
+                    if (a.year === null) return 1;
+                    if (b.year === null) return -1;
+                    return a.year - b.year;
+                }
+                if (a.number !== b.number) {
+                    if (a.number === null) return 1;
+                    if (b.number === null) return -1;
+                    return a.number - b.number;
+                }
+                return a.full.localeCompare(b.full);
+            }
+
+            if (a instanceof Date && b instanceof Date) {
+                return a.getTime() - b.getTime();
+            }
+            
+            if (type === 'mark') {
+                return a - b;
+            }
+
+             return String(a).localeCompare(String(b), 'ru', { 
+                sensitivity: 'base',
+                numeric: true 
+            });
+        }
+
+        function sortCards(column, type) {
+            const cards = Array.from(container.querySelectorAll('.exercise-card'));
+            const header = container.querySelector('.header-card');
+            
+            let direction = 'asc';
+            if (currentSort.column === column) {
+                if (currentSort.direction === 'asc') {
+                    direction = 'desc';
+                } else if (currentSort.direction === 'desc') {
+                    restoreOriginalOrder();
+                    return;
+                }
+            }
+            
+            cards.sort((cardA, cardB) => {
+                const valueA = getValueByClass(cardA, column);
+                const valueB = getValueByClass(cardB, column);
+
+                const comparison = compareValues(valueA, valueB, column, type);
+                return direction === 'asc' ? comparison : -comparison;
+            });
+            
+            cards.forEach(card => {
+                container.appendChild(card);
+            });
+            
+            currentSort = { column, direction };            
+            updateSortButtons(column, direction);
+        }
+        
+        function restoreOriginalOrder() {
+            const header = container.querySelector('.header-card');   
+            const currentCards = container.querySelectorAll('.exercise-card');
+            currentCards.forEach(card => card.remove());
+
+            originalCards.forEach(card => {
+                container.appendChild(card);
+            });
+
+            currentSort = { column: null, direction: null };
+            updateSortButtons(null, null);
+        }
+        
+        function updateSortButtons(activeColumn, direction) {
+            const buttons = container.querySelectorAll('.sort-btn');
+            
+            buttons.forEach(btn => {
+                const column = btn.dataset.sort;                
+                btn.textContent = '\u2191\u2193';
+                btn.style.color = '';
+                btn.style.fontWeight = '';
+                
+                if (column === activeColumn) {
+                    if (direction === 'asc') {
+                        btn.textContent = 	'\u2191';
+                        btn.style.color = '#007bff';
+                        btn.style.fontWeight = 'bold';
+                    } else if (direction === 'desc') {
+                        btn.textContent = '\u2193';                        
+                        btn.style.color = '#007bff';
+                        btn.style.fontWeight = 'bold';
+                    }
+                }
+            });
+        }
+        
+        container.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sort-btn')) {
+                const column = e.target.dataset.sort;
+                const type = e.target.dataset.type;
+                sortCards(column, type);
+            }
+        });
+    });
+</script>
 
 <script>
     let exerciseToDelete = null;
