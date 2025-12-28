@@ -566,7 +566,7 @@ def grade_text(request, idexercise=2):
             
             exercise_error_tokens = token.exerciseerrortoken_set.select_related(
                 "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
-            ).filter(idexercisegrading_id=idexercise)
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
             
             exercise_errors_list = []
 
@@ -580,13 +580,13 @@ def grade_text(request, idexercise=2):
                         "error_tag_russian": exerror.iderrortag.tagtextrussian,
                         "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
                         "error_color": exerror.iderrortag.tagcolor,
-                        "error_level": exerror.iderrorlevel.errorlevelname if error.iderrorlevel else "Не указано",
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
                         "error_correct": exerror.correct or "Не указано",
                         "error_comment": exerror.comment or "Не указано",
                         "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
                         "idtagparent": exerror.iderrortag.idtagparent,
                     })
-
+            
             tokens_data.append({
                 "token_id": token.idtoken,
                 "token": token.tokentext,
@@ -625,9 +625,6 @@ def grade_text(request, idexercise=2):
     group = student.idgroup
     text_type = text.idtexttype
 
-    print("====== отладка =====")
-    print(exercise_errors_list)
-    print(errors_list)
     context = {
         "mark_form": mark_form,
         "text": text,
