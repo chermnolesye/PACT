@@ -376,6 +376,9 @@
         // Функция загрузки текстов для Grading
         function loadGradingTexts() {
             document.getElementById("grading-texts-list").style.display = "block";
+
+            document.getElementById("apply_grading_filters").style.background = "#6C757D"
+            document.getElementById("apply_grading_filters").style.cursor = "default"
             if (!gradingTextsList) return;
             const selectedStudentId = document.getElementById('id_idstudent')?.value;
             if (!selectedStudentId) {
@@ -420,6 +423,8 @@
                 .then(texts => {
                     console.log('Получено текстов для оценивания:', texts.length);
 
+                    document.getElementById("apply_grading_filters").style.background = "#0d6efd"
+                    document.getElementById("apply_grading_filters").style.cursor = "pointer"
                     if (texts.length === 0) {
                         gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
                         return;
@@ -543,11 +548,13 @@
 
         // Обработчики кнопок фильтров
         document.getElementById('apply_grading_filters')?.addEventListener('click', function () {
-            loadGradingTexts();
-            if (!document.getElementById("alert-warning")){
-                document.getElementById("text-grading-label").style.display = "block";
+            if (!document.querySelector(".visually-hidden")) {
+                loadGradingTexts();
+                if (!document.getElementById("alert-warning")) {
+                    document.getElementById("text-grading-label").style.display = "block";
+                }
+                document.getElementById("errMsgFilters").style.display = "none";
             }
-            document.getElementById("errMsgFilters").style.display = "none";
         });
 
         document.getElementById('reset_grading_filters')?.addEventListener('click', function () {
@@ -603,7 +610,6 @@
         // Функция загрузки текстов для рецензирования
         function loadTexts() {
             textsList.innerHTML = '<div class="loading">Загрузка текстов...</div>';
-
             fetch("{% url 'get_review_texts' %}")
                 .then(response => {
                     if (!response.ok) {

@@ -67,7 +67,7 @@ def load_exercise_data(request):
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def teacher_exercises(request):
-    exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.all())
+    exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.filter(iduserteacher=request.user.iduser).all())
     # exercises_queryset = exercise_filter.qs
     exercises_queryset = exercise_filter.qs.order_by(
         '-completiondate', # последние завершенные первыми

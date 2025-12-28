@@ -44,6 +44,50 @@
                 </button>
             </div>
         </form>
+        <div class="filters_tags">
+            <button class="button filter-btn" id="remove_fio_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_type_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_status_ch_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_data_s_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_data_f_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_status_d_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_mark_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+        </div>
     </div>
     <div style="width: 100%; display: none;" id="filters">
         <form method="get" class="filter-form">
@@ -543,6 +587,97 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
+
+        const filters = document.getElementById("filters")
+        console.log(filters.querySelector("#id_student_name"))
+        if (filters.querySelector("#id_student_name").value!="") {
+            var filter = document.getElementById("remove_fio_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = "ФИО: " + filters.querySelector("#id_student_name").value;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_student_name").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_idexercisetype").value != "") {
+            var filter = document.getElementById("remove_type_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = filters.querySelector("#id_idexercisetype").options[filters.querySelector("#id_idexercisetype").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_idexercisetype").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_check_status").value != "") {
+            var filter = document.getElementById("remove_status_ch_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = filters.querySelector("#id_check_status").options[filters.querySelector("#id_check_status").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_check_status").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        var after_date = filters.querySelector("#id_creationdate_after").value
+        var before_date = filters.querySelector("#id_creationdate_before").value
+        if (after_date != "" || before_date != "") {
+            var filter = document.getElementById("remove_data_s_filter_btn")
+            filter.style.display = "flex";
+            if (after_date != "") {
+                filter.children[0].innerHTML = "Дата создания от: " + after_date
+                if (before_date != "") {
+                    filter.children[0].innerHTML = "Дата создания от: " + after_date + " до: " + before_date
+                }
+            }
+            else {
+                filter.children[0].innerHTML = "Дата создания до: " + before_date
+            }
+            console.log("hhh")
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_creationdate_after").value = null
+                filters.querySelector("#id_creationdate_before").value = null
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        after_date = filters.querySelector("#id_deadline_after").value
+        before_date = filters.querySelector("#id_deadline_before").value
+        if (after_date != "" || before_date != "") {
+            var filter = document.getElementById("remove_data_f_filter_btn")
+            filter.style.display = "flex";
+            if (after_date != "") {
+                filter.children[0].innerHTML = "Дата сдачи от: " + after_date
+                if (before_date != "") {
+                    filter.children[0].innerHTML = "Дата сдачи от: " + after_date + " до: " + before_date
+                }
+            }
+            else {
+                filter.children[0].innerHTML = "Дата сдачи до: " + before_date
+            }
+            console.log("hhh")
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_deadline_after").value = null
+                filters.querySelector("#id_deadline_before").value = null
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_exercisestatus").value != "") {
+            var filter = document.getElementById("remove_status_d_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = filters.querySelector("#id_exercisestatus").options[filters.querySelector("#id_exercisestatus").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_exercisestatus").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_exercisemark").value != "") {
+            var filter = document.getElementById("remove_mark_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = "Оценка: "+ filters.querySelector("#id_exercisemark").options[filters.querySelector("#id_exercisemark").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_exercisemark").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+
         const input = document.getElementById("id_student_name");
         input.value = "";
 

@@ -150,7 +150,7 @@
     justify-content: center;
 }
 
-.new_exercise_btn {
+.new_exercise_btn, .filter-btn {
     height: 45px;
     padding: 5px;
     margin-left: 0px;
@@ -167,6 +167,21 @@
         display: flex;
         align-items: center;
         color: white;
+    }
+
+
+.filter-btn {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px 5px;
+    color: black;
+    display: flex;
+    align-items: center;
+    color: black;
+}
+
+    .filter-btn:hover {
+        background: #ccc;
     }
 
 .search-bar {
@@ -379,7 +394,12 @@
 
 .top_panel {
     display: flex;
-    width: 80%;
+    flex-wrap: wrap;
+}
+
+.filters_tags {
+    display: flex;
+    flex-wrap: wrap;
 }
 
 #selected-info-grading-body, #selected-grading-text-info {
@@ -476,8 +496,8 @@
 
 .wrapChosen {
     display: flex;
-    width:550px;
-    max-width:90%;
+    width: 550px;
+    max-width: 90%;
 }
 
     .wrapChosen #chosen_group, .wrapChosen #add_form_fields {
@@ -647,15 +667,15 @@
     background: var(--grey-color);
 }
 
-#arrows{
-    width:40px;
+#arrows {
+    width: 40px;
 }
 
-#arrows button {
-    display: block;
-    background:none;
-    border:none;
-}
+    #arrows button {
+        display: block;
+        background: none;
+        border: none;
+    }
 
 @media (max-width: 1010px) {
     .return_btn svg {
@@ -682,17 +702,19 @@
 }
 
 @media (max-width:750px) {
+
     .wrapChosen {
         display: block;
-        width:100%;
-    }
-
-    .wrapChosen div {
-        max-width:unset;
         width: 100%;
     }
+
+        .wrapChosen div {
+            max-width: unset;
+            width: 100%;
+        }
+
     .add_exercise_form {
-        max-width:unset;
+        max-width: unset;
         width: 100%;
     }
 
@@ -722,7 +744,7 @@
     }
 }
 
-@media (max-width:610px) {
+@media (max-width:720px) {
     .top_panel {
         display: block;
     }
@@ -739,78 +761,81 @@
         .search-bar input {
             width: calc(100% - 104px);
         }
+}
 
-    .filter-grid .date_wrapper {
-        display: block;
-        align-items: center;
-        max-width: unset;
-    }
+    @media (max-width:610px) {
 
-        .filter-grid .date_wrapper label {
+        .filter-grid .date_wrapper {
             display: block;
+            align-items: center;
             max-width: unset;
         }
 
-        .filter-grid .date_wrapper input {
-            width: 100%;
-            max-width: unset;
-        }
-}
+            .filter-grid .date_wrapper label {
+                display: block;
+                max-width: unset;
+            }
 
-@media (max-width:550px) {
-    .deadline {
-        display: none;
+            .filter-grid .date_wrapper input {
+                width: 100%;
+                max-width: unset;
+            }
     }
 
-    .header-card div, .exercise-card span, .exercise-card button {
-        width: 16%;
-    }
-}
-
-@media (max-width:500px) {
-    .edit_delete_card svg {
-        display: block;
-        margin: 0 auto;
-    }
-
-    .edit_delete_card :first-child {
-        margin-bottom: 5px;
-    }
-
-    .completion_date {
-        display: none;
-    }
-
-    .header-card div, .exercise-card span, .exercise-card button {
-        width: 20%;
-    }
-}
-
-@media (max-width:400px) {
-    .add_exercise_form .form-group, .grouping-wrapper {
-        display: block;
-    }
-
-        .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
-            width: 100%;
+    @media (max-width:550px) {
+        .deadline {
+            display: none;
         }
 
-        .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label {
-            width: 100%;
+        .header-card div, .exercise-card span, .exercise-card button {
+            width: 16%;
+        }
+    }
+
+    @media (max-width:500px) {
+        .edit_delete_card svg {
             display: block;
+            margin: 0 auto;
+        }
+
+        .edit_delete_card :first-child {
             margin-bottom: 5px;
         }
 
-    .type {
-        display: none;
+        .completion_date {
+            display: none;
+        }
+
+        .header-card div, .exercise-card span, .exercise-card button {
+            width: 20%;
+        }
     }
 
-    .header-card div, .exercise-card span, .exercise-card button {
-        width: 25%;
-    }
+    @media (max-width:400px) {
+        .add_exercise_form .form-group, .grouping-wrapper {
+            display: block;
+        }
 
-    #id_exercisetext {
-        min-width: 90% !important;
-        max-width: 100%;
+            .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
+                width: 100%;
+            }
+
+            .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label {
+                width: 100%;
+                display: block;
+                margin-bottom: 5px;
+            }
+
+        .type {
+            display: none;
+        }
+
+        .header-card div, .exercise-card span, .exercise-card button {
+            width: 25%;
+        }
+
+        #id_exercisetext {
+            min-width: 90% !important;
+            max-width: 100%;
+        }
     }
-}

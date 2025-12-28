@@ -6,7 +6,7 @@ from django.db.models import Q
 class ExerciseFilter(django_filters.FilterSet):
     exercisestatus = django_filters.BooleanFilter(
         field_name='exercisestatus',
-        label='Статус',
+        label='Статус сдачи',
         widget=forms.Select(choices=[('', 'Все'), (True, 'Сдано'), (False, 'Не сдано')])
     )
 
