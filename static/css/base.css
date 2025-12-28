@@ -28,6 +28,11 @@
     --red-secondary-color: #e5979f;
     --green-color: #00c94d;
     --red-bright-color: #e20017;
+    --e-green: #CCFFCC;
+    --e-red: #FFCCCC;
+	--e-grey: #DAE0E4;
+    --e-grey2: #D9D9D9;
+    --e-purple: #EACFFF;
 }
 
 body {
@@ -40,6 +45,10 @@ body {
 
 html, body {
     height: 100%;
+}
+
+.bold {
+    font-weight: 600;
 }
 
 .highlighted-header {
@@ -59,6 +68,11 @@ html, body {
 .p-red {
     color: var(--red-bright-color);
     margin-left: 5px;
+}
+
+.svg-title {
+    display: flex;
+    align-items: center;
 }
 
 .horizontal-level {

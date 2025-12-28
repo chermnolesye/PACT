@@ -1,4 +1,3 @@
-
 .text-header, .menu-container {
     width: 100%;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -31,6 +30,11 @@ form {
 .text-title {
     color: var(--primary-color);
     font-size: 28px;
+    margin: 10px 0px;
+}
+.text-subtitle {
+    color: var(--primary-color);
+    font-size: 24px;
     margin: 10px 0px;
 }
 
@@ -190,6 +194,12 @@ form {
     color: var(--primary-color);
     cursor: default;
 }
+
+#gray_border {
+    border: 1px solid var(--grey-color);
+    color:black;
+}
+
 .menu-block {
     cursor: pointer;
 }
@@ -235,7 +245,7 @@ form {
     background-color: var(--secondary-color);
   }
 
-.menu-container > .menu-block:first-child {
+.menu-container > .menu-block:first-child, .menu-container > .menu-block-watch:first-child {
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
 }
@@ -676,26 +686,18 @@ label[for="id_iderrortag"] {
     margin-left: 10px;
 }
 
-.green_background {
-    background: #DEFFD6
-}
-
-.red_background {
-    background: #FFD6D6
-}
-
 .mistakes {
     color: black;
 }
 
 @media (max-width: 660px) {
     .text-header-grad{
-        margin-top: 168px;
+        margin-top: 258px !important;
     }
     .text-header {
         margin-top: 273px;
     }
-    .main-template-container .menu-container > .menu-block:first-child {
+    .main-template-container .menu-container > .menu-block:first-child, .menu-container > .menu-block-watch:first-child {
         border-top-left-radius: unset;
         border-bottom-left-radius: unset;
     }

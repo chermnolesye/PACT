@@ -9,6 +9,8 @@ from django.db.models import F
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django_filters.views import FilterView
+from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
 from core_app.models import (
     ExerciseTextType,
@@ -27,9 +29,11 @@ from core_app.models import (
     Error,
     ErrorToken,
     Sentence,
-    ExerciseTextTask
+    ExerciseTextTask,
+    AcademicYear,
+    Group,
+    TextType
 )
-
 from .forms import (
     AddExerciseForm,
     AddExerciseTextForm,
@@ -38,7 +42,8 @@ from .forms import (
     AddErrorAnnotationForm,
     ExerciseTextTaskForm,
     Group,
-    AddMarkForm
+    AddMarkForm,
+    TeacherCommentForm
 )
 
 '''
@@ -60,27 +65,40 @@ def load_exercise_data(request):
         return JsonResponse(data)    
     return JsonResponse({})
 
-
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def teacher_exercises(request):
-    #exercise_to_edit = get_object_or_404(Exercise, idexercise=2)
-    edit_form = EditExerciseForm(initial={
-         'creationdate': datetime.date.today(),
-         'deadline': datetime.date.today(),
-    })
-
+    exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.filter(iduserteacher=request.user.iduser).all())
+    # exercises_queryset = exercise_filter.qs
+    exercises_queryset = exercise_filter.qs.order_by(
+        '-completiondate', # последние завершенные первыми
+        '-exercisemark', # сначала без оценки
+        '-exercisestatus',  # сдано -> не сдано
+        'creationdate',  # сначала созданные раньше
+        '-deadline',      # ближайшие дедлайны первыми
+    )
     exercises_list = []
-    exercises = Exercise.objects.all()
-    for exercise in exercises:
+    for exercise in exercises_queryset:
         in_time = False
         if exercise.exercisestatus and exercise.completiondate:
             in_time = exercise.completiondate <= exercise.deadline
         else:
             in_time = datetime.date.today() <= exercise.deadline
-        exercises_dict = {'exercise_data' : exercise,
-                          'in_time':in_time}
+        removable = datetime.date.today() < exercise.creationdate
+        exercises_dict = {
+            'exercise_data': exercise,
+            'in_time': in_time,
+            'removable': removable
+        }
         exercises_list.append(exercises_dict)
-    context = {'exercises' : exercises_list,'edit_form': edit_form}
-
+    edit_form = EditExerciseForm(initial={
+         'creationdate': datetime.date.today(),
+         'deadline': datetime.date.today(),
+    })
+    context = {
+        'exercises' : exercises_list,
+        'filter': exercise_filter,
+        'edit_form': edit_form
+        }
     if request.method == "POST":
         if 'edit_text' in request.POST:
             edit_form = EditExerciseForm(request.POST)
@@ -91,8 +109,7 @@ def teacher_exercises(request):
                 exercise_to_edit.save()
                 return redirect('teacher_exercises')
             else:
-                edit_form = EditExerciseForm(request.POST)
-
+                edit_form = EditExerciseForm(request.POST)       
     return render(request, 'teacher_exercises.html', context)
 
 @require_POST
@@ -103,8 +120,8 @@ def delete_exercise_ajax(request, exercise_id):
         exercise.delete()
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
-    
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')    
 def add_exercise(request):
     if request.method == 'POST':
         form = AddExerciseForm(request.POST)
@@ -124,25 +141,21 @@ def add_exercise(request):
                         deadline=form.cleaned_data['deadline'],
                         exercisestatus=False
                     )
-                    exercise.save()
-                    
+                    exercise.save()                    
                     # В зависимости от типа exerciseabbr заполняется одна из таблиц
                     exercise_type = exercise.idexercisetype.exerciseabbr
-                    
                     if exercise_type == 'grading':
                         ExerciseGrading.objects.create(
                             idexercise=exercise,
                             idtext=form.cleaned_data['grading_text']
-                        )
-                    
+                        )                    
                     elif exercise_type == 'review':
                         ExerciseReview.objects.create(
                             idexercise=exercise,
-                            idexercisetext=form.cleaned_data['review_exercisetext']
-                        )
-                
-                return redirect('teacher_exercises')
-                
+                            idexercisetext=form.cleaned_data['review_exercisetext_obj'],
+                            idexercisetexttask=form.cleaned_data['review_task_obj']
+                        )            
+                return redirect('teacher_exercises')               
             except Exception as e:
                 print(f'Ошибка: {str(e)}')
         else:
@@ -154,12 +167,79 @@ def add_exercise(request):
     else:
         form = AddExerciseForm()
 
+    review_texts = ExerciseText.objects.all()
+    grading_texts = Text.objects.all().order_by('idtext')[:10]
     context = {
-        "form": form
+        "form": form,
+        "review_texts": review_texts,
+        "grading_texts": grading_texts,
+        "academic_years": AcademicYear.objects.all(),  # Для фильтра "Учебный год"
+        "text_types": TextType.objects.all(),
     }
-
     return render(request, "add_exercise.html", context)
 
+def get_grading_texts(request):
+    try:
+        queryset = Text.objects.filter(textgrade__isnull=False)
+        exclude_student_id = request.GET.get('exclude_student')
+        if exclude_student_id:
+            try:
+                # ВОЗМОЖНО, на курсы ниже тоже нужно исключать тексты
+                queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
+            except (ValueError, TypeError):
+                pass
+        filtered_texts = GradingTextFilter(request.GET, queryset=queryset)
+        texts = filtered_texts.qs.order_by('-createdate')
+        texts_data = [
+            {
+                'id': text.idtext,
+                'header': text.header,
+                'student': text.idstudent.get_full_name(),
+                'group': str(text.idstudent.idgroup),
+                'academic_year': str(text.idstudent.idgroup.idayear),
+                'text_type': str(text.idtexttype) if text.idtexttype else '',
+                'created_date': text.createdate.strftime('%d.%m.%Y') if text.createdate else '',
+                'grade': text.get_textgrade_display(),
+            }
+            for text in texts
+        ]
+        return JsonResponse(texts_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+def get_review_texts(request):
+    try:
+        texts = ExerciseText.objects.all().order_by('-loaddate')
+        
+        texts_data = [
+            {
+                'id': text.idexercisetext,
+                'name': text.exercisetextname,
+                'author': text.author,
+                'load_date': text.loaddate.strftime('%d.%m.%Y'),
+            }
+            for text in texts
+        ]
+        
+        return JsonResponse(texts_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+def get_text_tasks(request, text_id):
+    try:
+        tasks = ExerciseTextTask.objects.filter(idexercisetext=text_id)
+        print(len(tasks))
+        tasks_data = [
+            {
+                'id': task.idexercisetexttask,
+                'title': task.tasktitle,
+                'text': task.tasktext
+            }
+            for task in tasks
+        ]
+        return JsonResponse(tasks_data, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def load_students(request):
     group_id = request.GET.get('group_id')
@@ -190,7 +270,7 @@ def load_groups(request):
 '''
     БЕК КАТИ
 '''
-
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def add_review_text(request):
     if request.method == 'POST':
         form = AddExerciseTextForm(request.POST)
@@ -206,9 +286,8 @@ def add_review_text(request):
                     exercisetext=form.cleaned_data['exercisetext'].strip()
                 )
                 exercise_text.save()
-                
-                print('Текст добавлен')
-                return redirect('add_review_text')
+                # return redirect('add_review_text')
+                return redirect('review_text', idexercisetext=exercise_text.idexercisetext)
                 
             except Exception as e:
                 print("Form errors:", {str(e)}) 
@@ -217,6 +296,7 @@ def add_review_text(request):
     
     return render(request, 'add_review_text.html', {'form': form})
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_teacher(request, idexercise=1):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
@@ -227,6 +307,7 @@ def review_teacher(request, idexercise=1):
     reviews = ExerciseFragmentReview.objects.filter(
         idexercisereview=exercisereview
     ).order_by('startposition')
+    total_reviews = reviews.count()
 
     processed_text = wrap_fragments_with_spans(text.exercisetext, reviews)
 
@@ -243,14 +324,33 @@ def review_teacher(request, idexercise=1):
     else:
         mark_form = AddMarkForm(instance=exercise)
 
+    fragment_forms = {}
+    for review in reviews:
+        fragment_forms[review.idexercisetextreview] = TeacherCommentForm(
+            instance=review,
+            prefix=f'comment_{review.idexercisetextreview}'
+        )
+    
     context = {
         'exercise': exercise,
         'exercisereview': exercisereview,
         'text_metadata': text,
         'text': processed_text,
         'reviews': reviews,
+        'total_reviews': total_reviews,
         'in_time': in_time,
-        'mark_form': mark_form
+        'mark_form': mark_form,
+        'teacher_comment_form': TeacherCommentForm(),  # Пустая форма для AJAX
+        'fragment_forms': fragment_forms,
+        'fragments_json': json.dumps([  # Добавляем JSON с данными фрагментов
+            {
+                'id': r.idexercisetextreview,
+                'review': r.review,
+                'teachercomment': r.teachercomment or '',
+                'has_comment': bool(r.teachercomment)
+            }
+            for r in reviews
+        ])
     }
     return render(request, "review_teacher.html", context)
 
@@ -270,7 +370,7 @@ def wrap_fragments_with_spans(text, reviews):
             f'<span class="selection" '
             f'data-fragment-id="{fragment.idexercisetextreview}" '
             f'data-review="{fragment.review}" '
-            f'data-teacher-comment="{fragment.teachercomment}">'
+            f'data-teacher-comment="{fragment.teachercomment or ""}">'
         )
         print(f"offset before: {offset}")
         result = result[:start] + span_tag + result[start:end] + '</span>' + result[end:]
@@ -279,13 +379,53 @@ def wrap_fragments_with_spans(text, reviews):
         print(f"offset after: {offset}, len span = {len(span_tag)}")
     return result
 
+def update_teacher_comment(request, fragment_id):
+    if request.method == 'POST':
+        fragment = get_object_or_404(ExerciseFragmentReview, pk=fragment_id)
+        # Проверяем AJAX запрос
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            form = TeacherCommentForm(request.POST, instance=fragment)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({
+                    'success': True,
+                    'comment': fragment.teachercomment or '',
+                    'has_comment': bool(fragment.teachercomment),
+                    'message': 'Комментарий сохранен'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors
+                })
+        else:
+            form = TeacherCommentForm(request.POST, instance=fragment)
+            if form.is_valid():
+                form.save()
+                return redirect(request.META.get('HTTP_REFERER', '/'))
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def delete_teacher_comment(request, fragment_id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        fragment = get_object_or_404(ExerciseFragmentReview, pk=fragment_id)
+        fragment.teachercomment = ''
+        fragment.save()
+        return JsonResponse({
+            'success': True,
+            'message': 'Комментарий удален',
+            'has_comment': False
+        })
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_text_list(request):
-
-    texts = ExerciseText.objects.all()
-
-    context = {'texts' : texts}
+    reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())
+    texts = reviewtext_filter.qs.order_by('-loaddate')
+    # texts = ExerciseText.objects.all()
+    context = {'texts' : texts, 'filter': reviewtext_filter}
     return render(request, 'review_text_list.html', context)
 
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_text(request, idexercisetext=2):
     text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
     tasks = ExerciseTextTask.objects.filter(idexercisetext=idexercisetext)
@@ -373,11 +513,19 @@ def get_count_end(count):
 '''
     БЕК ДАШИ
 '''
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+def grade_text(request, idexercise=2):
+    exercise = get_object_or_404(Exercise, idexercise=idexercise)
+    
+    in_time = False
+    if exercise.exercisestatus and exercise.completiondate:
+        in_time = exercise.completiondate <= exercise.deadline
 
-def grade_text(request, text_id=2379):
-    text_id = request.GET.get("text_id")
+    exercise_grading = get_object_or_404(ExerciseGrading, idexercise=idexercise)
+    
+    text_id = exercise_grading.idtext
     if text_id:
-        text = get_object_or_404(Text, idtext=text_id)
+        text = get_object_or_404(Text, idtext=text_id.idtext)
     else:
         text = Text.objects.first()
 
@@ -415,7 +563,30 @@ def grade_text(request, text_id=2379):
                         "error_reason": error.idreason.reasonname if error.idreason else "Не указано",
                         "idtagparent": error.iderrortag.idtagparent,
                     })
+            
+            exercise_error_tokens = token.exerciseerrortoken_set.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+            
+            exercise_errors_list = []
 
+            for eet in exercise_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    exercise_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+            
             tokens_data.append({
                 "token_id": token.idtoken,
                 "token": token.tokentext,
@@ -425,6 +596,7 @@ def grade_text(request, text_id=2379):
                 "pos_tag_color": pos_tag_color,
                 "token_order_number": token.tokenordernumber,
                 "errors": errors_list,
+                "exercise_errors": exercise_errors_list,
             })
 
         sentence_data.append({
@@ -440,14 +612,13 @@ def grade_text(request, text_id=2379):
         annotation_form = AddErrorAnnotationForm()
 
     # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
-    # if request.method == "POST" and "mark-form" in request.POST:
-    #     mark_form = AddMarkForm(request.POST, instance=exercise)
-    #     if mark_form.is_valid():
-    #         mark_form.save()
-    #         return redirect(request.path + f"?idexercise={exercise.idexercise}")
-    # else:
-    #     mark_form = AddMarkForm(instance=exercise)
-
+    if request.method == "POST" and "mark-form" in request.POST:
+         mark_form = AddMarkForm(request.POST, instance=exercise)
+         if mark_form.is_valid():
+             mark_form.save()
+             return redirect(request.path + f"?idexercise={exercise.idexercise}")
+    else:
+         mark_form = AddMarkForm(instance=exercise)
 
     student = text.idstudent
     user = student.iduser
@@ -455,27 +626,16 @@ def grade_text(request, text_id=2379):
     text_type = text.idtexttype
 
     context = {
-        # ДАША РАСКОММЕНТИРУЙ КОГДА ДОБАВИШЬ УПРАЖНЕНИЕ
-        # "mark_form": mark_form,
+        "mark_form": mark_form,
         "text": text,
         "annotation_form": annotation_form,
         "sentence_data": sentence_data,
+        "exercise": exercise,
+        "exercise_grading":exercise_grading,
+        "in_time":in_time,
         "selected_markup": selected_markup,
-        "author": f"{user.lastname} {user.firstname}",
-        "group": group.groupname,
-        "create_date": text.createdate,
-        "text_type": text_type.texttypename if text_type else "Не указано",
-        "self_rating": text.get_selfrating_display() if text.selfrating else "Нет данных",
-        "self_assesment": text.get_selfassesment_display() if text.selfassesment else "Нет данных",
-        "fio": get_teacher_fio(request),
-        "textgrade": text.get_textgrade_display() if text.textgrade else "Нет данных",
-        "completeness": text.get_completeness_display() if text.completeness else "Нет данных",
-        "structure": text.get_structure_display() if text.structure else "Нет данных",
-        "coherence": text.get_coherence_display() if text.coherence else "Нет данных",
         "poscheckflag": text.poscheckflag,
         "errorcheckflag": text.errorcheckflag,
-        "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано", 
-        "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
     }
     return render(request, "grade_text.html", context)
 

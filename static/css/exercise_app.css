@@ -5,27 +5,53 @@
     --e-grey2: #D9D9D9;
 }
 
-.add_exercise_form{
-    width:90%;
-    max-width:500px;
-}
-.add_exercise_form .form-group,#grading-fields,#review-fields{
-    width:100%;
-    align-items: center;
-    gap: 10px;
-    display:flex;
-    margin-bottom:10px;
-}
-.add_exercise_form .form-group label,.add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label{
-    width:130px;
-    text-align:start;
-    display:flex;
-    color: var(--grey-color);
+.add_exercise_form {
+    width: 100%;
+    max-width: 550px;
 }
 
+    .add_exercise_form .form-group, #grading-fields, #review-fields {
+        width: 100%;
+        align-items: center;
+        gap: 10px;
+        display: flex;
+        margin-bottom: 10px;
+    }
 
-.add_exercise_form .form-group input,.add_exercise_form .form-group select, #review-fields select, #grading-fields select{
-    width:calc(100% - 140px);
+        .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #grading-fields label {
+            width: 130px;
+            text-align: start;
+            display: flex;
+            color: var(--grey-color);
+        }
+
+        .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select,
+        .grading-field input {
+            width: calc(100% - 140px);
+        }
+
+        #review-fields label, #label {
+            text-align: start;
+            display: flex;
+            color: var(--grey-color);
+            margin-bottom: 10px;
+        }
+
+
+        #grading-fields label {
+            margin-bottom: 10px;
+        }
+
+.grading-field {
+    display: flex;
+}
+
+.form-control {
+    margin: 0 0 10px 5px;
+}
+
+#reset_grading_filters {
+    cursor: pointer;
 }
 
 .grouping-wrapper {
@@ -50,10 +76,28 @@
     border-radius: var(--border-radius);
     box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
 }
-.exercises :last-child {
-    border-bottom-right-radius: var(--border-radius);
-    border-bottom-left-radius: var(--border-radius);
+
+    .exercises :last-child {
+        border-bottom-right-radius: var(--border-radius);
+        border-bottom-left-radius: var(--border-radius);
+    }
+
+.exercises-texts {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--border-radius);
+    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
 }
+
+    .exercises-texts :last-child {
+        border-bottom-right-radius: var(--border-radius);
+        border-bottom-left-radius: var(--border-radius);
+    }
+
+    .exercises-texts .header-card {
+        text-align: start;
+    }
 
 .header-card {
     display: flex;
@@ -73,19 +117,19 @@
     background-color: white;
 }
 
-.header-card div, .exercise-card span, .exercise-card button {
-    width: 12%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+    .header-card div, .exercise-card span, .exercise-card button {
+        width: 12%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
-.exercise-card button {
-    background:none;
-    border:none;
-}
+    .exercise-card button {
+        background: none;
+        border: none;
+    }
 
-.edit_delete_card{
-    display:none;
+.edit_delete_card {
+    display: none;
 }
 
 .modal-content {
@@ -93,7 +137,7 @@
 }
 
 .modal-inner {
-    margin:10px 5% 0;
+    margin: 10px 5% 0;
 }
 
 .modal-content p {
@@ -101,20 +145,96 @@
 }
 
 .modal-actions {
-    margin-top:20px;
-    display:flex;
-    justify-content: center;
-}
-
-.new_exercise_btn {
+    margin-top: 20px;
     display: flex;
     justify-content: center;
-    align-items: center;
-    position: absolute;
-    left: 0px;
 }
 
-.new_exercise_btn svg {
+.new_exercise_btn, .filter-btn {
+    height: 45px;
+    padding: 5px;
+    margin-left: 0px;
+}
+
+.new_text_btn {
+    height: 45px;
+    padding: 5px;
+    width: 150px;
+    margin-left: 0px;
+}
+
+    .new_exercise_btn a, .new_text_btn a {
+        display: flex;
+        align-items: center;
+        color: white;
+    }
+
+
+.filter-btn {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px 5px;
+    color: black;
+    display: flex;
+    align-items: center;
+    color: black;
+}
+
+    .filter-btn:hover {
+        background: #ccc;
+    }
+
+.search-bar {
+    width: 300px;
+    margin: 5px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 45px;
+}
+
+    .search-bar input {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        font-size: 16px;
+        outline: none;
+    }
+
+    .search-bar button {
+        padding: 10px 15px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 45px;
+    }
+
+    .search-bar #toggle {
+        background-color: transparent;
+        border-left: 1px solid #ccc;
+    }
+
+    .search-bar button:last-child {
+        background-color: #007bff;
+        color: white;
+        border-left: 1px solid #ccc;
+    }
+
+.filter-form-singlefield {
+    margin: 5px;
+}
+
+    .filter-form-singlefield select {
+        height: 45px;
+        margin: 0 !important;
+    }
+
+.new_exercise_btn svg, .new_text_btn svg {
     margin-right: 5px;
 }
 
@@ -127,23 +247,30 @@
 .header-card .full_name, .header-card .group, .header-card .type {
     text-align: left;
     flex: 2;
+    vertical-align: middle;
 }
 
-.exercise-card .out_date, .exercise-card .deadline, 
+.exercise-card .out_date, .exercise-card .deadline,
 .exercise-card .completion_date, .exercise-card .mark,
-.header-card .out_date, .header-card .deadline, 
-.header-card .completion_date, .header-card .mark  {
+.header-card .out_date, .header-card .deadline,
+.header-card .completion_date, .header-card .mark {
     text-align: left;
     flex: 1;
-    width: 100%
+    width: 100%;
+    vertical-align: middle;
 }
 
 .exercise-card .text_name, .exercise-card .author, .exercise-card .out_date, .exercise-card .text_type {
     width: 100% !important;
     text-align: left;
 }
+
 .text_name, .author, .out_date, .text_type {
     width: 100% !important;
+}
+
+.exercises-texts .exercise-card:hover {
+    background-color: var(--e-grey);
 }
 
 .delete_card, .edit_card {
@@ -198,7 +325,6 @@
     max-width: 700px;
     position: relative;
     border-radius: var(--border-radius);
-
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -223,10 +349,10 @@
     margin-bottom: 10px;
 }
 
-.clickable-icon:hover {
-    transform: scale(1.1);
-    margin-bottom: 10px;
-}
+    .clickable-icon:hover {
+        transform: scale(1.1);
+        margin-bottom: 10px;
+    }
 
 .modal-head {
     width: 100%;
@@ -247,7 +373,7 @@
     display: flex;
     flex-direction: row;
     margin: 5px 0px;
-    justify-content: center; 
+    justify-content: center;
     gap: 30px;
 }
 
@@ -262,73 +388,454 @@
     flex-direction: column;
 }
 
-.form-fields > * {
-    padding: 5px 0px;
+    .form-fields > * {
+        padding: 5px 0px;
+    }
+
+.top_panel {
+    display: flex;
+    flex-wrap: wrap;
 }
 
-@media (max-width:680px) {
+.filters_tags {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#selected-info-grading-body, #selected-grading-text-info {
+    padding: 5px 10px 15px 10px;
+}
+
+    #selected-grading-text-info p {
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
+
+.texts-list, #selection-info, #selected-info-grading, #selected-grading-text {
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    width: 100%;
+}
+
+    .texts-list .text-meta {
+        text-align: start;
+        margin: 5px 5px 5px 10px;
+    }
+
+#selection-info, .selected-info-g, .selected-info-r {
+    margin-top: 10px;
+}
+
+#selected-text-info {
+    padding: 5px 5px 0;
+    text-align: start;
+}
+
+#selected-task-info {
+    padding: 0 5px 5px;
+    text-align: start;
+}
+
+#tasks-section {
+    margin: 10px 5px 5px 10px;
+}
+
+    #tasks-section label {
+        margin-bottom: 0;
+        color: black;
+    }
+
+.task-item {
+    width: 100%;
+    display: flex;
+    padding: 3px;
+}
+
+.review_task_header {
+    font-weight: 800;
+    max-width: 40%;
+    display: flex;
+}
+
+.grading_text_header {
+    font-weight: 800;
+    max-width: 40%;
+}
+
+.task-text {
+    display: flex;
+}
+
+.selected, .selected_gray {
+    background: var(--secondary-grey-color) !important;
+    color: white;
+}
+
+.review_text_header {
+    background: var(--e-grey);
+    padding: 10px 5px;
+}
+
+:nth-child(1 of .text-item) .review_text_header {
+    border-radius: 7px 7px 0 0;
+}
+
+.header-text {
+    background: var(--e-grey);
+    padding: 10px 5px;
+}
+
+.grading-text-item {
+    margin-bottom: 10px;
+}
+
+.chosen_text_header {
+    padding: 10px 5px;
+    border-radius: 7px 7px 0 0;
+}
+
+.wrapChosen {
+    display: flex;
+    width: 550px;
+    max-width: 90%;
+}
+
+    .wrapChosen #chosen_group, .wrapChosen #add_form_fields {
+        flex: 1 0 0;
+    }
+
+    .wrapChosen #selection-info {
+        min-width: unset;
+    }
+
+    .wrapChosen #submit_button {
+        margin: 10px auto;
+    }
+
+
+#exercise_card {
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    padding: var(--primary-padding);
+    position: relative;
+}
+
+.chosen_params {
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    padding: var(--primary-padding);
+    position: relative;
+    height: max-content;
+}
+
+    .chosen_params :first-child {
+        margin-bottom: 10px;
+    }
+
+    .chosen_params li, #selected-grading-text-info li, .grading-text-item-info {
+        text-align: start;
+        margin-left: 20px;
+    }
+
+    .chosen_params button, #grading-fields .card-body #toggle {
+        height: 30px;
+        width: 30px;
+        background: none;
+        border: none;
+        position: absolute;
+        right: 5px;
+        bottom: 5px;
+    }
+
+.grading-text-item-info {
+    margin-top: 5px;
+}
+
+#errMsg {
+    display: none;
+    margin-bottom: 10px;
+}
+
+#errMsgFilters {
+    margin: 10px 10px;
+    display: none;
+}
+
+.grouping-options div label ::before {
+    border: 2px solid red;
+}
+
+.filter-form {
+    align-content: start;
+    border: 1px solid rgba(0, 0, 0, .15);
+    border-radius: var(--border-radius);
+    padding: var(--primary-padding);
+    max-width: 90%;
+    width: 550px;
+}
+
+.filter-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+    .filter-grid label {
+        margin-bottom: 10px;
+    }
+
+    .filter-grid select, .filter-grid input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .filter-grid .date_wrapper {
+        width: 100%;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 1rem;
+        margin-bottom: 15px;
+    }
+
+.date_wrapper label {
+    font-weight: normal;
+    margin-top: 5px;
+    width: 100%;
+    text-align: left;
+}
+
+#filters {
+    width: 80%;
+    display: none;
+}
+
+.date_wrapper input {
+    max-width: 105px;
+}
+
+#id_exercisemarkcomment {
+    padding: 5px;
+}
+
+#mark-form-grading {
+    display: flex;
+    flex-direction: column;
+    padding: var(--primary-padding);
+    width: 100%;
+}
+
+    #statistics, #mark-form-grading .form-fields {
+        width: 90%;
+    }
+
+        #statistics label {
+            color: var(--grey-color);
+        }
+
+        #statistics p {
+            margin-left: 10px;
+        }
+
+.return_btn {
+    padding: 5px;
+}
+
+    .return_btn a, .return_btn svg {
+        display: inline;
+        color: black;
+    }
+
+.type {
+    display: flex;
+    align-items: center;
+}
+
+.sort-btn {
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 5px;
+    border-radius: var(--border-radius);
+}
+
+#open_filter_btn {
+    background: var(--grey-color);
+}
+
+#arrows {
+    width: 40px;
+}
+
+    #arrows button {
+        display: block;
+        background: none;
+        border: none;
+    }
+
+@media (max-width: 1010px) {
+    .return_btn svg {
+        display: none;
+    }
+}
+
+@media (max-width:1000px) {
+    .exercises-texts, .top_panel, #filters {
+        width: 90%;
+    }
+}
+
+@media (max-width:970px) {
+    .text-header-grad {
+        margin-top: 10%;
+    }
+}
+
+@media (max-width:800px) {
+    .text-header-grad {
+        margin-top: 12%;
+    }
+}
+
+@media (max-width:750px) {
+
+    .wrapChosen {
+        display: block;
+        width: 100%;
+    }
+
+        .wrapChosen div {
+            max-width: unset;
+            width: 100%;
+        }
+
+    .add_exercise_form {
+        max-width: unset;
+        width: 100%;
+    }
+
+    .text-header-grad {
+        margin-top: 15%;
+    }
+
+    .exercises-texts, .top_panel, #filters {
+        width: 100%;
+    }
+
     .edit_delete_card {
         display: block;
     }
+
     .edit_card, .delete_card, .out_date {
         display: none;
     }
+
     .header-card div, .exercise-card span, .exercise-card button {
         width: 14%;
     }
+
     .modal-content {
         max-width: 90%;
         min-width: unset;
     }
 }
-@media (max-width:550px) {
-    .deadline {
-        display: none;
-    }
 
-    .header-card div, .exercise-card span, .exercise-card button {
-        width: 16%;
-    }
-}
-
-@media (max-width:500px) {
-    .edit_delete_card svg {
-        display: block;
-        margin: 0 auto;
-    }
-    .edit_delete_card :first-child {
-        margin-bottom: 5px;
-    }
-    .completion_date {
-        display: none;
-    }
-    .header-card div, .exercise-card span, .exercise-card button {
-        width: 20%;
-    }
-}
-
-@media (max-width:400px) {
-    .add_exercise_form .form-group, .grouping-wrapper {
+@media (max-width:720px) {
+    .top_panel {
         display: block;
     }
 
-    .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
+    .search-bar, .filter-form-singlefield {
+        margin: 0 0 5px;
+    }
+
+    .search-bar, #filters, .filter-form {
         width: 100%;
+        max-width: unset;
     }
 
-    .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label {
-        width: 100%;
-        display: block;
-        margin-bottom: 5px;
-    }
-    .type{
-        display:none;
-    }
-    .header-card div, .exercise-card span, .exercise-card button {
-        width: 25%;
-    }
-    #id_exercisetext {
-        min-width: 90% !important;
-        max-width: 100%;
-    }
+        .search-bar input {
+            width: calc(100% - 104px);
+        }
 }
+
+    @media (max-width:610px) {
+
+        .filter-grid .date_wrapper {
+            display: block;
+            align-items: center;
+            max-width: unset;
+        }
+
+            .filter-grid .date_wrapper label {
+                display: block;
+                max-width: unset;
+            }
+
+            .filter-grid .date_wrapper input {
+                width: 100%;
+                max-width: unset;
+            }
+    }
+
+    @media (max-width:550px) {
+        .deadline {
+            display: none;
+        }
+
+        .header-card div, .exercise-card span, .exercise-card button {
+            width: 16%;
+        }
+    }
+
+    @media (max-width:500px) {
+        .edit_delete_card svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .edit_delete_card :first-child {
+            margin-bottom: 5px;
+        }
+
+        .completion_date {
+            display: none;
+        }
+
+        .header-card div, .exercise-card span, .exercise-card button {
+            width: 20%;
+        }
+    }
+
+    @media (max-width:400px) {
+        .add_exercise_form .form-group, .grouping-wrapper {
+            display: block;
+        }
+
+            .add_exercise_form .form-group input, .add_exercise_form .form-group select, #review-fields select, #grading-fields select {
+                width: 100%;
+            }
+
+            .add_exercise_form .form-group label, .add_exercise_form .grouping-wrapper > label, #review-fields label, #grading-fields label {
+                width: 100%;
+                display: block;
+                margin-bottom: 5px;
+            }
+
+        .type {
+            display: none;
+        }
+
+        .header-card div, .exercise-card span, .exercise-card button {
+            width: 25%;
+        }
+
+        #id_exercisetext {
+            min-width: 90% !important;
+            max-width: 100%;
+        }
+    }
