@@ -14,26 +14,46 @@
 <div class="main-container">
 
     <div class="review-menu">
+        <button type="button" class="review-menu-button"
+            onclick="window.location.href = '{% url 'teacher_exercises' %}'">
+            К упражнениям
+        </button>
+
         <div class="review-menu-block grey-block">
             Студент: {{ exercise.idstudent.iduser.get_full_name }}
          </div>
 
          <div class="review-menu-block grey-block">
+            Выделено рецензий: <span class="bold">{{ total_reviews }}</span>
+         </div>
+
+         <!-- <div class="review-menu-block grey-block">
             Дата создания: {{ exercise.creationdate }}
          </div>
 
          <div class="review-menu-block grey-block">
             Срок сдачи: {{ exercise.deadline }}
-         </div>
+         </div> -->
 
          {% if exercise.exercisestatus %}
             {% if in_time %}
-            <div class="review-menu-block green-block">
+            <div class="review-menu-block green-block dropdown-container">
                 Дата сдачи: {{ exercise.completiondate }}
+                <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
+
+                <div class="review-menu-block-dropdown">
+                    <div><span class="no-highlight">Дата создания:</span> {{ exercise.creationdate }}</div>
+                    <div><span class="no-highlight">Срок сдачи:</span> {{ exercise.deadline }}</div>
+                </div>
             </div>
             {% else %}
-            <div class="review-menu-block red-block">
+            <div class="review-menu-block red-block dropdown-container">
                 Дата сдачи: {{ exercise.completiondate }}
+                <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
+                <div class="review-menu-block-dropdown">
+                    <div>Дата создания: {{ exercise.creationdate }}</div>
+                    <div>Срок сдачи: {{ exercise.deadline }}</div>
+                </div>
             </div>
             {% endif %}
         {% endif %}
@@ -53,7 +73,7 @@
         </p>
     </div>
 
-    <div class="review-body" id="reviewBody">
+    <div class="review-body" id="reviewBody">        
         <div class="review-text-container-e" id="reviewTextContainer">
             <div class="text-header underline">
                 <h2>{{ text_metadata.exercisetextname }}</h2>
@@ -72,27 +92,31 @@
                 <button class="close-review" id="closeReview">&#10006;</button>                
             </div>
 
-            <div class="student-review separator" id="review">
-            </div>
+            <div class="student-review separator" id="review"></div>
+            
 
-            <div class="teacher-comment">
+            <div class="teacher-comment" id="teacherCommentSection">
                 <h3>Комментарий преподавателя</h3>
-                <div id="comment"> </div>
+
+                <div id="commentDisplay">
+                    <p id="commentText" class="text-muted">Выберите фрагмент для просмотра комментария</p>
+                    <div class="review-buttons" id="commentControls" style="display: none;">
+                        <!-- Кнопки будут генерироваться динамически -->
+                    </div>
+                </div>
+
+                <!-- Форма для редактирования/добавления комментария -->
+                <form id="commentForm" style="display: none;">
+                    {% csrf_token %}
+                        <input type="hidden" id="fragmentId" value="">
+                        <textarea id="commentInput" class="form-control" rows="5" 
+                                placeholder="Введите ваш комментарий..."></textarea>
+                        <div class="review-buttons">
+                            <button type="submit" class="button">Сохранить</button>
+                            <button type="button" class="button grey-button" id="cancelComment">Отмена</button>
+                        </div>
+                </form>
             </div>
-
-            <!-- <form id="create-comment-form">
-                <div class="review-buttons">
-                    <button>Сохранить</button>
-                    <button>Отмена</button>                    
-                </div>
-            </form>
-
-            <form id="edit-comment-form">
-                <div class="review-buttons">
-                    <button>Изменить</button>
-                    <button>Удалить</button>                    
-                </div>
-            </form> -->
         </div>
     </div> 
 
@@ -124,7 +148,7 @@
 
                 <div class="grade-buttons">
                     <button type="submit" name="mark-form" class="button" onclick="addAnnotation()">Сохранить</button>
-                    <button type="button" class="button grey-button">Назад</button>
+                    <button type="button" class="button grey-button" id="backModalBtn">Назад</button>
                 </div>
             </form>
         </div>
@@ -133,13 +157,55 @@
 </div>
 
 <script>
+    function toggleDropdown(button) {
+        // родительский контейнер и выпадающее меню
+        const container = button.closest('.dropdown-container');
+        const dropdown = container.querySelector('.review-menu-block-dropdown');
+        const isActive = dropdown.classList.contains('show');        
+        // Закрываем все другие выпадающие меню
+        document.querySelectorAll('.review-menu-block-dropdown.show').forEach(item => {
+            if (item !== dropdown) {
+                item.classList.remove('show');
+                item.previousElementSibling?.classList?.remove('active');
+            }
+        });
+        dropdown.classList.toggle('show');
+        button.classList.toggle('active');
+        if (!isActive) {
+            setTimeout(() => {
+                document.addEventListener('click', closeDropdownOnClickOutside);
+            }, 0);
+        }
+    }
+
+    function closeDropdownOnClickOutside(event) {
+        const dropdowns = document.querySelectorAll('.review-menu-block-dropdown.show');
+        let shouldClose = true;
+        dropdowns.forEach(dropdown => {
+            const container = dropdown.closest('.dropdown-container');
+            if (container && container.contains(event.target)) {
+                shouldClose = false;
+            }
+        });
+        if (shouldClose) {
+            dropdowns.forEach(dropdown => {
+                dropdown.classList.remove('show');
+                const btn = dropdown.closest('.dropdown-container')?.querySelector('.dropdown-btn');
+                if (btn) btn.classList.remove('active');
+            });
+            document.removeEventListener('click', closeDropdownOnClickOutside);
+        }
+    }
+</script>
+
+<script>
+    // Скрипт для модального окна
     document.addEventListener('DOMContentLoaded', function() {
         const rateBtn = document.querySelector('.rate-btn');
         const modal = document.getElementById('modal');
         const closeModal = document.querySelector('.close-modal');
-        const backButton = document.querySelector('.grey-button');
+        const backButton = document.getElementById('backModalBtn');
 
-        // Обработчики для модального окна
         if (backButton) {
             backButton.addEventListener('click', function(e) {
                 e.preventDefault(); // Предотвращает отправку формы
@@ -166,85 +232,232 @@
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function(){
+    // Скрипт для работы с рецензиями
+    document.addEventListener('DOMContentLoaded', function() {
         const selections = document.querySelectorAll('.selection');
         const reviewContainer = document.getElementById('reviewContainer');
         const closeReview = document.getElementById('closeReview');
         const reviewText = document.getElementById('review');
-        const commentText = document.getElementById('comment');
-        const reviewTextContainer = document.getElementById('reviewTextContainer');
+        const commentText = document.getElementById('commentText');
+        const commentDisplay = document.getElementById('commentDisplay');
+        const commentForm = document.getElementById('commentForm');
+        const commentInput = document.getElementById('commentInput');
+        const fragmentIdInput = document.getElementById('fragmentId');
+        const commentControls = document.getElementById('commentControls');
+        const cancelComment = document.getElementById('cancelComment');
+        
+        let currentFragmentId = null;
+        let currentComment = '';
+        const fragmentsData = {};        
+        // Инициализируем данные фрагментов из HTML
+        selections.forEach(span => {
+            const fragmentId = span.getAttribute('data-fragment-id');
+            fragmentsData[fragmentId] = {
+                id: fragmentId,
+                review: span.getAttribute('data-review'),
+                teachercomment: span.getAttribute('data-teacher-comment') || '',
+                has_comment: Boolean(span.getAttribute('data-teacher-comment'))
+            };
+        });
 
-        // Функция открытия панели
-        function openReviewPanel() {
-            reviewContainer.classList.add('active');
-            if (reviewTextContainer) {
-                reviewTextContainer.classList.add('with-sidebar');
+        function displayFragmentComment(fragmentId) {
+            const fragment = fragmentsData[fragmentId];
+            currentFragmentId = fragmentId;
+            currentComment = fragment.teachercomment;
+            reviewText.textContent = fragment.review;
+            if (fragment.teachercomment) {
+                commentText.textContent = fragment.teachercomment;
+                commentText.classList.remove('text-muted');
+            } else {
+                commentText.textContent = 'Комментарий отсутствует.';
+                commentText.classList.add('text-muted');
             }
-            if (reviewBody) {
-                reviewBody.classList.add('with-sidebar');
+            updateCommentButtons(fragment.has_comment);
+            commentForm.style.display = 'none';
+            commentDisplay.style.display = 'block';
+            commentControls.style.display = 'flex';
+        }
+        
+        // Функция обновления кнопок в зависимости от наличия комментария
+        function updateCommentButtons(hasComment) {
+            if (hasComment) {
+                commentControls.innerHTML = `
+                    <button type="button" class="button" id="editCommentBtn">Изменить</button>
+                    <button type="button" class="button" id="deleteCommentBtn">Удалить</button>
+                `;                
+                document.getElementById('editCommentBtn').addEventListener('click', showCommentForm);
+                document.getElementById('deleteCommentBtn').addEventListener('click', deleteComment);
+            } else {
+                commentControls.innerHTML = `
+                    <button type="button" class="button" id="addCommentBtn">Добавить комментарий</button>
+                `;
+                
+                document.getElementById('addCommentBtn').addEventListener('click', showCommentForm);
             }
         }
-
-        // Функция закрытия панели
-        function closeReviewPanel() {
-            reviewContainer.classList.remove('active');
-
-            if (reviewTextContainer) {
-                reviewTextContainer.classList.remove('with-sidebar');
-            }
-
-            if (reviewBody) {
-                reviewBody.classList.remove('with-sidebar');
-            }
-            
-            // Сбрасываем выделение
-            document.querySelectorAll('.selection').forEach(s => {
-                s.classList.remove('active');
+        
+        function showCommentForm() {
+            commentDisplay.style.display = 'none';
+            commentForm.style.display = 'block';
+            commentInput.value = currentComment;
+            fragmentIdInput.value = currentFragmentId;
+            commentInput.focus();
+        }
+        
+        function hideCommentForm() {
+            commentForm.style.display = 'none';
+            commentDisplay.style.display = 'block';
+            commentInput.value = '';
+        }
+        
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();            
+            const comment = commentInput.value.trim();
+            const fragmentId = fragmentIdInput.value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;            
+            if (!comment) {
+                return;
+            }            
+            fetch(`/exercise/fragment/${fragmentId}/update-comment/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrfToken
+                },
+                body: new URLSearchParams({
+                    'teachercomment': comment
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновления локальных данных
+                    fragmentsData[fragmentId].teachercomment = data.comment;
+                    fragmentsData[fragmentId].has_comment = data.has_comment;                    
+                    // Обновление отображения
+                    displayFragmentComment(fragmentId);                    
+                    // Обновление атрибута в HTML
+                    const span = document.querySelector(`.selection[data-fragment-id="${fragmentId}"]`);
+                    if (span) {
+                        span.setAttribute('data-teacher-comment', data.comment || '');
+                    }                    
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+        
+        function deleteComment() {
+            // if (!confirm('Удалить комментарий к этому фрагменту?')) {
+            //     return;
+            // }            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;            
+            fetch(`/exercise/fragment/${currentFragmentId}/delete-comment/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновлениелокальных данных
+                    fragmentsData[currentFragmentId].teachercomment = '';
+                    fragmentsData[currentFragmentId].has_comment = false;                    
+                    // Обновление отображение
+                    displayFragmentComment(currentFragmentId);                    
+                    // Обновление атрибута в HTML
+                    const span = document.querySelector(`.selection[data-fragment-id="${currentFragmentId}"]`);
+                    if (span) {
+                        span.setAttribute('data-teacher-comment', '');
+                    }
+                    
+                    // alert(data.message || 'Комментарий удален');
+                } else {
+                    // alert('Ошибка при удалении комментария');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // alert('Произошла ошибка при удалении');
             });
         }
 
-        // Обработчик клика по фрагменту
+        cancelComment.addEventListener('click', function() {
+            hideCommentForm();
+            commentInput.value = currentComment;
+        });
+
         selections.forEach(span => {
             span.addEventListener('click', function() {
                 const fragmentId = this.getAttribute('data-fragment-id');
-                const review = this.getAttribute('data-review');
-                const teacherComment = this.getAttribute('data-teacher-comment');
-                const fragmentText = this.textContent;
-
-                reviewText.textContent = review;
-                commentText.textContent = teacherComment || 'Комментарий отсутствует';
-
                 document.querySelectorAll('.selection').forEach(s => {
                     s.classList.remove('active');
                 });
                 this.classList.add('active');
-
+                displayFragmentComment(fragmentId);
                 openReviewPanel();
             });
         });
-
-        function handleClickOutside(event) {
-            // Если панель открыта И клик был вне панели И не по выделенному фрагменту
-            if (reviewContainer.classList.contains('active') && 
-                !reviewContainer.contains(event.target) && 
-                !event.target.classList.contains('selection')) {
-                closeReviewPanel();
+        
+        function openReviewPanel() {
+            reviewContainer.classList.add('active');
+            const reviewTextContainer = document.getElementById('reviewTextContainer');
+            if (reviewTextContainer) {
+                reviewTextContainer.classList.add('with-sidebar');
             }
         }
-
+        
+        function closeReviewPanel() {
+            reviewContainer.classList.remove('active');
+            const reviewTextContainer = document.getElementById('reviewTextContainer');
+            if (reviewTextContainer) {
+                reviewTextContainer.classList.remove('with-sidebar');
+            }
+            document.querySelectorAll('.selection').forEach(s => {
+                s.classList.remove('active');
+            });
+            commentText.textContent = 'Выберите фрагмент для просмотра комментария';
+            commentText.classList.add('text-muted');
+            commentControls.style.display = 'none';
+            hideCommentForm();
+            currentFragmentId = null;
+            currentComment = '';
+        }
+        
         // Закрытие панели
-        closeReview.addEventListener('click', closeReviewPanel);
-        document.addEventListener('click', handleClickOutside);
+        closeReview.addEventListener('click', closeReviewPanel);        
+        // Закрытие по клику вне панели
+        document.addEventListener('click', function(e) {
+            if (reviewContainer.classList.contains('active') && 
+                !reviewContainer.contains(e.target) && 
+                !e.target.classList.contains('selection')) {
+                closeReviewPanel();
+            }
+        });        
         // Закрытие по ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeReviewPanel();
             }
-        });
+        });        
+        // Предотвращает закрытие при клике внутри панели
         reviewContainer.addEventListener('click', function(event) {
             event.stopPropagation();
         });
-
+        
+        // Инициализация: если есть выбранный фрагмент в URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const fragmentIdFromUrl = urlParams.get('fragment');
+        if (fragmentIdFromUrl && fragmentsData[fragmentIdFromUrl]) {
+            const span = document.querySelector(`.selection[data-fragment-id="${fragmentIdFromUrl}"]`);
+            if (span) {
+                span.click();
+            }
+        }
     });
 </script>
 

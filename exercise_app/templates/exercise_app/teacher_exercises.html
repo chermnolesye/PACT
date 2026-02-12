@@ -10,24 +10,167 @@
 {% block content %}
 <div class="container">
     <h2 class="highlighted-header">Список упражнений</h2>
-    <div style="width:100%;height:45px;position:relative;">
-        <a href="{% url 'add_exercise' %}" class="button new_exercise_btn">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20.456 15.9085H15.9085M15.9085 15.9085H11.3609M15.9085 15.9085V11.3609M15.9085 15.9085V20.456M8.32924 2.77822C10.6326 1.44564 13.2474 0.745918 15.9085 0.750018C24.2805 0.750018 31.067 7.53646 31.067 15.9085C31.067 24.2805 24.2805 31.067 15.9085 31.067C7.53645 31.067 0.75 24.2805 0.75 15.9085C0.75 13.1481 1.48822 10.5575 2.7782 8.32925" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-            Новое упражнение
-        </a>
+    <div class="top_panel" style="width: 100%;">
+        <div class="button new_exercise_btn">
+            <a href="{% url 'add_exercise' %}">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20.456 15.9085H15.9085M15.9085 15.9085H11.3609M15.9085 15.9085V11.3609M15.9085 15.9085V20.456M8.32924 2.77822C10.6326 1.44564 13.2474 0.745918 15.9085 0.750018C24.2805 0.750018 31.067 7.53646 31.067 15.9085C31.067 24.2805 24.2805 31.067 15.9085 31.067C7.53645 31.067 0.75 24.2805 0.75 15.9085C0.75 13.1481 1.48822 10.5575 2.7782 8.32925" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                Новое упражнение
+            </a>
+        </div>
+        <div>
+            <form method="get" class="filter-form-singlefield">
+                <div class="filter-grid">
+                    {{ filter.form.exercisestatus }}
+                </div>
+            </form>
+        </div>
+
+        <form method="get" class="filter-formFIO">
+            <div class="search-bar">
+                {{ filter.form.student_name }}
+
+                <button type="button" id="toggle">
+                    <svg width="20" height="20" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M58.5025 28.3587C61.2675 26.8012 62.6529 26.0225 63.4083 24.7654C64.1666 23.5113 64.1666 21.9975 64.1666 18.97V16.9575C64.1666 13.09 64.1666 11.1533 62.8833 9.95167C61.6058 8.75 59.5437 8.75 55.4166 8.75H14.5833C10.4591 8.75 8.39706 8.75 7.11665 9.95167C5.83331 11.1533 5.83331 13.09 5.83331 16.9604V18.9729C5.83331 21.9975 5.83331 23.5113 6.59165 24.7654C7.34998 26.0196 8.72956 26.8012 11.4975 28.3587L19.9937 33.1421C21.8487 34.1863 22.7791 34.7083 23.4441 35.2858C24.8266 36.4846 25.6783 37.8963 26.0633 39.6317C26.25 40.46 26.25 41.4342 26.25 43.3796V51.1671C26.25 53.8183 26.25 55.1454 26.985 56.1779C27.72 57.2133 29.0266 57.7238 31.6341 58.7446C37.1146 60.8854 39.8533 61.9558 41.8016 60.7367C43.75 59.5204 43.75 56.735 43.75 51.1642V43.3767C43.75 41.4342 43.75 40.46 43.9366 39.6288C44.3029 37.9288 45.2256 36.3995 46.5587 35.2829" stroke="#0D6EFD" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <button type="submit" name="search" class="search">
+                    <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50.9583 50.9583L61.1666 61.1666M16.6875 6.53745C22.5094 3.17781 29.3541 2.04905 35.9465 3.36146C42.5389 4.67386 48.4294 8.33792 52.5208 13.6711C56.6122 19.0043 58.6254 25.6429 58.1854 32.3502C57.7455 39.0576 54.8823 45.3763 50.1293 50.1293C45.3763 54.8823 39.0576 57.7455 32.3502 58.1854C25.6429 58.6254 19.0043 56.6122 13.6711 52.5208C8.33792 48.4294 4.67386 42.5389 3.36146 35.9465C2.04905 29.3541 3.17781 22.5094 6.53745 16.6875" stroke="#FFFDFD" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+        </form>
+        <div class="filters_tags">
+            <button class="button filter-btn" id="remove_fio_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_type_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_status_ch_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_data_s_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_data_f_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_status_d_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+            <button class="button filter-btn" id="remove_mark_filter_btn" style="display:none;">
+                <span></span>
+                <svg width="20" height="20" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:5px;">
+                    <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round"></path>
+                </svg>
+            </button>
+        </div>
     </div>
+    <div style="width: 100%; display: none;" id="filters">
+        <form method="get" class="filter-form">
+            <div class="filter-grid">
+                <label>{{ filter.form.student_name.label }}</label>
+                {{ filter.form.student_name }}
+
+                <label>{{ filter.form.idexercisetype.label }}</label>
+                {{ filter.form.idexercisetype }}
+
+                <label>{{ filter.form.check_status.label }}</label>
+                {{ filter.form.check_status }}
+
+                <div class="date_wrapper">
+                    <label>{{ filter.form.creationdate_after.label }}</label>
+                    {{ filter.form.creationdate_after }}
+
+                    <label>{{ filter.form.creationdate_before.label }}</label>
+                    {{ filter.form.creationdate_before }}
+                </div>
+
+                <div class="date_wrapper">
+                    <label>{{ filter.form.deadline_after.label }}</label>
+                    {{ filter.form.deadline_after }}
+
+                    <label>{{ filter.form.deadline_before.label }}</label>
+                    {{ filter.form.deadline_before }}
+                </div>
+
+                <label>{{ filter.form.exercisestatus.label }}</label>
+                {{ filter.form.exercisestatus }}
+
+                <label>{{ filter.form.exercisemark.label }}</label>
+                {{ filter.form.exercisemark }}
+
+
+            </div>
+
+            <button type="submit" class="button">Найти</button>
+            <a href="{% url 'teacher_exercises' %}">Сбросить</a>
+        </form>
+    </div>
+
     <form id="csrf-form" style="display: none;">{% csrf_token %}</form>
     <div class="exercises">
         <div class="header-card">
-            <div class="full_name">ФИО</div>
+            <!-- <div class="full_name">ФИО</div>
             <div class="group">Группа</div>
             <div class="type">Тип упражнения</div>
             <div class="out_date">Дата выдачи</div>
             <div class="deadline">Дата сдачи</div>
             <div class="completion_date">Дата завершения</div>
-            <div class="mark">Оценка</div>
+            <div class="mark">Оценка</div> -->
+
+           <div class="full_name">
+                ФИО 
+                <button class="sort-btn" data-sort="full_name" data-type="text">&#8595;&#8593;</button>                
+            </div>
+            <div class="group">
+                Группа 
+                <button class="sort-btn" data-sort="group" data-type="text">&#8595;&#8593;</button>
+            </div>
+            <div class="type">
+                Тип упражнения 
+                <button class="sort-btn" data-sort="type" data-type="text">&#8595;&#8593;</button>
+            </div>
+            <div class="out_date">
+                Дата выдачи 
+                <button class="sort-btn" data-sort="out_date" data-type="date">&#8595;&#8593;</button>
+            </div>
+            <div class="deadline">
+                Дата сдачи 
+                <button class="sort-btn" data-sort="deadline" data-type="date">&#8595;&#8593;</button>
+            </div>
+            <div class="completion_date">
+                Дата завершения 
+                <button class="sort-btn" data-sort="completion_date" data-type="date">&#8595;&#8593;</button>
+            </div>
+            <div class="mark">
+                Оценка 
+                <button class="sort-btn" data-sort="mark" data-type="mark">&#8595;&#8593;</button>
+            </div>
+
             <div class="edit_card">Редактировать задание</div>
             <div class="delete_card">Удалить задание</div>
             <div class="edit_delete_card">Управление</div>
@@ -46,27 +189,59 @@
             <span class="full_name">
                 {% if exercise.exercise_data.exercisestatus %}
                     {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-                    <a href="{% url 'grade_text' %}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                    <a href="{% url 'grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
                     {% else %}
-                    <a>{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
+                    <a href="{% url 'review_teacher' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
                     {% endif %}
                 {% else %}{{ exercise.exercise_data.idstudent.iduser.get_full_name }}{% endif %}
             </span>
             <span class="group">{{ exercise.exercise_data.idstudent.idgroup }}</span>
             {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-            <span class="type">Поиск ошибок</span>
+            <span class="type">
+                <svg width="30" viewBox="0 0 42 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px;">
+                    <path d="M12.5 11.5H1.5" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M1.5 1.5H12.2188" stroke="#FF7373" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M19.5007 2.5L27.5007 20L31.0007 14.5L35.5007 18L39.0007 14.5L34.0007 10.5L37.5007 6L19.5007 2.5Z" stroke="black" stroke-width="2" />
+                    <path d="M1.5 6.5H12.5" stroke="#8FFF73" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Поиск ошибок
+            </span>
             {% else %}
-            <span class="type">Рецензирование</span>
+            <span class="type">
+                <svg width="28" viewBox="0 0 44 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px;">
+                    <path d="M31.1916 4.53366L32.5421 3.18032C33.6173 2.1047 35.0758 1.50027 36.5967 1.5C38.1175 1.49973 39.5762 2.10363 40.6519 3.17886C41.7275 4.2541 42.3319 5.71258 42.3322 7.23346C42.3325 8.75434 41.7285 10.213 40.6533 11.2887L39.3029 12.642M31.1916 4.53366C31.1916 4.53366 31.3608 7.40365 33.8954 9.93824C36.43 12.4728 39.3029 12.642 39.3029 12.642M31.1916 4.53366L18.7666 16.9587C17.9208 17.7987 17.5008 18.2216 17.1391 18.6853C16.7133 19.2337 16.3487 19.8228 16.0483 20.4528C15.7946 20.9837 15.6079 21.5466 15.2316 22.6753L14.0271 26.292L13.6362 27.4616L16.3721 30.1974L17.5416 29.8066L21.1583 28.602C22.2871 28.2257 22.85 28.0391 23.3808 27.7853C24.0108 27.4849 24.6 27.1203 25.1483 26.6945C25.6121 26.3328 26.0321 25.9128 26.8779 25.067L39.3029 12.642" stroke="black" stroke-width="2.5" />
+                    <path d="M8.79167 19.0002H1.5V30.6669H5.875" stroke="#0D6EFD" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M15.2025 30.5883L16.372 30.1975L13.6362 27.4617L13.2483 28.6342C13.1579 28.9063 13.1451 29.1983 13.2111 29.4773C13.2772 29.7564 13.4195 30.0115 13.6223 30.2143C13.8251 30.4171 14.0803 30.5595 14.3593 30.6255C14.6384 30.6916 14.9303 30.6787 15.2025 30.5883Z" stroke="#0D6EFD" stroke-width="2.5" />
+                </svg>
+                Рецензирование
+            </span>
             {% endif %}
-            <span class="out_date">{{ exercise.exercise_data.creationdate }}</span>
+            <!-- <span class="out_date">{{ exercise.exercise_data.creationdate }}</span>
             <span class="deadline">{{ exercise.exercise_data.deadline }}</span>
             {% if exercise.exercise_data.completiondate %}
             <span class="completion_date">{{ exercise.exercise_data.completiondate }}</span>
             {% else %}
             <span class="completion_date">-</span>
+            {% endif %} -->
+
+            <span class="out_date" data-original-date="{{ exercise.exercise_data.creationdate|date:'Y-m-d' }}">
+                {{ exercise.exercise_data.creationdate }}
+            </span>
+            
+            <span class="deadline" data-original-date="{{ exercise.exercise_data.deadline|date:'Y-m-d' }}">
+                {{ exercise.exercise_data.deadline }}
+            </span>
+            
+            {% if exercise.exercise_data.completiondate %}
+            <span class="completion_date" data-original-date="{{ exercise.exercise_data.completiondate|date:'Y-m-d' }}">
+                {{ exercise.exercise_data.completiondate }}
+            </span>
+            {% else %}
+            <span class="completion_date" data-original-date="">-</span>
             {% endif %}
+
             {% if exercise.exercise_data.exercisemark %}
-            <span class="mark">{{ exercise.exercise_data.exercisemark }}</span>
+            <span class="mark">{{ exercise.exercise_data.get_exercisemark_display }}</span>
             {% else %}
             <span class="mark">-</span>
             {% endif %}
@@ -75,20 +250,34 @@
                     <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
                 </svg>
             </button>
-            <button onclick="confirmDelete(this)" class="delete_card">
+            <!-- <button onclick="confirmDelete(this)" class="delete_card">
                 <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
                 </svg>
-            </button>
+            </button> -->
+            {% if exercise.removable %}
+                <button onclick="confirmDelete(this)" class="delete_card">
+                    <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                </button>
+            {% else %}
+                <span></span>
+            {% endif %}
             <span class="edit_delete_card">
                 <button id="editExerciseButton" onclick="openEditModal(this)">
                     <svg height="20px" viewBox="0 0 65 47" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M46.6914 6.07644L48.7289 4.03486C50.3511 2.41223 52.5517 1.50041 54.8464 1.5C57.141 1.49959 59.3419 2.41061 60.9648 4.03266C62.5876 5.65471 63.4996 7.85491 63.5 10.1492C63.5004 12.4436 62.5893 14.6441 60.967 16.2667L58.9295 18.3083M46.6914 6.07644C46.6914 6.07644 46.9466 10.406 50.7707 14.2295C54.5949 18.0531 58.9295 18.3083 58.9295 18.3083M46.6914 6.07644L27.9448 24.8202C26.6686 26.0874 26.0349 26.7254 25.4892 27.425C24.8467 28.2522 24.2967 29.141 23.8434 30.0914C23.4605 30.8922 23.1789 31.7414 22.6112 33.4441L20.2041 40.6645M58.9295 18.3083L40.1829 37.0521C38.9067 38.3281 38.273 38.9617 37.5733 39.5073C36.746 40.1497 35.8571 40.6997 34.9065 41.1529C34.1056 41.5357 33.2563 41.8172 31.5533 42.3848L24.3319 44.7916M20.2041 40.6645L19.6188 42.4332C19.4825 42.8438 19.4631 43.2842 19.5627 43.7052C19.6624 44.1261 19.8772 44.5111 20.1831 44.817C20.4891 45.1229 20.8741 45.3377 21.2951 45.4373C21.7161 45.5369 22.1566 45.5175 22.5672 45.3812L24.3319 44.7916M20.2041 40.6645L24.3319 44.7916M1.5 28H12.6538M1.5 10.5H30.5M1.5 45.5H8.19231" stroke="black" stroke-width="3" stroke-linecap="round" />
                     </svg>
                 </button>
+                    <!-- <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
+                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
+                    </svg> -->
+                {% if exercise.removable %}
                     <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
                         <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="black" stroke-width="3" stroke-linecap="round" />
                     </svg>
+                {% endif %}
             </span>
         </div>
         {% endfor %}
@@ -154,6 +343,173 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.querySelector('.exercises');
+        
+        let originalCards = Array.from(container.querySelectorAll('.exercise-card'));
+        let currentSort = { column: null, direction: null };
+        
+        function getValueByClass(card, className) {
+            const element = card.querySelector('.' + className);
+            if (!element) return null;
+
+            const text = element.textContent.trim();  
+            if (className.includes('date')) {
+                const originalDate = element.getAttribute('data-original-date');
+                if (!originalDate || originalDate === '') return null;                
+                // YYYY-MM-DD
+                const date = new Date(originalDate);
+                return isNaN(date.getTime()) ? null : date;
+            }  else if (className === 'mark') {
+                return parseMark(text);
+            } else if (className === 'group') {
+                return parseGroup(text);
+            } else {
+                return text;
+            }
+        }
+
+        function parseGroup(groupStr) {
+            if (!groupStr) return { number: null, year: null, full: groupStr };
+
+            const cleaned = groupStr.trim();
+            const match = cleaned.match(/(\d+)(?:\s*\((\d{4})\/(\d{4})\))?/);
+            
+            if (!match) return { number: null, year: null, full: groupStr };
+            
+            const number = parseInt(match[1], 10);
+            let year = null;
+
+            if (match[2] && match[3]) {
+                year = parseInt(match[2], 10);
+            }
+            
+            return {
+                number: isNaN(number) ? null : number,
+                year: year,
+                full: groupStr
+            };
+        }
+
+        function parseMark(markStr) {
+            if (!markStr || markStr === '-') return null;
+
+            const numMatch = markStr.match(/(\d+)/);
+            if (numMatch) return parseInt(numMatch[1], 10);
+            return null;
+        }
+        
+        function compareValues(a, b, column, type) {
+            if (a === null && b === null) return 0;
+            if (a === null) return 1; // Прочерки в конец
+            if (b === null) return -1;
+
+            if (column === 'group' && type === 'text') {
+                // Сначала сравниваем по году
+                if (a.year !== b.year) {
+                    if (a.year === null) return 1;
+                    if (b.year === null) return -1;
+                    return a.year - b.year;
+                }
+                if (a.number !== b.number) {
+                    if (a.number === null) return 1;
+                    if (b.number === null) return -1;
+                    return a.number - b.number;
+                }
+                return a.full.localeCompare(b.full);
+            }
+
+            if (a instanceof Date && b instanceof Date) {
+                return a.getTime() - b.getTime();
+            }
+            
+            if (type === 'mark') {
+                return a - b;
+            }
+
+             return String(a).localeCompare(String(b), 'ru', { 
+                sensitivity: 'base',
+                numeric: true 
+            });
+        }
+
+        function sortCards(column, type) {
+            const cards = Array.from(container.querySelectorAll('.exercise-card'));
+            const header = container.querySelector('.header-card');
+            
+            let direction = 'asc';
+            if (currentSort.column === column) {
+                if (currentSort.direction === 'asc') {
+                    direction = 'desc';
+                } else if (currentSort.direction === 'desc') {
+                    restoreOriginalOrder();
+                    return;
+                }
+            }
+            
+            cards.sort((cardA, cardB) => {
+                const valueA = getValueByClass(cardA, column);
+                const valueB = getValueByClass(cardB, column);
+
+                const comparison = compareValues(valueA, valueB, column, type);
+                return direction === 'asc' ? comparison : -comparison;
+            });
+            
+            cards.forEach(card => {
+                container.appendChild(card);
+            });
+            
+            currentSort = { column, direction };            
+            updateSortButtons(column, direction);
+        }
+        
+        function restoreOriginalOrder() {
+            const header = container.querySelector('.header-card');   
+            const currentCards = container.querySelectorAll('.exercise-card');
+            currentCards.forEach(card => card.remove());
+
+            originalCards.forEach(card => {
+                container.appendChild(card);
+            });
+
+            currentSort = { column: null, direction: null };
+            updateSortButtons(null, null);
+        }
+        
+        function updateSortButtons(activeColumn, direction) {
+            const buttons = container.querySelectorAll('.sort-btn');
+            
+            buttons.forEach(btn => {
+                const column = btn.dataset.sort;                
+                btn.textContent = '\u2191\u2193';
+                btn.style.color = '';
+                btn.style.fontWeight = '';
+                
+                if (column === activeColumn) {
+                    if (direction === 'asc') {
+                        btn.textContent = 	'\u2191';
+                        btn.style.color = '#007bff';
+                        btn.style.fontWeight = 'bold';
+                    } else if (direction === 'desc') {
+                        btn.textContent = '\u2193';                        
+                        btn.style.color = '#007bff';
+                        btn.style.fontWeight = 'bold';
+                    }
+                }
+            });
+        }
+        
+        container.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sort-btn')) {
+                const column = e.target.dataset.sort;
+                const type = e.target.dataset.type;
+                sortCards(column, type);
+            }
+        });
+    });
+</script>
+
+<script>
     let exerciseToDelete = null;
 
     function confirmDelete(el) {
@@ -199,11 +555,13 @@
             .then(data => {
                 if (data.success) {
                     document.getElementById(exerciseToDelete).remove();
-                    alert('Упражнение успешно удалено');
-                } else {
-                    alert('Ошибка при удалении');
+                    // alert('Упражнение успешно удалено');
                 }
+                //  else {
+                //     alert('Ошибка при удалении');
+                // }
                 closeModal();
+                location.reload();
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -234,7 +592,117 @@
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
     }
 
+    function toggle() {
+        const filters = document.getElementById("filters")
+        if (filters.style.display == "block") {
+            filters.style.display = "none"
+        }
+        else {
+            filters.style.display = "block"
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+
+        const filters = document.getElementById("filters")
+        console.log(filters.querySelector("#id_student_name"))
+        if (filters.querySelector("#id_student_name").value!="") {
+            var filter = document.getElementById("remove_fio_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = "ФИО: " + filters.querySelector("#id_student_name").value;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_student_name").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_idexercisetype").value != "") {
+            var filter = document.getElementById("remove_type_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = filters.querySelector("#id_idexercisetype").options[filters.querySelector("#id_idexercisetype").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_idexercisetype").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_check_status").value != "") {
+            var filter = document.getElementById("remove_status_ch_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = filters.querySelector("#id_check_status").options[filters.querySelector("#id_check_status").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_check_status").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        var after_date = filters.querySelector("#id_creationdate_after").value
+        var before_date = filters.querySelector("#id_creationdate_before").value
+        if (after_date != "" || before_date != "") {
+            var filter = document.getElementById("remove_data_s_filter_btn")
+            filter.style.display = "flex";
+            if (after_date != "") {
+                filter.children[0].innerHTML = "Дата создания от: " + after_date
+                if (before_date != "") {
+                    filter.children[0].innerHTML = "Дата создания от: " + after_date + " до: " + before_date
+                }
+            }
+            else {
+                filter.children[0].innerHTML = "Дата создания до: " + before_date
+            }
+            console.log("hhh")
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_creationdate_after").value = null
+                filters.querySelector("#id_creationdate_before").value = null
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        after_date = filters.querySelector("#id_deadline_after").value
+        before_date = filters.querySelector("#id_deadline_before").value
+        if (after_date != "" || before_date != "") {
+            var filter = document.getElementById("remove_data_f_filter_btn")
+            filter.style.display = "flex";
+            if (after_date != "") {
+                filter.children[0].innerHTML = "Дата сдачи от: " + after_date
+                if (before_date != "") {
+                    filter.children[0].innerHTML = "Дата сдачи от: " + after_date + " до: " + before_date
+                }
+            }
+            else {
+                filter.children[0].innerHTML = "Дата сдачи до: " + before_date
+            }
+            console.log("hhh")
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_deadline_after").value = null
+                filters.querySelector("#id_deadline_before").value = null
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_exercisestatus").value != "") {
+            var filter = document.getElementById("remove_status_d_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = filters.querySelector("#id_exercisestatus").options[filters.querySelector("#id_exercisestatus").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_exercisestatus").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+        if (filters.querySelector("#id_exercisemark").value != "") {
+            var filter = document.getElementById("remove_mark_filter_btn")
+            filter.style.display = "flex";
+            filter.children[0].innerHTML = "Оценка: "+ filters.querySelector("#id_exercisemark").options[filters.querySelector("#id_exercisemark").selectedIndex].innerHTML;
+            filter.addEventListener("click", function () {
+                filters.querySelector("#id_exercisemark").value = ""
+                document.querySelector(".filter-form").submit()
+            })
+        }
+
+        const input = document.getElementById("id_student_name");
+        input.value = "";
+
+        document.getElementById('toggle').addEventListener('click', toggle);
+        const select_stat = document.getElementById('id_exercisestatus');
+        select_stat.addEventListener("change", function () {
+            document.getElementsByClassName("filter-form-singlefield")[0].submit();
+        });
+
         document.getElementById('confirmDelete').addEventListener('click', deleteExercise);
         document.getElementById('cancelDelete').addEventListener('click', closeModal);
         const editModal = document.getElementById('editExerciseModal');

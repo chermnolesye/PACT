@@ -6,27 +6,64 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
+<link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
     {% endblock %}
 
 {% block content %}
 <div class="text-app-container">
-
     <div class="menu-container">
         <!-- Блоки меню -->
-        <div class="menu-block" data-target="view-content">
+        <div class="menu-block-watch return_btn" id="gray_border">
+            <a href='{% url 'teacher_exercises' %}'>
+                К списку упражнений
+            </a>
+            <svg width="25" height="25" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.6666 20.4167H43.75C47.6177 20.4167 51.327 21.9532 54.0619 24.6881C56.7968 27.423 58.3333 31.1323 58.3333 35.0001C58.3333 38.8678 56.7968 42.5772 54.0619 45.3121C51.327 48.047 47.6177 49.5834 43.75 49.5834M11.6666 20.4167L20.4166 11.6667M11.6666 20.4167L20.4166 29.1667M23.3333 49.5834H32.0833" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </div>
+
+        <div class="menu-block" data-target="view-content" id="gray_border">
             <span>
                 Вид
                 <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
                 </svg>
             </span>
         </div>
-        <div class="menu-block-watch">
-            Дата завершения:&nbsp;
-            <span class="deadline">
-                01.01.2025
+
+        {% if exercise.exercisestatus %}
+        {% if in_time %}
+        <div class="menu-block green_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;{{ exercise.completiondate }}
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
             </span>
         </div>
+        {% else %}
+        <div class="menu-block red_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;{{ exercise.completiondate }}
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% if exercise.exercisemark %}
+        <div class="menu-block" id="gray_border" data-target="mark-content">
+            <span>
+                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
+            </span>
+            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+            </svg>
+        </div>
+        {% else %}
+        <div class="menu-block-watch" id="gray_border">Оценка:&nbsp;-</div>
+        {% endif %}
         <button class="rate-btn">Просмотреть статистику и оценить</button>
     </div>
 
@@ -35,7 +72,10 @@
     <div class="error-popup popup-sidebyside" id="error-popup">
         <!-- <span class="close-btn" id="close-popup">&#x2715;</span> -->
         <div class="popup-content-sidebyside">
-            <div class="student-mark">
+            <div class="student-mark" id="errS" style="display:none;">
+                <h3 style="margin-bottom:5px">Аннотация студента отсутствует</h3>
+            </div>
+            <div class="student-mark" id="annS">
                 <h3 style="margin-bottom:5px">Аннотация студента</h3>
                 <h3>
                     <span id="error-tag-s"></span>
@@ -46,7 +86,10 @@
                 <p><strong>Исправление:</strong> <span id="error-correct-s"></span></p>
                 <p><strong>Комментарий:</strong> <span id="error-comment-s"></span></p>
             </div>
-            <div class="teacher-mark">
+            <div class="teacher-mark" id="errT" style="display:none;">
+                <h3 style="margin-bottom:5px">Аннотация преподавателя отсутствует</h3>
+            </div>
+            <div class="teacher-mark" id="annT">
                 <h3 style="margin-bottom:5px">Аннотация преподавателя</h3>
                 <h3>
                     <span id="error-tag-t"></span>
@@ -104,12 +147,38 @@
                     <span class="slider"></span>
                 </label>
             </div>
+        </div>
+    </div>
 
+    <div class="menu-content" id="date-content">
+        <div class="menu-content-data">
+            <p>Дата выдачи:</p>
+            <p class="p-dark"> {{ exercise.creationdate }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Дата сдачи:</p>
+            <p class="p-dark"> {{ exercise.deadline }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Дата завершения:</p>
+            <p class="p-dark"> {{ exercise.completiondate }} </p>
+        </div>
+    </div>
+
+    <div class="menu-content" id="mark-content">
+        <div class="menu-content-data">
+            <p>Оценка:</p>
+            <p class="p-dark"> {{ exercise.get_exercisemark_display }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Комментарий:</p>
+            <p class="p-dark"> {{ exercise.exercisemarkcomment }} </p>
         </div>
     </div>
 
     <div class="text-header-grad">
-        <h1 class="text-title">Иванов Иван Иванович</h1>
+        <h1 class="text-title">{{ exercise.idstudent.iduser.get_full_name }}</h1>
+        <h2 class="text-subtitle">Название текста: {{ text.header }}</h2>
     </div>
 
     <!-- НОВОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ -->
@@ -123,9 +192,16 @@
                     </svg>
                 </button>
             </div>
-
-            <form method="post" id="mark-form">
+            <form method="post" id="mark-form-grading">
                 {% csrf_token %}
+
+                <div id="statistics">
+                    <label>Статистика:</label>
+                    <p>Количество верно найденных ошибок: <span id="FoundRightErr">0</span></p>
+                    <p>Количество неверно найденных ошибок: <span id="FoundWrongErr">0</span></p>
+                    <p>Количество пропущенных ошибок: <span id="MissedErr">0</span></p>
+                </div>
+
                 <div class="form-fields">
                     <label for="{{ mark_form.exercisemark.label.id_for_label }}" class="no-highlight">
                         {{ mark_form.exercisemark.label }}
@@ -208,10 +284,28 @@
                       data-pos-color="{{ token.pos_tag_color }}"
                       data-position="{{ token.token_order_number }}">
 
+                    {% if token.exercise_errors %}
+                    {% for error in token.exercise_errors %}
+                    <span class="error-tag student"
+                          style="background-color: #FF7373; display: none; "
+                          data-error-id="{{ error.error_id }}"
+                          data-error-tag="{{ error.error_tag }}"
+                          tag_id="{{ error.error_tag_id }}"
+                          data-error-tag-russian="{{ error.error_tag_russian }}"
+                          data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
+                          data-error-level="{{ error.error_level }}"
+                          data-error-correct="{{ error.error_correct }}"
+                          data-error-comment="{{ error.error_comment }}"
+                          data-error-reason="{{ error.error_reason }}">
+                        {{ error.error_tag }}
+                    </span>
+                    {% endfor %}
+                    {% endif %}
+
                     {% if token.errors %}
                     {% for error in token.errors %}
-                    <span class="error-tag"
-                          style="background-color: #8FFF73; display: none;"
+                    <span class="error-tag teacher"
+                          style="background-color: #6C757D; display: none; color: white;"
                           data-error-id="{{ error.error_id }}"
                           data-error-tag="{{ error.error_tag }}"
                           tag_id="{{ error.error_tag_id }}"
@@ -253,16 +347,14 @@
         const chosen = [];
         document.addEventListener('DOMContentLoaded', function () {
 
-            const deadline = document.getElementsByClassName('deadline')[0];
-            const block = document.getElementsByClassName('menu-block-watch')[0];
-            const currentDate = (new Date()).toLocaleDateString('ru-Ru', { day: 'numeric', month: 'long', year: 'numeric' });
-            if (deadline.textContent < currentDate) {
-                block.classList.add('red_background');
-            }
-            else {
-                block.classList.add('green_background');
-            }
-
+            document.querySelectorAll(".student").forEach(tokenElement => {
+                tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
+                tokenElementsTeacher.forEach(el => {
+                    if (tokenElement.dataset.errorTag == el.dataset.errorTag) {
+                        tokenElement.style.background ="#8FFF73"
+                    }
+                })
+            })
 
             const languageRadios = document.querySelectorAll('input[name="language"]');
             const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
@@ -335,7 +427,7 @@
             const closePopupBtn = document.getElementById('close-popup');
             let list_tags = {};
 
-            
+
 
             async function fetchDataAsync(url, let_tags) {
                 const response = await fetch(url);
@@ -347,31 +439,66 @@
 
             // Функция для отображения всплывающего окна с информацией об ошибке
             function showPopup(tokenElement) {
-                const errorTag = tokenElement.dataset.errorTag;
-                const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
-                const errorLevel = tokenElement.dataset.errorLevel;
-                const errorReason = tokenElement.dataset.errorReason;
-                const errorCorrect = tokenElement.dataset.errorCorrect;
-                const errorComment = tokenElement.dataset.errorComment;
 
-                if (!errorTag) {
-                    return;
+                if (tokenElement.classList.contains("teacher")) {
+                    tokenElementTeacher = tokenElement
+                    tokenElementsStudent = tokenElement.parentElement.querySelectorAll(".student")
+                    tokenElementStudent = null
+                    tokenElementsStudent.forEach(el => {
+                        if (tokenElementTeacher.dataset.errorTag == el.dataset.errorTag) {
+                            tokenElementStudent = el
+                        }
+                    })
+                }
+                else {
+                    tokenElementStudent = tokenElement
+                    tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
+                    tokenElementTeacher = null
+                    tokenElementsTeacher.forEach(el => {
+                        if (tokenElementStudent.dataset.errorTag == el.dataset.errorTag) {
+                            tokenElementTeacher = el
+                        }
+                    })
                 }
 
-                document.getElementById('error-tag-s').textContent = errorTag || 'Не указано';
-                document.getElementById('error-tag-abbrev-s').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
-                document.getElementById('error-level-s').textContent = errorLevel || 'Не указано';
-                document.getElementById('error-reason-s').textContent = errorReason || 'Не указано';
-                document.getElementById('error-correct-s').textContent = errorCorrect || 'Не указано';
-                document.getElementById('error-comment-s').textContent = errorComment || 'Не указано';
 
-                document.getElementById('error-tag-t').textContent = errorTag || 'Не указано';
-                document.getElementById('error-tag-abbrev-t').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
-                document.getElementById('error-level-t').textContent = errorLevel || 'Не указано';
-                document.getElementById('error-reason-t').textContent = errorReason || 'Не указано';
-                document.getElementById('error-correct-t').textContent = errorCorrect || 'Не указано';
-                document.getElementById('error-comment-t').textContent = errorComment || 'Не указано';
+                if (tokenElementTeacher) {
+                    const errorTag_t = tokenElementTeacher.dataset.errorTag;
+                    const errorTagAbbrev_t = tokenElementTeacher.dataset.errorTagAbbrev;
+                    const errorLevel_t = tokenElementTeacher.dataset.errorLevel;
+                    const errorReason_t = tokenElementTeacher.dataset.errorReason;
+                    const errorCorrect_t = tokenElementTeacher.dataset.errorCorrect;
+                    const errorComment_t = tokenElementTeacher.dataset.errorComment;
 
+                    document.getElementById('error-tag-t').textContent = errorTag_t || 'Не указано';
+                    document.getElementById('error-tag-abbrev-t').textContent = errorTagAbbrev_t ? `(${errorTagAbbrev_t})` : '';
+                    document.getElementById('error-level-t').textContent = errorLevel_t || 'Не указано';
+                    document.getElementById('error-reason-t').textContent = errorReason_t || 'Не указано';
+                    document.getElementById('error-correct-t').textContent = errorCorrect_t || 'Не указано';
+                    document.getElementById('error-comment-t').textContent = errorComment_t || 'Не указано';
+                    document.getElementById('errT').style.display = "none"
+                    document.getElementById('annT').style.display = "inline"
+                }
+
+                if (tokenElementStudent) {
+                    const errorTag_s = tokenElementStudent.dataset.errorTag;
+                    const errorTagAbbrev_s = tokenElementStudent.dataset.errorTagAbbrev;
+                    const errorLevel_s = tokenElementStudent.dataset.errorLevel;
+                    const errorReason_s = tokenElementStudent.dataset.errorReason;
+                    const errorCorrect_s = tokenElementStudent.dataset.errorCorrect;
+                    const errorComment_s = tokenElementStudent.dataset.errorComment;
+
+                    document.getElementById('error-tag-s').textContent = errorTag_s || 'Не указано';
+                    document.getElementById('error-tag-abbrev-s').textContent = errorTagAbbrev_s ? `(${errorTagAbbrev_s})` : '';
+                    document.getElementById('error-level-s').textContent = errorLevel_s || 'Не указано';
+                    document.getElementById('error-reason-s').textContent = errorReason_s || 'Не указано';
+                    document.getElementById('error-correct-s').textContent = errorCorrect_s || 'Не указано';
+                    document.getElementById('error-comment-s').textContent = errorComment_s || 'Не указано';
+
+                    document.getElementById('errS').style.display = "none"
+                    document.getElementById('annS').style.display = "inline"
+                }
+                
                 const rect = tokenElement.getBoundingClientRect();
                 const offsetLeft = rect.left + window.scrollX;
                 const offsetTop = rect.top + window.scrollY;
@@ -416,6 +543,10 @@
                     showPopup(this);
                 });
                 errorTagElement.addEventListener('mouseleave', function (e) {
+                    document.getElementById('errS').style.display = "inline"
+                    document.getElementById('errT').style.display = "inline"
+                    document.getElementById('annS').style.display = "none"
+                    document.getElementById('annT').style.display = "none"
                     const popup = document.getElementById('error-popup');
                     popup.classList.remove('show'); // Убираем класс для анимации исчезновения
                     setTimeout(() => {
@@ -528,36 +659,75 @@
 
         // СКРИПТ ДЛЯ МОДАЛЬНОГО ОКНА ВЫСТАВЛЕНИЯ ОЦЕНКИ
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const rateBtn = document.querySelector('. '); // <- ПОМЕНЯЙ НАЗВАНИЕ 
-            // КЛАССА НА ТОТ ЧТО У ТВОЕЙ КНОПКИ ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
+        document.addEventListener('DOMContentLoaded', function () {
+            const rateBtn = document.querySelector('.rate-btn');
             const modal = document.getElementById('modal');
             const closeModal = document.querySelector('.close-modal');
             const backButton = document.querySelector('.grey-button');
 
             // Обработчики для модального окна
             if (backButton) {
-                backButton.addEventListener('click', function(e) {
+                backButton.addEventListener('click', function (e) {
                     e.preventDefault(); // Предотвращает отправку формы
                     modal.style.display = 'none';
                 });
             }
 
-            rateBtn.addEventListener('click', function(e) {
+            rateBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 document.querySelectorAll('.menu-content').forEach(c => {
-                        c.style.display = 'none';
+                    c.style.display = 'none';
                 });
                 modal.style.display = 'flex';
+                let FoundRightErr = 0
+                let FoundWrongErr = 0
+                let MissedErr = 0
+                document.querySelectorAll(".error-tag").forEach(tokenElement => {
+                    if (tokenElement.classList.contains("teacher")) {
+                        tokenElementTeacher = tokenElement
+                        tokenElementsStudent = tokenElement.parentElement.querySelectorAll(".student")
+                        tokenElementStudent = null
+                        tokenElementsStudent.forEach(el => {
+                            if (tokenElementTeacher.dataset.errorTag == el.dataset.errorTag) {
+                                tokenElementStudent = el
+                            }
+                        })
+                        if (!tokenElementStudent) {
+                            MissedErr = MissedErr+ 1
+                        }
+                        else {
+                            FoundRightErr = FoundRightErr + 1
+                        }
+                    }
+                    else {
+                        tokenElementStudent = tokenElement
+                        tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
+                        tokenElementTeacher = null
+                        tokenElementsTeacher.forEach(el => {
+                            if (tokenElementStudent.dataset.errorTag == el.dataset.errorTag) {
+                                tokenElementTeacher = el
+                            }
+                        })
+                        if (!tokenElementTeacher) {
+                            FoundWrongErr = FoundWrongErr + 1
+                        }
+                        else {
+                            FoundRightErr = FoundRightErr + 1
+                        }
+                    }
+                    document.getElementById("FoundRightErr").innerHTML = FoundRightErr / 2
+                    document.getElementById("FoundWrongErr").innerHTML = FoundWrongErr
+                    document.getElementById("MissedErr").innerHTML = MissedErr
+                })
             });
 
-            closeModal.addEventListener('click', function() {
+            closeModal.addEventListener('click', function () {
                 modal.style.display = 'none';
             });
 
-            modal.addEventListener('click', function(e) {
+            modal.addEventListener('click', function (e) {
                 if (e.target === modal) {
-                modal.style.display = 'none';
+                    modal.style.display = 'none';
                 }
             });
         });
