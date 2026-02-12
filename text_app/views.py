@@ -1,5 +1,6 @@
 from authorization_app.utils import has_teacher_rights
 from django.contrib.auth.decorators import user_passes_test
+from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import F
@@ -211,7 +212,11 @@ def annotate_text(request, text_id=2379):
         grade_form = AddTextAnnotationForm(request.POST, instance=text)
         if grade_form.is_valid():
             grade_form.save()
-            return redirect(request.path + f"?text_id={text.idtext}&markup={selected_markup}")
+            # return redirect(request.path + f"?text_id={text.idtext}&markup={selected_markup}")
+            url = reverse('annotate_text')
+            params = f"?text_id={text.idtext}&markup={selected_markup}"
+            return redirect(url + params)
+
     else:
         grade_form = AddTextAnnotationForm(instance=text)
 
@@ -322,9 +327,10 @@ def annotate_text(request, text_id=2379):
                             ErrorToken.objects.create(idtoken=token, iderror=new_error)
                         except Token.DoesNotExist:
                             continue
-
-                print("Annotation successfully saved.")
-                return redirect(request.path + f"?text_id={text.idtext}&markup={selected_markup}")
+                # return redirect(request.path + f"?text_id={text.idtext}&markup={selected_markup}")
+                url = reverse('annotate_text')
+                params = f"?text_id={text.idtext}&markup={selected_markup}"
+                return redirect(url + params)
 
             except Exception as e:
                 print(f"Error saving annotation: {str(e)}")
