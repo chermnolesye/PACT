@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from .forms import StudentRegistrationForm, TeacherRegistrationForm, StudentLoginForm, TeacherLoginForm, LoginForm
@@ -31,7 +32,7 @@ def register_student(request):
             )
 
             messages.success(request, 'Студент успешно зарегистрирован')
-            return redirect('home')  # Заменить
+            return redirect('home_view')  # Заменить
     else:
         form = StudentRegistrationForm()
 
@@ -61,7 +62,7 @@ def register_teacher(request):
             user.save()  
 
             messages.success(request, 'Преподаватель успешно зарегистрирован')
-            return redirect('home')  # Заменить
+            return redirect('home_view')  # Заменить
     else:
         form = TeacherRegistrationForm()
 
@@ -84,7 +85,7 @@ def login_student(request):
             if user and user.check_password(password_data):
                 login(request, user)
                 messages.success(request, 'Вы успешно вошли в систему как студент.')
-                return redirect('academic_years')  # Заменить
+                return redirect('home_view')  # Заменить
             else:
                 messages.error(request, 'Неправильный логин или пароль.')
     else:
@@ -113,7 +114,7 @@ def login_teacher(request):
                 fio = f"{user.lastname} {user.firstname} {user.middlename}"
                 # Сохраняем ФИО в сессии
                 request.session['teacher_fio'] = fio
-                return redirect('/text/show_texts/')  # Заменить !!!!
+                return redirect('search_texts')  
             else:
                 messages.error(request, 'Неправильный логин или пароль.')
     else:
@@ -128,9 +129,9 @@ def login_teacher(request):
 def user_login(request):
     if request.user.is_authenticated:
         if request.user.idrights_id in [2, 4]:
-            return redirect("/text/search_texts/")
+            return redirect('search_texts')
         else:
-            return redirect("/text/home/") #!!!!
+            return redirect('home_view') #!!!!
 
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -145,9 +146,9 @@ def user_login(request):
                 request.session['teacher_fio'] = fio
 
                 if user.idrights.idrights in [2, 4]:
-                    return redirect("/text/search_texts/")
+                    return redirect('search_texts')
                 else:
-                    return redirect("/text/home/") #!!!!
+                    return redirect('home_view') #!!!!
             else:
                 messages.error(request, "Неверный логин или пароль.")
     else:
@@ -158,4 +159,4 @@ def user_login(request):
 def logout_teacher(request):
     logout(request) 
     messages.success(request, 'Вы успешно вышли из системы.')
-    return redirect('/auth/login')  
+    return redirect('login')  
