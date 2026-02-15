@@ -15,7 +15,7 @@ import os
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 NLTK_DATA = os.path.join(BASE_DIR, 'nltk_data')
 os.environ['NLTK_DATA'] = NLTK_DATA
@@ -160,3 +160,8 @@ try:
     download_nltk_resources()
 except:
     pass
+
+try:
+    from pact.settings.local import *
+except ImportError:
+    print("LOCAL SETTINGS NOT FOUND, USE DEFAULT SETTINGS!")
