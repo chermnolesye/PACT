@@ -435,7 +435,7 @@
                 console.log(list_tags);
             }
 
-            fetchDataAsync('/text/get_tags/', list_tags);
+            fetchDataAsync("{% url 'get_tags' %}", list_tags);
 
             // Функция для отображения всплывающего окна с информацией об ошибке
             function showPopup(tokenElement) {

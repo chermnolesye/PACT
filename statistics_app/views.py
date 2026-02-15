@@ -730,25 +730,26 @@ def chart_grade_errors(request):
             
             return JsonResponse({'data_grade_errors': data_errorlevel}, status=200)
 
-def chart_types_grade_errors(request):		
+def chart_types_grade_errors(request):
     if request.method != 'POST':
         print("=== PROCESSING TYPES GRADE ERRORS GET REQUEST ===")
-        
+
         levels = dashboards.get_levels()
 
+        # ✅ FIX 1: добавили idgroup (иначе на фронте v-model получает undefined и выбирается "первая")
         groups = list(
-            Group.objects.values("groupname", "idayear__title")
+            Group.objects.values("idgroup", "groupname", "idayear__title")
             .distinct()
             .order_by("groupname")
         )
-        
+
         courses = list(
             Group.objects.values("studycourse")
             .filter(studycourse__gt=0)
             .distinct()
             .order_by("studycourse")
         )
-        
+
         texts = list(
             Text.objects.values("header")
             .filter(errorcheckflag=True)
@@ -763,7 +764,10 @@ def chart_types_grade_errors(request):
             .values('idtexttype', 'texttypename')
         )
 
-        grades = list(ErrorLevel.objects.values('iderrorlevel', 'errorlevelname', 'errorlevelrussian').order_by('iderrorlevel'))
+        grades = list(
+            ErrorLevel.objects.values('iderrorlevel', 'errorlevelname', 'errorlevelrussian')
+            .order_by('iderrorlevel')
+        )
 
         data_count_errors = list(
             ErrorToken.objects.values(
@@ -792,7 +796,10 @@ def chart_types_grade_errors(request):
 
         data_by_grades = []
         for grade in grades:
-            grade_data = [item for item in data_on_tokens if item.get('iderror__iderrorlevel__iderrorlevel') == grade['iderrorlevel']]
+            grade_data = [
+                item for item in data_on_tokens
+                if item.get('iderror__iderrorlevel__iderrorlevel') == grade['iderrorlevel']
+            ]
             processed_data = dashboards.get_data_errors(grade_data, level=0, is_sorted=True)
             data_by_grades.append(processed_data)
 
@@ -818,135 +825,150 @@ def chart_types_grade_errors(request):
                 "dict_children": dict_children,
             },
         )
-    
-    else:
-        list_filters = json.loads(request.body)
-        flag_post = list_filters['flag_post']
-        
-        if flag_post == 'enrollment_date':
-            enrollment_date = dashboards.get_enrollment_date(list_filters)
-            return JsonResponse({'enrollment_date': enrollment_date}, status=200)
 
-        if flag_post == "choice_all":
-            texts, text_types = dashboards.get_filters_for_choice_all(list_filters)
-            return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
+    # ======================= POST =======================
+    list_filters = json.loads(request.body)
+    flag_post = list_filters.get('flag_post')
 
-        if flag_post == "choice_group":
-            texts, text_types = dashboards.get_filters_for_choice_group(list_filters)
-            return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
+    if flag_post == 'enrollment_date':
+        enrollment_date = dashboards.get_enrollment_date(list_filters)
+        return JsonResponse({'enrollment_date': enrollment_date}, status=200)
 
-        if flag_post == "choice_student":
-            texts, text_types = dashboards.get_filters_for_choice_student(list_filters)
-            return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
+    if flag_post == "choice_all":
+        texts, text_types = dashboards.get_filters_for_choice_all(list_filters)
+        return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
 
-        if flag_post == "choice_course":
-            texts, text_types = dashboards.get_filters_for_choice_course(list_filters)
-            return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
+    if flag_post == "choice_group":
+        texts, text_types = dashboards.get_filters_for_choice_group(list_filters)
+        return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
 
-        if flag_post == "choice_text":
-            groups, courses, text_types = dashboards.get_filters_for_choice_text(
-                list_filters
-            )
-            return JsonResponse(
-                {"groups": groups, "courses": courses, "text_types": text_types},
-                status=200,
-            )
+    if flag_post == "choice_student":
+        texts, text_types = dashboards.get_filters_for_choice_student(list_filters)
+        return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
 
-        if flag_post == "choice_text_type":
-            groups, courses, texts = dashboards.get_filters_for_choice_text_type(
-                list_filters
-            )
-            return JsonResponse(
-                {"groups": groups, "courses": courses, "texts": texts}, status=200
-            )
-            
-        if flag_post == 'update_diagrams':
-            group = list_filters.get('group')
-            date = list_filters.get('enrollment_date')
-            surname = list_filters.get('surname')
-            name = list_filters.get('name')
-            patronymic = list_filters.get('patronymic')
-            course = list_filters.get('course')
-            text = list_filters.get('text')
-            text_type = list_filters.get('text_type')
-            level = int(list_filters.get('level', 0))
+    if flag_post == "choice_course":
+        texts, text_types = dashboards.get_filters_for_choice_course(list_filters)
+        return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
 
-            print("=== FILTERS FOR TYPES GRADE DIAGRAMS ===")
-            print(f"Group: {group}, Date: {date}")
-            print(f"Surname: {surname}, Name: {name}, Patronymic: {patronymic}")
-            print(f"Course: {course}, Text: {text}, Text_type: {text_type}")
-            print(f"Level: {level}")
+    if flag_post == "choice_text":
+        groups, courses, text_types = dashboards.get_filters_for_choice_text(list_filters)
+        return JsonResponse({"groups": groups, "courses": courses, "text_types": text_types}, status=200)
 
-            academic_year_title = None
-            if date:
-                if " \\ " in date:
-                    start_year = date.split(" \\ ")[0]
-                    academic_year_title = f"{start_year}/{int(start_year) + 1}"
+    if flag_post == "choice_text_type":
+        groups, courses, texts = dashboards.get_filters_for_choice_text_type(list_filters)
+        return JsonResponse({"groups": groups, "courses": courses, "texts": texts}, status=200)
+
+    if flag_post == 'update_diagrams':
+        group = list_filters.get('group')
+        date = list_filters.get('enrollment_date')
+        surname = list_filters.get('surname')
+        name = list_filters.get('name')
+        patronymic = list_filters.get('patronymic')
+        course = list_filters.get('course')
+        text = list_filters.get('text')
+        text_type = list_filters.get('text_type')
+        level = int(list_filters.get('level', 0))
+
+        print("=== FILTERS FOR TYPES GRADE DIAGRAMS ===")
+        print(f"Group: {group}, Date: {date}")
+        print(f"Surname: {surname}, Name: {name}, Patronymic: {patronymic}")
+        print(f"Course: {course}, Text: {text}, Text_type: {text_type}")
+        print(f"Level: {level}")
+
+        # ✅ FIX 2: нормализуем год (чтобы не падать на "2016/2017")
+        academic_year_title = None
+        if date:
+            s = str(date).strip()
+            if " \\ " in s:
+                left = s.split(" \\ ", 1)[0].strip()
+                if left.isdigit():
+                    y = int(left)
+                    academic_year_title = f"{y}/{y+1}"
                 else:
-                    academic_year_title = date
+                    academic_year_title = s
+            elif "/" in s:
+                academic_year_title = s
+            elif s.isdigit():
+                y = int(s)
+                academic_year_title = f"{y}/{y+1}"
+            else:
+                academic_year_title = s
 
-            grades = list(ErrorLevel.objects.values('iderrorlevel', 'errorlevelname', 'errorlevelrussian').order_by('iderrorlevel'))
+        grades = list(
+            ErrorLevel.objects.values('iderrorlevel', 'errorlevelname', 'errorlevelrussian')
+            .order_by('iderrorlevel')
+        )
 
-            data_by_grades = []
+        data_by_grades = []
 
-            for grade in grades:
-                base_filter = Q(iderror__iderrortag__isnull=False) & \
-                             Q(idtoken__idsentence__idtext__errorcheckflag=True) & \
-                             Q(iderror__iderrorlevel=grade['iderrorlevel'])
+        for grade in grades:
+            base_filter = (
+                Q(iderror__iderrortag__isnull=False) &
+                Q(idtoken__idsentence__idtext__errorcheckflag=True) &
+                Q(iderror__iderrorlevel=grade['iderrorlevel'])
+            )
 
-                if surname and name:
+            if surname and name:
+                base_filter &= Q(
+                    idtoken__idsentence__idtext__idstudent__iduser__lastname__iexact=surname
+                ) & Q(
+                    idtoken__idsentence__idtext__idstudent__iduser__firstname__iexact=name
+                )
+                if patronymic:
                     base_filter &= Q(
-                        idtoken__idsentence__idtext__idstudent__iduser__lastname__iexact=surname
-                    ) & Q(
-                        idtoken__idsentence__idtext__idstudent__iduser__firstname__iexact=name
-                    )
-                    if patronymic:
-                        base_filter &= Q(
-                            idtoken__idsentence__idtext__idstudent__iduser__middlename__iexact=patronymic
-                        )
-
-                if course:
-                    base_filter &= Q(
-                        idtoken__idsentence__idtext__idstudent__idgroup__studycourse=course
+                        idtoken__idsentence__idtext__idstudent__iduser__middlename__iexact=patronymic
                     )
 
-                if group and academic_year_title:
-                    print(f"Applying group filter: {group}, year: {academic_year_title}")
-                    base_filter &= Q(
-                        idtoken__idsentence__idtext__idstudent__idgroup__groupname=group
-                    ) & Q(
-                        idtoken__idsentence__idtext__idstudent__idgroup__idayear__title=academic_year_title
-                    )
-
-                if text:
-                    base_filter &= Q(idtoken__idsentence__idtext__header=text)
-
-                if text_type:
-                    base_filter &= Q(idtoken__idsentence__idtext__idtexttype__texttypename=text_type)
-
-                data_count_errors = list(
-                    ErrorToken.objects.filter(base_filter)
-                    .values(
-                        "iderror__iderrortag__iderrortag",
-                        "iderror__iderrortag__idtagparent",
-                        "iderror__iderrortag__tagtext",
-                        "iderror__iderrortag__tagtextrussian",
-                        "idtoken__idsentence__idtext",
-                    )
-                    .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+            if course:
+                base_filter &= Q(
+                    idtoken__idsentence__idtext__idstudent__idgroup__studycourse=course
                 )
 
-                print(f"Grade {grade['errorlevelname']}: {len(data_count_errors)} errors")
-
-                data_on_tokens = dashboards.get_data_on_tokens(
-                    data_count_errors, "iderror__iderrortag__iderrortag", True, False
+            if group and academic_year_title:
+                print(f"Applying group filter: {group}, year: {academic_year_title}")
+                base_filter &= Q(
+                    idtoken__idsentence__idtext__idstudent__idgroup__groupname=group
+                ) & Q(
+                    idtoken__idsentence__idtext__idstudent__idgroup__idayear__title=academic_year_title
                 )
-                grade_data = dashboards.get_data_errors(data_on_tokens, level, True)
-                data_by_grades.append(grade_data)
 
-            print(f"Final data_by_grades length: {len(data_by_grades)}")
+            if text:
+                base_filter &= Q(idtoken__idsentence__idtext__header=text)
 
-            return JsonResponse({"data": data_by_grades}, status=200)
+            if text_type:
+                base_filter &= Q(idtoken__idsentence__idtext__idtexttype__texttypename=text_type)
+
+            data_count_errors = list(
+                ErrorToken.objects.filter(base_filter)
+                .values(
+                    "iderror__iderrortag__iderrortag",
+                    "iderror__iderrortag__idtagparent",
+                    "iderror__iderrortag__tagtext",
+                    "iderror__iderrortag__tagtextrussian",
+                    "idtoken__idsentence__idtext",
+                )
+                .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+            )
+
+            print(f"Grade {grade['errorlevelname']}: {len(data_count_errors)} errors")
+
+            # ✅ FIX 3: именованные аргументы (убирает UnboundLocalError text_id_key)
+            data_on_tokens = dashboards.get_data_on_tokens(
+                data_count_errors,
+                id_data="iderror__iderrortag__iderrortag",
+                is_unique_data=True,
+                is_for_one_group=False,
+            )
+
+            grade_data = dashboards.get_data_errors(data_on_tokens, level, True)
+            data_by_grades.append(grade_data)
+
+        print(f"Final data_by_grades length: {len(data_by_grades)}")
+        return JsonResponse({"data": data_by_grades}, status=200)
+
+    # Если прилетело что-то неизвестное
+    return JsonResponse({"error": "Unknown flag_post"}, status=400)
+
 
 def chart_student_dynamics(request):		
     if request.method != 'POST':
@@ -1140,16 +1162,16 @@ def chart_groups_errors(request):
                 'text_types': []
             }, status=500)
 
-def chart_emotions_errors(request):		
+def chart_emotions_errors(request):
     if request.method != 'POST':
         print("=== PROCESSING EMOTIONS GET REQUEST ===")
 
         levels = dashboards.get_levels()
-
         emotions = list(Emotion.objects.values('idemotion', 'emotionname'))
 
+        # ✅ ВОТ ЭТОТ БЛОК ПОМЕНЯТЬ
         groups = list(
-            Group.objects.values("groupname", "idayear__title")
+            Group.objects.values("idgroup", "groupname", "idayear__title")
             .distinct()
             .order_by("groupname")
         )
@@ -1187,7 +1209,7 @@ def chart_emotions_errors(request):
             .filter(
                 Q(iderror__iderrortag__isnull=False) &
                 Q(idtoken__idsentence__idtext__errorcheckflag=True) &
-                Q(idtoken__idsentence__idtext__idemotion__isnull=False)  
+                Q(idtoken__idsentence__idtext__idemotion__isnull=False)
             )
             .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
         )
@@ -1198,7 +1220,6 @@ def chart_emotions_errors(request):
             is_unique_data=True,
             is_for_one_group=False,
         )
-
 
         data = dashboards.get_data_errors(data_on_tokens, level=0, is_sorted=True)
 
@@ -1346,7 +1367,7 @@ def chart_emotions_errors(request):
 
             return JsonResponse({"data_type_errors": data}, status=200)
 
-def chart_self_rating_errors(request):		
+def chart_self_rating_errors(request):
     if request.method != 'POST':
 
         levels = dashboards.get_levels()
@@ -1354,7 +1375,7 @@ def chart_self_rating_errors(request):
         self_ratings = []
         for value, label in Text.TASK_RATES:
             texts_with_rating = Text.objects.filter(
-                selfrating=value, 
+                selfrating=value,
                 errorcheckflag=True
             ).exists()
             if texts_with_rating:
@@ -1364,11 +1385,12 @@ def chart_self_rating_errors(request):
                 })
 
         if not self_ratings:
-            self_ratings = [{'selfrating': value, 'selfrating_text': label} 
-                           for value, label in Text.TASK_RATES]
+            self_ratings = [{'selfrating': value, 'selfrating_text': label}
+                            for value, label in Text.TASK_RATES]
 
+        # ✅ ВОТ ТУТ: ДОБАВИТЬ idgroup
         groups = list(
-            Group.objects.values("groupname", "idayear__title")
+            Group.objects.values("idgroup", "groupname", "idayear__title")
             .distinct()
             .order_by("groupname")
         )
@@ -1406,7 +1428,7 @@ def chart_self_rating_errors(request):
             .filter(
                 Q(iderror__iderrortag__isnull=False) &
                 Q(idtoken__idsentence__idtext__errorcheckflag=True) &
-                Q(idtoken__idsentence__idtext__selfrating__isnull=False)  
+                Q(idtoken__idsentence__idtext__selfrating__isnull=False)
             )
             .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
         )
@@ -1421,7 +1443,6 @@ def chart_self_rating_errors(request):
         data = dashboards.get_data_errors(data_on_tokens, level=0, is_sorted=True)
 
         tag_parents, dict_children = dashboards.get_dict_children()
-
 
         return render(
             request,
@@ -1439,11 +1460,11 @@ def chart_self_rating_errors(request):
                 "dict_children": dict_children,
             },
         )
-    
+
     else:
         list_filters = json.loads(request.body)
         flag_post = list_filters['flag_post']
-        
+
         if flag_post == 'enrollment_date':
             enrollment_date = dashboards.get_enrollment_date(list_filters)
             return JsonResponse({'enrollment_date': enrollment_date}, status=200)
@@ -1465,22 +1486,16 @@ def chart_self_rating_errors(request):
             return JsonResponse({"texts": texts, "text_types": text_types}, status=200)
 
         if flag_post == "choice_text":
-            groups, courses, text_types = dashboards.get_filters_for_choice_text(
-                list_filters
-            )
+            groups, courses, text_types = dashboards.get_filters_for_choice_text(list_filters)
             return JsonResponse(
                 {"groups": groups, "courses": courses, "text_types": text_types},
                 status=200,
             )
 
         if flag_post == "choice_text_type":
-            groups, courses, texts = dashboards.get_filters_for_choice_text_type(
-                list_filters
-            )
-            return JsonResponse(
-                {"groups": groups, "courses": courses, "texts": texts}, status=200
-            )
-            
+            groups, courses, texts = dashboards.get_filters_for_choice_text_type(list_filters)
+            return JsonResponse({"groups": groups, "courses": courses, "texts": texts}, status=200)
+
         if flag_post == 'update_diagrams':
             group = list_filters.get('group')
             date = list_filters.get('enrollment_date')
@@ -1501,9 +1516,11 @@ def chart_self_rating_errors(request):
                 else:
                     academic_year_title = date
 
-            base_filter = Q(iderror__iderrortag__isnull=False) & \
-                         Q(idtoken__idsentence__idtext__errorcheckflag=True) & \
-                         Q(idtoken__idsentence__idtext__selfrating=self_rating)  
+            base_filter = (
+                Q(iderror__iderrortag__isnull=False) &
+                Q(idtoken__idsentence__idtext__errorcheckflag=True) &
+                Q(idtoken__idsentence__idtext__selfrating=self_rating)
+            )
 
             if surname and name:
                 base_filter &= Q(
@@ -1557,6 +1574,7 @@ def chart_self_rating_errors(request):
             print(f"Final data length: {len(data)}")
 
             return JsonResponse({"data_type_errors": data}, status=200)
+
         
 def chart_relation_assessment_self_rating(request):    
     if request.method != 'POST':
