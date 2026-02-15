@@ -13,6 +13,7 @@ from django_filters.views import FilterView
 from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
 from django.urls import reverse
+from django.utils.html import escape
 from core_app.models import (
     ExerciseTextType,
     Exercise,
@@ -368,12 +369,17 @@ def wrap_fragments_with_spans(text, reviews):
     for fragment in fragments:
         start = fragment.startposition + offset
         end = fragment.endposition + offset
-        
+        update_url = reverse('update_teacher_comment', args=[0])
+        delete_url = reverse('delete_teacher_comment', args=[0])
+        escaped_comment = escape(fragment.teachercomment or "")
         span_tag = (
             f'<span class="selection" '
             f'data-fragment-id="{fragment.idexercisetextreview}" '
             f'data-review="{fragment.review}" '
-            f'data-teacher-comment="{fragment.teachercomment or ""}">'
+            # f'data-teacher-comment="{fragment.teachercomment or ""}" '
+            f'data-teacher-comment="{escaped_comment}" '
+            f'data-delete-url="{delete_url}" '
+            f'data-update-url="{update_url}">'
         )
         print(f"offset before: {offset}")
         result = result[:start] + span_tag + result[start:end] + '</span>' + result[end:]
