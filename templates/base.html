@@ -20,7 +20,7 @@
             </label>
             <ul>
                 <li>
-                    <a href="/text/search_texts/" class="header__link">
+                    <a href="{% url 'search_texts' %}" class="header__link">
                         <svg class="bi" xmlns="http://www.w3.org/2000/svg" height="30px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-width="1.5" d="M22 12.2v1.53c0 3.9 0 5.85-1.17 7.06S17.77 22 14 22h-4c-3.77 0-5.66 0-6.83-1.21S2 17.63 2 13.73V12.2c0-2.28 0-3.43.52-4.38.52-.95 1.47-1.53 3.36-2.71l2-1.24C9.88 2.62 10.9 2 12 2c1.1 0 2.11.62 4.12 1.87l2 1.24c1.9 1.18 2.84 1.76 3.36 2.71M15 18H9"></path>
                         </svg>
@@ -28,7 +28,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="/years_groups/show_groups" class="header__link">
+                    <a href="{% url 'show_groups' %}" class="header__link">
                         <svg class="header-svg" xmlns="http://www.w3.org/2000/svg" height="30px" fill="none" stroke="currentColor" viewBox="0 0 23 23">
                             <circle cx="12" cy="12" r="3" stroke-width="1.5"></circle>
                             <path stroke-linecap="round" stroke-width="1.5" d="M3.66 10.64c.47.3.78.8.78 1.36s-.3 1.06-.78 1.36A2 2 0 0 0 2.6 15.4c.05.4.28.8.75 1.61.47.8.7 1.21 1.01 1.45a2 2 0 0 0 1.48.4c.24-.03.49-.13.82-.3.5-.27 1.09-.28 1.57 0s.77.8.79 1.35c.01.38.05.64.14.87a2 2 0 0 0 1.08 1.08c.37.15.84.15 1.77.15s1.4 0 1.77-.15a2 2 0 0 0 1.08-1.08c.09-.23.13-.49.14-.87.02-.56.3-1.07.8-1.35a1.62 1.62 0 0 1 1.56 0c.33.17.58.27.82.3a2 2 0 0 0 1.48-.4c.31-.24.54-.64 1.01-1.45l.49-.87m-.81-2.77c-.47-.3-.78-.8-.78-1.36s.3-1.06.78-1.36A2 2 0 0 0 21.4 8.6c-.05-.4-.28-.8-.75-1.61-.47-.8-.7-1.21-1.01-1.45a2 2 0 0 0-1.48-.4c-.24.03-.49.13-.82.3-.5.27-1.09.28-1.57 0s-.77-.8-.79-1.35a2.47 2.47 0 0 0-.14-.87 2 2 0 0 0-1.08-1.08C13.4 2 12.93 2 12 2s-1.4 0-1.77.15a2 2 0 0 0-1.08 1.08c-.09.23-.13.49-.14.87-.02.56-.3 1.07-.8 1.35-.47.28-1.06.27-1.56 0a2.46 2.46 0 0 0-.82-.3 2 2 0 0 0-1.48.4c-.31.24-.54.64-1.01 1.45l-.49.87"></path>
@@ -37,7 +37,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="/students/show_students" class="header__link">
+                    <a href="{% url 'show_students' %}" class="header__link">
                         <svg class="header-svg" viewBox="0 0 74 77" fill="none" height="29px" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path fill="currentColor" d="M0.557646 74.9334C0.599016 75.7608 1.30329 76.398 2.13068 76.3566C2.95807 76.3152 3.59527 75.611 3.5539 74.7836L0.557646 74.9334ZM30.2278 36.972L30.1794 38.4712L31.7278 38.5212V36.972H30.2278ZM30.2278 30.172H31.7278V28.9013L30.4743 28.6924L30.2278 30.172ZM3.5539 74.7836C3.23856 68.4767 4.24358 59.0975 8.19673 51.4558C10.164 47.6529 12.8362 44.3276 16.3931 41.9971C19.9364 39.6756 24.4405 38.2861 30.1794 38.4712L30.2761 35.4728C23.969 35.2694 18.8477 36.8023 14.749 39.4878C10.6639 42.1643 7.67734 45.9306 5.53215 50.0774C1.26038 58.335 0.225357 68.2876 0.557646 74.9334L3.5539 74.7836ZM31.7278 36.972V30.172H28.7278V36.972H31.7278ZM30.4743 28.6924C28.1117 28.2986 26.147 26.7136 24.8091 24.3485C23.4678 21.9775 22.8219 18.9164 23.1 15.8575C23.3772 12.8081 24.5636 9.8427 26.7867 7.59273C28.9942 5.35846 32.326 3.7256 37.0992 3.4983L36.9565 0.501698C31.5296 0.760126 27.4541 2.64876 24.6526 5.48423C21.8666 8.30401 20.4423 11.9566 20.1123 15.5859C19.7832 19.2057 20.5339 22.8841 22.1979 25.8256C23.8654 28.7732 26.5151 31.0739 29.9812 31.6516L30.4743 28.6924Z" stroke-width="1.5" />
                             <path d="M43.7722 30.172V36.972C67.8641 36.1949 72.5919 61.9058 71.9442 74.8585H2M43.7722 30.172C49.6363 29.1946 53.0421 22.3177 52.3824 15.6003C53.0086 25.7033 46.9032 29.5243 43.7722 30.172ZM36.9721 2C41.622 2.22142 45.1111 3.70458 47.5889 5.88579" stroke-width="5" />
@@ -46,7 +46,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="/statistics/" class="header__link">
+                    <a href="{% url 'statistics' %}" class="header__link">
                         <svg class="header-svg" xmlns="http://www.w3.org/2000/svg" height="30px" fill="none" stroke="currentColor" viewBox="0 0 23 23">
                             <path stroke-linecap="round" stroke-width="1.5" d="M4 18V6M20 12v6"></path>
                             <path stroke-width="1.5" d="M12 10c4.42 0 8-1.8 8-4s-3.58-4-8-4-8 1.8-8 4 3.58 4 8 4Z"></path>
@@ -66,12 +66,12 @@
                     </a>
                     <ul class="drop_down_list">
                         <li class="drop_down_list_item">
-                            <a href="/exercise/teacher_exercises/" class="drop_down_link">
+                            <a href="{% url 'teacher_exercises' %}" class="drop_down_link">
                                 Список упражнений
                             </a>
                         </li>
                         <li class="drop_down_list_item">
-                            <a href="/exercise/review_text_list/" class="drop_down_link">
+                            <a href="{% url 'review_text_list' %}" class="drop_down_link">
                                 Список текстов для рецензирования
                             </a>
                         </li>
@@ -91,7 +91,7 @@
             </ul>
         </nav>
         <div class="header__right">
-            <a href="/auth/logout" class="header__link">
+            <a href="{% url 'logout' %}" class="header__link">
                 <div id="user-link"></div>
                 <svg class="header-svg" xmlns="http://www.w3.org/2000/svg" height="33px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-width="1.5" d="M9 4.5H8c-2.357 0-3.536 0-4.268.732C3 5.964 3 7.143 3 9.5v.5m6 9.5H8c-2.357 0-3.536 0-4.268-.732C3 18.035 3 16.857 3 14.5V14M13.658 2.347c-2.162-.377-3.243-.565-3.95.062C9 3.036 9 4.183 9 6.476v11.048c0 2.293 0 3.44.707 4.067.707.627 1.788.439 3.95.062l2.33-.406c2.394-.418 3.591-.627 4.302-1.505.711-.879.711-2.149.711-4.69V8.948c0-2.54 0-3.81-.71-4.689-.476-.587-1.168-.875-2.29-1.126M12 11v2"></path>
