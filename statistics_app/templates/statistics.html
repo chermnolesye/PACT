@@ -194,13 +194,13 @@
   </div>
 
     <script> 
-        document.querySelector('#download-button').addEventListener('click', function() {
+      document.querySelector('#download-button').addEventListener('click', function() {
           const groupId = document.getElementById('group').value;
           if (!groupId) {
-            return;
+              return;
           }
-          window.location.href = `/statistics/export_group_error_stats?group=${groupId}`;
-        });
-
+          const exportUrl = "{% url 'export_group_error_stats' %}?group=" + groupId;
+          window.location.href = exportUrl;
+      });
     </script>
 {% endblock %}
