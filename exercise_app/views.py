@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from django_filters.views import FilterView
 from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
+from django.urls import reverse
 from core_app.models import (
     ExerciseTextType,
     Exercise,
@@ -320,7 +321,9 @@ def review_teacher(request, idexercise=1):
         mark_form = AddMarkForm(request.POST, instance=exercise)
         if mark_form.is_valid():
             mark_form.save()
-            return redirect(request.path + f"?idexercise={exercise.idexercise}")
+            url = reverse('review_teacher')
+            params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+            return redirect(url + params)
     else:
         mark_form = AddMarkForm(instance=exercise)
 
@@ -616,7 +619,11 @@ def grade_text(request, idexercise=2):
          mark_form = AddMarkForm(request.POST, instance=exercise)
          if mark_form.is_valid():
              mark_form.save()
-             return redirect(request.path + f"?idexercise={exercise.idexercise}")
+             
+             #return redirect(request.path + f"?idexercise={exercise.idexercise}")
+             url = reverse('grade_text')
+             params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+             return redirect(url + params)
     else:
          mark_form = AddMarkForm(instance=exercise)
 
