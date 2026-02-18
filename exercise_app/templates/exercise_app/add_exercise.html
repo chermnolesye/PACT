@@ -413,7 +413,7 @@
             </div>
         `;
 
-            fetch(`/exercise/gradingtexts/?${params}`)
+            fetch("{% url 'get_grading_texts' %}?"+params)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`Ошибка загрузки текстов: ${response.status}`);
@@ -682,7 +682,11 @@
             tasksSection.style.display = 'block';
             tasksList.innerHTML = '<div class="loading">Загрузка заданий...</div>';
 
-            fetch(`/exercise/reviewtexts/${textId}/tasks/`)
+            //fetch("{% url 'get_grading_texts' %}?"+params)
+            const urlTemplate = "{% url 'get_text_tasks' text_id=0 %}";
+            const url = urlTemplate.replace('/0/', '/' + textId + '/');
+
+            fetch(url)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Ошибка загрузки заданий');
