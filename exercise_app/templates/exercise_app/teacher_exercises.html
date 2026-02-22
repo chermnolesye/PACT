@@ -544,7 +544,9 @@
     // AJAX удаление
     function deleteExercise() {
         if (exerciseToDelete) {
-            fetch(`/exercise/teacher_exercises/delete/${exerciseToDelete}/`, {
+            const url = `/exercise/teacher_exercises/delete/${exerciseToDelete}/`;
+            // fetch(`/exercise/teacher_exercises/delete/${exerciseToDelete}/`, {
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',

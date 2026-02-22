@@ -216,7 +216,6 @@ def annotate_text(request, text_id=2379):
             url = reverse('annotate_text')
             params = f"?text_id={text.idtext}&markup={selected_markup}"
             return redirect(url + params)
-
     else:
         grade_form = AddTextAnnotationForm(instance=text)
 
@@ -639,7 +638,7 @@ def teacher_load_text(request):
         {"form": form, "fio": get_teacher_fio(request)},
     )
 
-
+# Это надо убрать????
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def home_view(request):
     return render(request, "home.html")
