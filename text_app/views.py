@@ -1,5 +1,5 @@
 from authorization_app.utils import has_teacher_rights
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -888,3 +888,153 @@ def search_texts(request):
         "fio": get_teacher_fio(request),
     }
     return render(request, "search_texts.html", context)
+
+
+def has_student_rights(user):
+    return (
+        user.is_authenticated
+        and hasattr(user, "idrights")
+        and user.idrights
+        and user.idrights.rightsname == "Студент"
+    )
+
+def get_student_fio(request):
+    user = request.user
+    return f"{user.lastname} {user.firstname} {user.middlename or ''}".strip()
+
+@user_passes_test(has_student_rights, login_url="/auth/login/")
+@login_required
+def student_search_texts(request):
+    text_type_id = (request.GET.get("text_type") or "").strip()
+    year_id = (request.GET.get("year") or "").strip()
+
+    text_types = TextType.objects.all().values("idtexttype", "texttypename").distinct()
+    text_type_data = [{"id": t["idtexttype"], "name": t["texttypename"]} for t in text_types]
+
+    texts_qs = (
+        Text.objects
+        .exclude(idtexttype__isnull=True)
+        .filter(idstudent__iduser=request.user)
+    )
+
+    years = (
+        texts_qs
+        .values("idstudent__idgroup__idayear__idayear", "idstudent__idgroup__idayear__title")
+        .distinct()
+        .order_by("idstudent__idgroup__idayear__title")
+    )
+    years_data = [
+        {"id": y["idstudent__idgroup__idayear__idayear"], "name": y["idstudent__idgroup__idayear__title"]}
+        for y in years
+    ]
+
+    if text_type_id:
+        qs = texts_qs.filter(idtexttype_id=text_type_id)
+
+        if year_id:
+            qs = qs.filter(idstudent__idgroup__idayear=year_id)
+
+        qs = qs.values(
+            "idtext",
+            "header",
+            "idtexttype__texttypename",
+            "modifieddate",
+        ).order_by("-modifieddate", "header")
+
+        texts_of_type = [
+            {
+                "id": t["idtext"],
+                "header_text": t["header"],
+                "date_modificate": t["modifieddate"],
+                "text_type": t["idtexttype__texttypename"],
+            }
+            for t in qs
+        ]
+
+        context = {
+            "texts_of_type": texts_of_type,
+            "text_types": text_type_data,
+            "years": years_data,
+            "selected_text_type": text_type_id,
+            "selected_year": year_id,
+            "selected_text": "",
+            "finded_text_by_name": [],
+            "texts_type_folders": {},
+            "fio": get_student_fio(request),
+        }
+        return render(request, "student_search_texts.html", context)
+
+    selected_text = ""
+    selected_year = ""
+    selected_text_type = ""
+
+    finded_text_by_name_data = []
+
+    if request.method == "POST":
+        selected_text = (request.POST.get("text") or "").strip()
+        selected_year = (request.POST.get("year") or "").strip()
+        selected_text_type = (request.POST.get("text_type") or "").strip()
+
+        qs = texts_qs
+
+        if selected_text:
+            qs = qs.filter(header__icontains=selected_text)
+
+        if selected_year:
+            qs = qs.filter(idstudent__idgroup__idayear=selected_year)
+
+        if selected_text_type:
+            qs = qs.filter(idtexttype_id=selected_text_type)
+
+        qs = qs.values(
+            "idtext",
+            "header",
+            "modifieddate",
+        ).order_by("-modifieddate", "header")
+
+        finded_text_by_name_data = [
+            {
+                "id": t["idtext"],
+                "header_text": t["header"],
+                "date_modificate": t["modifieddate"],
+            }
+            for t in qs
+        ]
+
+    qs_for_folders = texts_qs
+
+    if request.method == "POST" and selected_year:
+        qs_for_folders = qs_for_folders.filter(idstudent__idgroup__idayear=selected_year)
+
+    texts_for_folders = qs_for_folders.values(
+        "idtext",
+        "header",
+        "idtexttype__texttypename",
+        "modifieddate",
+    )
+
+    texts_by_types_for_folders = {}
+    for t in texts_for_folders:
+        ttype = t["idtexttype__texttypename"] or "Не указано"
+        if ttype not in texts_by_types_for_folders:
+            texts_by_types_for_folders[ttype] = []
+        texts_by_types_for_folders[ttype].append(
+            {
+                "id": t["idtext"],
+                "header_text": t["header"],
+                "date_modificate": t["modifieddate"],
+            }
+        )
+
+    context = {
+        "texts_of_type": [],
+        "text_types": text_type_data,
+        "years": years_data,
+        "finded_text_by_name": finded_text_by_name_data,
+        "texts_type_folders": texts_by_types_for_folders,
+        "selected_text": selected_text,
+        "selected_year": selected_year,
+        "selected_text_type": selected_text_type,
+        "fio": get_student_fio(request),
+    }
+    return render(request, "student_search_texts.html", context)
