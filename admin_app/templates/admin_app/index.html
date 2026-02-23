@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админ-панель</title>
+</head>
+<body>
+    <h1>Добро пожаловать, администратор</h1>
+
+    <ul>
+        <li><a href="{% url 'admin_students_list' %}">Студенты</a></li>
+        <li><a href="{% url 'admin_teachers_list' %}">Преподаватели</a></li>
+    </ul>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div>{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

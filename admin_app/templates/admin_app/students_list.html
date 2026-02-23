@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Студенты</title>
+</head>
+<body>
+    <h1>Студенты</h1>
+
+    <p><a href="{% url 'admin_index' %}">← Назад в админ-панель</a></p>
+    <p><a href="{% url 'register_student' %}">+ Зарегистрировать нового студента</a></p>
+
+    <form method="get" style="margin: 16px 0;">
+        <input type="text" name="q" placeholder="Поиск по ФИО или логину" value="{{ q }}">
+        <button type="submit">Найти</button>
+        {% if q %}
+            <a href="{% url 'admin_students_list' %}">Сбросить</a>
+        {% endif %}
+    </form>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div>{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <table border="1" cellpadding="6" cellspacing="0">
+        <thead>
+            <tr>
+                <th>ФИО</th>
+                <th>Логин</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for u in students %}
+            <tr>
+                <td>{{ u.lastname }} {{ u.firstname }} {{ u.middlename|default_if_none:"" }}</td>
+                <td>{{ u.login }}</td>
+                <td>
+                    <form method="post" action="{% url 'admin_reset_password' u.iduser %}" style="display:inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'admin_students_list' %}">
+                        <button type="submit">Сбросить пароль</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="3">Нет студентов</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -640,10 +640,6 @@ def teacher_load_text(request):
     )
 
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
-def home_view(request):
-    return render(request, "home.html")
-
 
 def get_teacher_fio(request):
     return request.session.get("teacher_fio", "")

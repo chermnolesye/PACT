@@ -2,15 +2,19 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Регистрация студента в существующую группу</title>
+    <title>Регистрация преподавателя</title>
 </head>
 <body>
-    <h1>Регистрация студента</h1>
+    <h1>Регистрация преподавателя</h1>
+
+    <p><a href="{% url 'admin_teachers_list' %}">← К списку преподавателей</a></p>
+
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">Зарегистрировать</button>
     </form>
+
     {% if messages %}
         {% for message in messages %}
             <div>{{ message }}</div>
