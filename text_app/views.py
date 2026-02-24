@@ -8,7 +8,7 @@ import json
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
-from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm
+from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm, StudentLoadTextForm
 from nltk.tokenize import sent_tokenize, word_tokenize
 from core_app.models import (
     Text,
@@ -1040,4 +1040,56 @@ def student_search_texts(request):
     return render(request, "student_search_texts.html", context)
 
 def student_load_text(request):
-    return render(request, "student_load_text.html")
+    student_profile = request.user.student
+    if request.method == "POST":
+        form = StudentLoadTextForm(request.POST)
+        if form.is_valid():
+            new_text = form.save(commit=False)
+            new_text.student = student_profile  # Привязываем студента
+            new_text.group = student_profile.idgroup  # Привязываем группу
+            new_text.save()
+
+            sentences = sent_tokenize(new_text.text, language="german")
+
+            print(
+                f"Начинаем токенизацию текста. Количество предложений: {len(sentences)}"
+            )
+
+            for order, sentence_text in enumerate(sentences, start=0):
+                if sentence_text.strip():
+                    sentence_obj = Sentence.objects.create(
+                        sentensetext=sentence_text,
+                        ordernumber=order,
+                        idtext=new_text,
+                    )
+                    print(f"Добавлено предложение {order}: {sentence_text}")
+
+                    tokens = word_tokenize(sentence_text, language="german")
+                    print(
+                        f"Токенизируем предложение {order}, количество слов: {len(tokens)}"
+                    )
+
+                    for t_order, token_text in enumerate(tokens, start=0):
+                        Token.objects.create(
+                            tokentext=token_text,
+                            tokenordernumber=t_order,
+                            idsentence=sentence_obj,
+                        )
+                        print(f"Добавлен токен {t_order}: {token_text}")
+
+            print(
+                f"Токенизация завершена для текста с ID {new_text.idtext}. "
+                f"Всего предложений: {len(sentences)}, слов: {sum(len(word_tokenize(s, language='german')) for s in sentences)}."
+            )
+
+            return redirect("search_texts")
+        else:
+            print(f"Форма невалидна. Ошибки: {form.errors}")
+
+    return render(
+        request,
+        "student_load_text.html",
+        {"form": form},
+    )
+
+    # return render(request, "student_load_text.html")

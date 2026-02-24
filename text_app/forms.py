@@ -181,3 +181,50 @@ class AddErrorAnnotationForm(forms.ModelForm):
             'selected_tag': selected_tag.tagtext if selected_tag else '',
             'creator': creator_name
         }
+
+# ___ формы для кабинета студента
+
+class StudentLoadTextForm(forms.ModelForm):
+    createdate = forms.DateField(
+        initial=date.today(),
+        widget=forms.DateInput(
+            attrs={'type': 'date', 'class': 'form-control'}
+        ),
+        label="Дата создания"
+    )
+
+    selfrating = forms.TypedChoiceField(
+        choices=Text.TASK_RATES,
+        coerce=int,
+        label="Самооценка",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    selfassesment = forms.TypedChoiceField(
+        choices=Text.RATES,
+        coerce=int,
+        label="Оценка",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Text
+        fields = [
+            'header',
+            'text',
+            'createdate',
+            'idtexttype',
+            'idemotion',
+            'idwriteplace',
+            'idwritetool',
+            'educationlevel',
+            'selfrating',      
+            'selfassesment',   
+        ]
+
+    def __init__(self, *args, **kwargs):
+        self.student = kwargs.pop('student', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.student and self.student.idgroup:
+            self.initial['educationlevel'] = self.student.idgroup.studycourse
+            self.fields['educationlevel'].widget.attrs['readonly'] = True
