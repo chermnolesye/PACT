@@ -10,4 +10,5 @@ urlpatterns = [
     path('get_tags/', views.get_tags, name='get_tags'),
     path('search_texts/', views.search_texts, name='search_texts'),
     path('student_search_texts/', views.student_search_texts, name='student_search_texts'),
+    path('student_load_text/', views.student_load_text, name='student_load_text'),
 ]

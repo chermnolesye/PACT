@@ -1038,3 +1038,6 @@ def student_search_texts(request):
         "fio": get_student_fio(request),
     }
     return render(request, "student_search_texts.html", context)
+
+def student_load_text(request):
+    return render(request, "student_load_text.html")
