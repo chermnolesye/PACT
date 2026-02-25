@@ -12,7 +12,7 @@
     <!--<div id="header-container"></div>-->
     <!-- Всплывающее окно с информацией об ошибке -->
     <div class="error-popup" id="error-popup">
-        <span class="close-btn" id="close-popup">&#x2715;</span>
+        <!-- <span class="close-btn" id="close-popup">&#x2715;</span> -->
         <h3>
             <span id="error-tag"></span>
             <span id="error-tag-abbrev"></span>
@@ -435,7 +435,6 @@
     
             // Функция для отображения всплывающего окна с информацией об ошибке
             function showPopup(tokenElement) {
-
                 const errorTag = tokenElement.dataset.errorTag;
                 const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
                 const errorLevel = tokenElement.dataset.errorLevel;
@@ -482,19 +481,22 @@
 
 
             // Закрытие окна с анимацией
-            closePopupBtn.addEventListener('click', function() {
-                const popup = document.getElementById('error-popup');
-                popup.classList.remove('show'); // Убираем класс для анимации исчезновения
-                setTimeout(() => {
-                    popup.style.display = 'none'; // Скрываем окно после анимации
-                }, 300); // Задержка, соответствующая длительности перехода
-            });
-    
-            // Слушаем клик по токенам
-            document.querySelectorAll('.error-tag').forEach(function(errorTagElement) {
-                errorTagElement.addEventListener('click', function(e) {
+            document.querySelectorAll('.error-tag').forEach(function (errorTagElement) {
+                errorTagElement.addEventListener('mouseover', function (e) {
                     e.stopPropagation(); // Чтобы не всплывало до .token
-                    showPopup(this);     
+                    showPopup(this);
+                });
+                errorTagElement.addEventListener('click', function (e) {
+
+                    document.getElementById('annotation-modal').style.display = 'flex';
+                    EditAnnotationForm(this);
+                });
+                errorTagElement.addEventListener('mouseleave', function (e) {
+                    const popup = document.getElementById('error-popup');
+                    popup.classList.remove('show'); // Убираем класс для анимации исчезновения
+                    setTimeout(() => {
+                        popup.style.display = 'none'; // Скрываем окно после анимации
+                    }, 300); // Задержка, соответствующая длительности перехода
                 });
             });
         });
