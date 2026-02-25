@@ -152,7 +152,7 @@ def show_text_markup(request, text_id=None):
         "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
     }
 
-    return render(request, "show_text_markup.html", context)
+    return render(request, "student_show_text_markup.html", context)
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def annotate_text(request, text_id=2379):
@@ -433,7 +433,7 @@ def show_texts(request):
     text_type_id = ""
     grouping = ""
 
-    finded_text_by_name_data = []
+    found_text_by_name_data = []
     grouped_texts = {}
     if request.method == "POST":
         # Получаем параметры из формы
@@ -467,12 +467,12 @@ def show_texts(request):
             "modifieddate",
         )
 
-        finded_text_by_name_data = [
+        found_text_by_name_data = [
             {"id": text["idtext"], "header_text": text["header"]} for text in texts
         ]
 
         if grouping == "fio":
-            finded_text_by_name_data = []
+            found_text_by_name_data = []
             for text in texts:
                 fio_user = (
                     f"{text['idstudent__iduser__lastname']} "
@@ -487,7 +487,7 @@ def show_texts(request):
                     )
 
         elif grouping == "category":
-            finded_text_by_name_data = []
+            found_text_by_name_data = []
             for text in texts:
                 category = (
                     text["idtexttype__texttypename"]
@@ -532,7 +532,7 @@ def show_texts(request):
         "groups": group_data,
         "years": years_data,
         "text_types": text_type_data,
-        "finded_text_by_name": finded_text_by_name_data,
+        "found_text_by_name": found_text_by_name_data,
         "grouped_texts": grouped_texts,
         "texts_type_folders": texts_by_types_for_folders,
         "selected_text": text_name,  # Алена, не удаляй это,пожалуйста, это надо для сохранения введенного поиска
@@ -771,7 +771,7 @@ def search_texts(request):
     text_type_id = ""
     grouping = ""
 
-    finded_text_by_name_data = []
+    found_text_by_name_data = []
     grouped_texts = {}
     if request.method == "POST":
         # Получаем параметры из формы
@@ -805,7 +805,7 @@ def search_texts(request):
         )
 
         # Обновляем структуру данных для результатов поиска
-        finded_text_by_name_data = [
+        found_text_by_name_data = [
             {
                 "id": text["idtext"],
                 "header_text": text["header"],
@@ -818,7 +818,7 @@ def search_texts(request):
         ]
 
         if grouping == "fio":
-            finded_text_by_name_data = []
+            found_text_by_name_data = []
             grouped_texts = {}
             for text in texts:
                 fio_user = (
@@ -837,7 +837,7 @@ def search_texts(request):
                 })
 
         elif grouping == "category":
-            finded_text_by_name_data = []
+            found_text_by_name_data = []
             grouped_texts = {}
             for text in texts:
                 category = (
@@ -886,7 +886,7 @@ def search_texts(request):
         "groups": group_data,
         "years": years_data,
         "text_types": text_type_data,
-        "finded_text_by_name": finded_text_by_name_data,
+        "found_text_by_name": found_text_by_name_data,
         "grouped_texts": grouped_texts,
         "texts_type_folders": texts_by_types_for_folders,
         "selected_text": text_name,  
@@ -947,15 +947,17 @@ def student_search_texts(request):
             "idtext",
             "header",
             "idtexttype__texttypename",
-            "modifieddate",
+            "createdate",
+            "textgrade"
         ).order_by("-modifieddate", "header")
 
         texts_of_type = [
             {
                 "id": t["idtext"],
                 "header_text": t["header"],
-                "date_modificate": t["modifieddate"],
+                "date_modificate": t["createdate"],
                 "text_type": t["idtexttype__texttypename"],
+                "mark": t["textgrade"]
             }
             for t in qs
         ]
@@ -967,7 +969,7 @@ def student_search_texts(request):
             "selected_text_type": text_type_id,
             "selected_year": year_id,
             "selected_text": "",
-            "finded_text_by_name": [],
+            "found_text_by_name": [],
             "texts_type_folders": {},
             "fio": get_student_fio(request),
         }
@@ -977,7 +979,7 @@ def student_search_texts(request):
     selected_year = ""
     selected_text_type = ""
 
-    finded_text_by_name_data = []
+    found_text_by_name_data = []
 
     if request.method == "POST":
         selected_text = (request.POST.get("text") or "").strip()
@@ -998,14 +1000,14 @@ def student_search_texts(request):
         qs = qs.values(
             "idtext",
             "header",
-            "modifieddate",
+            "createdate",
         ).order_by("-modifieddate", "header")
 
-        finded_text_by_name_data = [
+        found_text_by_name_data = [
             {
                 "id": t["idtext"],
                 "header_text": t["header"],
-                "date_modificate": t["modifieddate"],
+                "date_modificate": t["createdate"],
             }
             for t in qs
         ]
@@ -1019,7 +1021,7 @@ def student_search_texts(request):
         "idtext",
         "header",
         "idtexttype__texttypename",
-        "modifieddate",
+        "createdate",
     )
 
     texts_by_types_for_folders = {}
@@ -1031,7 +1033,7 @@ def student_search_texts(request):
             {
                 "id": t["idtext"],
                 "header_text": t["header"],
-                "date_modificate": t["modifieddate"],
+                "date_modificate": t["createdate"],
             }
         )
 
@@ -1039,7 +1041,7 @@ def student_search_texts(request):
         "texts_of_type": [],
         "text_types": text_type_data,
         "years": years_data,
-        "finded_text_by_name": finded_text_by_name_data,
+        "found_text_by_name": found_text_by_name_data,
         "texts_type_folders": texts_by_types_for_folders,
         "selected_text": selected_text,
         "selected_year": selected_year,

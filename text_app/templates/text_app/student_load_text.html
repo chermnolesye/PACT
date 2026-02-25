@@ -26,57 +26,39 @@
                         </div>
                         <div class="vertical-level">
                             <label for="{{ form.text.id_for_label }}">Текст</label>
-                            {{ form.text }}
+                            <div id="student_text">{{ form.text}}</div>
                         </div>
                     </div>
 
-                    <div> 
+                    <div>
                         <div class="vertical-level">
-                            <label for="{{ form.group.id_for_label }}">Группа</label>
-                            {{ form.group }}
-                        </div>
-                        <div class="vertical-level">
-                            <label for="{{ form.student.id_for_label }}">Автор</label>
-                            {{ form.student }}
-                        </div>
-                        <div class="vertical-level">
-                            <label for="{{ form.educationlevel.id_for_label }}">Курс обучения</label>
-                            <input type="text" id="id_educationlevel" name="educationlevel" value="{{ form.educationlevel.value }}" readonly>
-                        </div>
-                        <div class="vertical-level">
-                            <label for="{{ form.createdate.id_for_label }}">Дата создания</label>
+                            <label for="{{ form.createdate.id_for_label}}">Дата создания</label>
                             {{ form.createdate }}
                         </div>
                         <div class="vertical-level">
                             <label for="{{ form.idtexttype.id_for_label }}">Тип текста</label>
                             {{ form.idtexttype }}
                         </div>
-                    </div>
-                </div>
-
-                <div class="horizontal-wrap">
-                    <div class="vertical-level">
-                        <label for="{{ form.idemotion.id_for_label }}">Эмоция</label>
-                        {{ form.idemotion }}
-                    </div>
-                    <div class="vertical-level">
-                        <label for="{{ form.idwriteplace.id_for_label }}">Место написания</label>
-                        {{ form.idwriteplace }}
-                    </div>
-                </div>
-
-                <div class="horizontal-wrap">
-                    <div class="vertical-level">
-                        <label for="{{ form.idwritetool.id_for_label }}">Инструмент написания</label>
-                        {{ form.idwritetool }}
-                    </div>        
-                    <div class="vertical-level">
-                        <label for="{{ form.selfrating.id_for_label }}">Самооценивание</label>
-                        {{ form.selfrating }}
-                    </div>
-                    <div class="vertical-level">
-                        <label for="{{ form.selfassesment.id_for_label }}">Оценка задания</label>
-                        {{ form.selfassesment }}
+                        <div class="vertical-level">
+                            <label for="{{ form.idemotion.id_for_label }}">Эмоция</label>
+                            {{ form.idemotion }}
+                        </div>
+                        <div class="vertical-level">
+                            <label for="{{ form.idwriteplace.id_for_label }}">Место написания</label>
+                            {{ form.idwriteplace }}
+                        </div>
+                        <div class="vertical-level">
+                            <label for="{{ form.idwritetool.id_for_label }}">Инструмент написания</label>
+                            {{ form.idwritetool }}
+                        </div>
+                        <div class="vertical-level">
+                            <label for="{{ form.selfrating.id_for_label }}">Самооценивание</label>
+                            {{ form.selfrating }}
+                        </div>
+                        <div class="vertical-level">
+                            <label for="{{ form.selfassesment.id_for_label }}">Оценка задания</label>
+                            {{ form.selfassesment }}
+                        </div>
                     </div>
                 </div>
             </div>

@@ -186,9 +186,9 @@ class AddErrorAnnotationForm(forms.ModelForm):
 
 class StudentLoadTextForm(forms.ModelForm):
     createdate = forms.DateField(
-        initial=date.today(),
+        initial=(date.today()).isoformat(),
         widget=forms.DateInput(
-            attrs={'type': 'date', 'class': 'form-control'}
+            attrs={'type': 'date', 'class': 'form-control'},
         ),
         label="Дата создания"
     )
