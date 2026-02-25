@@ -97,7 +97,7 @@
 
       <div class="texts-list">
         {% for text in texts_of_type %}
-          <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="text-link text-card">
+            <a href="{% url 'show_text_markup' text.id %}" class="result-card"></a>
             <span class="text-name">
               <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                 <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
@@ -162,7 +162,7 @@
 
         <div class="results">
           {% for text in finded_text_by_name %}
-            <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="result-card">
+              <a href="{% url 'show_text_markup' text.id %}" class="result-card"></a>
               <span class="text-name">
                 <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                   <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>

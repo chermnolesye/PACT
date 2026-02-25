@@ -24,7 +24,10 @@ from core_app.models import (
     User,
 )
 
-def show_text_markup(request, text_id=2379):
+def show_text_markup(request, text_id=None):
+    if text_id is None:
+        text_id = request.GET.get('text_id')
+    
     if text_id is not None:
         text = get_object_or_404(Text, idtext=text_id)
     else:
@@ -135,16 +138,21 @@ def show_text_markup(request, text_id=2379):
         "write_tool": write_tool.writetoolname if write_tool else "Не указано",
         "text_type": text_type.texttypename if text_type else "Не указано",
         "emotion": emotion.emotionname,
-        "year_study_language": year_study_language
-        if text_type == None
-        else "Не указано",
+        "year_study_language": year_study_language,
         "self_rating": self_rating,
         "self_assesment": assesment,
         "fio": get_teacher_fio(request),
+        "textgrade": text.get_textgrade_display() if text.textgrade else "Нет данных",
+        "completeness": text.get_completeness_display() if text.completeness else "Нет данных",
+        "structure": text.get_structure_display() if text.structure else "Нет данных",
+        "coherence": text.get_coherence_display() if text.coherence else "Нет данных",
+        "poscheckflag": text.poscheckflag,
+        "errorcheckflag": text.errorcheckflag,
+        "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано",
+        "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
     }
 
     return render(request, "show_text_markup.html", context)
-
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def annotate_text(request, text_id=2379):
@@ -366,7 +374,8 @@ def annotate_text(request, text_id=2379):
         "write_tool": write_tool.writetoolname if write_tool else "Не указано",
         "text_type": text_type.texttypename if text_type else "Не указано",
         "emotion": emotion.emotionname if emotion else "Не указано",
-        "year_study_language": year_study_language if text_type == None else "Не указано",
+        # "year_study_language": year_study_language if text_type == None else "Не указано",
+        "year_study_language": year_study_language,
         "self_rating": text.get_selfrating_display() if text.selfrating else "Нет данных",
         "self_assesment": text.get_selfassesment_display() if text.selfassesment else "Нет данных",
         "fio": get_teacher_fio(request),
@@ -1040,13 +1049,17 @@ def student_search_texts(request):
     return render(request, "student_search_texts.html", context)
 
 def student_load_text(request):
-    student_profile = request.user.student
+    # student_profile = request.user.student
+    student_profile = get_object_or_404(Student, iduser=request.user)
+    form = StudentLoadTextForm(request.POST)
     if request.method == "POST":
-        form = StudentLoadTextForm(request.POST)
+        form = StudentLoadTextForm(request.POST, student=student_profile)
         if form.is_valid():
             new_text = form.save(commit=False)
-            new_text.student = student_profile  # Привязываем студента
-            new_text.group = student_profile.idgroup  # Привязываем группу
+            new_text.student = student_profile
+            new_text.idstudent = student_profile
+            new_text.group = student_profile.idgroup
+            new_text.educationlevel = student_profile.idgroup.studycourse
             new_text.save()
 
             sentences = sent_tokenize(new_text.text, language="german")
@@ -1082,10 +1095,11 @@ def student_load_text(request):
                 f"Всего предложений: {len(sentences)}, слов: {sum(len(word_tokenize(s, language='german')) for s in sentences)}."
             )
 
-            return redirect("search_texts")
+            return redirect("student_search_texts")
         else:
             print(f"Форма невалидна. Ошибки: {form.errors}")
-
+    else:
+        form = StudentLoadTextForm(student=student_profile)
     return render(
         request,
         "student_load_text.html",

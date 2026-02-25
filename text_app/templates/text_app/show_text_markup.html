@@ -1,14 +1,14 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Разметка текста</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Аннотирование{% endblock %}
+
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
-</head>
-<body>
+    {% endblock %}
+
+{% block content %}  
     <!--<div id="header-container"></div>-->
     <!-- Всплывающее окно с информацией об ошибке -->
     <div class="error-popup" id="error-popup">
@@ -578,6 +578,4 @@
            
             });
     </script>
-
-</body>
-</html>
+{% endblock %}
