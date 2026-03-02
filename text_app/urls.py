@@ -11,4 +11,6 @@ urlpatterns = [
     path('search_texts/', views.search_texts, name='search_texts'),
     path('student_search_texts/', views.student_search_texts, name='student_search_texts'),
     path('student_load_text/', views.student_load_text, name='student_load_text'),
+
+    path('student_search_texts/delete/<int:text_id>/', views.delete_text_ajax, name='delete_text'),
 ]

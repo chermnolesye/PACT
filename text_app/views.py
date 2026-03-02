@@ -8,6 +8,8 @@ import json
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm, StudentLoadTextForm
 from nltk.tokenize import sent_tokenize, word_tokenize
 from core_app.models import (
@@ -956,3 +958,25 @@ def student_load_text(request):
     )
 
     # return render(request, "student_load_text.html")
+
+
+@require_POST
+@csrf_exempt
+def delete_text_ajax(request, text_id):
+    '''
+    Docstring for delete_text_ajax
+    url для удаления: 
+    Проверяет, что текст не проверен, и удаляет его, если у текста нет аннотаций и оценки
+    '''
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Проверка принадлежности текста студенту
+        text_item = get_object_or_404(Text, idtext=text_id, idstudent__iduser=request.user)
+
+        if text_item.textgrade is not None:
+            return JsonResponse({'success': False, 'error': 'Текст уже оценен'}, status=403)
+        has_errors = ErrorToken.objects.filter(idtoken__idsentence__idtext=text_item).exists()
+        if has_errors:
+            return JsonResponse({'success': False, 'error': 'В тексте есть ошибки'}, status=403)
+        text_item.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
