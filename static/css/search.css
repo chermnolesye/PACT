@@ -182,7 +182,7 @@
     color: var(--grey-color);
 }
 
-.types-body > .type-header:last-child {
+.types-body > .type-header:last-child, .texts-list > .result-card:last-child, .texts-list {
     border-bottom-left-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
 }
@@ -216,7 +216,7 @@
     color: black;
 }
 
-.date {
+.date, .small_column {
     flex: 1;
     text-align: center;
     color: var(--grey-color);
@@ -269,6 +269,12 @@
 #result-card-header {
     text-align: start;
     color: var(--grey-color);
+}
+
+@media (max-width: 1500px) {
+    .texts-of-type-container, .text-types-container, .no-results {
+        width: 100% !important;
+    }
 }
 
 @media (max-width: 768px) {
