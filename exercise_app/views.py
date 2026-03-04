@@ -652,6 +652,42 @@ def grade_text(request, idexercise=2):
     }
     return render(request, "grade_text.html", context)
 
+# Поменять на тест с правами студента
+# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+def student_exercises(request):
+    student_id = get_object_or_404(Student, iduser=request.user)
+    base_queryset = Exercise.objects.filter(idstudent=student_id)
+    exercise_filter = ExerciseFilter(request.GET, queryset=base_queryset)
+
+    # exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.filter(idstudent=student_id).all())
+    # Тут удаляется поле фио студента, потому что оно не нужно
+    if 'student_name' in exercise_filter.filters:
+        del exercise_filter.filters['student_name']
+
+    exercises_queryset = exercise_filter.qs.order_by(
+        '-deadline',      # ближайшие дедлайны первыми
+        '-exercisemark', # сначала без оценки
+        'exercisestatus',  # не сдано -> сдано
+        'creationdate',  # сначала созданные раньше
+    )
+    exercises_list = []
+    for exercise in exercises_queryset:
+        in_time = False
+        if exercise.exercisestatus and exercise.completiondate:
+            in_time = exercise.completiondate <= exercise.deadline
+        else:
+            in_time = datetime.date.today() <= exercise.deadline
+        exercises_dict = {
+            'exercise_data': exercise,
+            'in_time': in_time
+        }
+        exercises_list.append(exercises_dict)
+    context = {
+        'exercises' : exercises_list,
+        'filter': exercise_filter,
+        }
+    return render(request, 'student_exercises.html', context)
+
 def grading_student(request):
     return render(request, "grading_student.html")
 

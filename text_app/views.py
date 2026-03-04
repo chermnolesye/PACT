@@ -1,5 +1,5 @@
 from authorization_app.utils import has_teacher_rights
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -8,7 +8,10 @@ import json
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
-from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm, StudentLoadTextForm
+from .filters import StudentTextFilter
 from nltk.tokenize import sent_tokenize, word_tokenize
 from core_app.models import (
     Text,
@@ -24,7 +27,10 @@ from core_app.models import (
     User,
 )
 
-def show_text_markup(request, text_id=2379):
+def show_text_markup(request, text_id=None):
+    if text_id is None:
+        text_id = request.GET.get('text_id')
+    
     if text_id is not None:
         text = get_object_or_404(Text, idtext=text_id)
     else:
@@ -135,16 +141,21 @@ def show_text_markup(request, text_id=2379):
         "write_tool": write_tool.writetoolname if write_tool else "Не указано",
         "text_type": text_type.texttypename if text_type else "Не указано",
         "emotion": emotion.emotionname,
-        "year_study_language": year_study_language
-        if text_type == None
-        else "Не указано",
+        "year_study_language": year_study_language,
         "self_rating": self_rating,
         "self_assesment": assesment,
         "fio": get_teacher_fio(request),
+        "textgrade": text.get_textgrade_display() if text.textgrade else "Нет данных",
+        "completeness": text.get_completeness_display() if text.completeness else "Нет данных",
+        "structure": text.get_structure_display() if text.structure else "Нет данных",
+        "coherence": text.get_coherence_display() if text.coherence else "Нет данных",
+        "poscheckflag": text.poscheckflag,
+        "errorcheckflag": text.errorcheckflag,
+        "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано",
+        "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
     }
 
-    return render(request, "show_text_markup.html", context)
-
+    return render(request, "student_show_text_markup.html", context)
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def annotate_text(request, text_id=2379):
@@ -366,7 +377,8 @@ def annotate_text(request, text_id=2379):
         "write_tool": write_tool.writetoolname if write_tool else "Не указано",
         "text_type": text_type.texttypename if text_type else "Не указано",
         "emotion": emotion.emotionname if emotion else "Не указано",
-        "year_study_language": year_study_language if text_type == None else "Не указано",
+        # "year_study_language": year_study_language if text_type == None else "Не указано",
+        "year_study_language": year_study_language,
         "self_rating": text.get_selfrating_display() if text.selfrating else "Нет данных",
         "self_assesment": text.get_selfassesment_display() if text.selfassesment else "Нет данных",
         "fio": get_teacher_fio(request),
@@ -381,159 +393,6 @@ def annotate_text(request, text_id=2379):
     }
 
     return render(request, "annotate_text.html", context)
-
-
-def show_texts(request):
-    groups = (
-        Group.objects.select_related("idayear")
-        .all()
-        .values("idgroup", "groupname", "idayear__title")
-        .distinct()
-    )
-    group_data = [
-        {
-            "id": group["idgroup"],
-            "name": group["groupname"],
-            "year": group["idayear__title"],
-        }
-        for group in groups
-    ]
-
-    years = AcademicYear.objects.all().values("idayear", "title").distinct()
-    years_data = [
-        {
-            "id": year["idayear"],
-            "name": year["title"],
-        }
-        for year in years
-    ]
-
-    text_types = TextType.objects.all().values("idtexttype", "texttypename").distinct()
-    text_type_data = [
-        {
-            "id": text_type["idtexttype"],
-            "name": text_type["texttypename"],
-        }
-        for text_type in text_types
-    ]
-
-    # Алена, не удаляй это,пожалуйста, это надо для сохранения введенного поиска
-    text_name = ""
-    year_id = ""
-    group_id = ""
-    text_type_id = ""
-    grouping = ""
-
-    finded_text_by_name_data = []
-    grouped_texts = {}
-    if request.method == "POST":
-        # Получаем параметры из формы
-        text_name = request.POST.get("text", "")
-        year_id = request.POST.get("year", "")  # id учебного года
-        group_id = request.POST.get("group", "")  # id группы
-        text_type_id = request.POST.get("text_type", "")  # id типа текста
-        grouping = request.POST.get("grouping", "")
-
-        # Начинаем с выборки всех текстов
-        texts = Text.objects.all()
-
-        if text_name:
-            texts = texts.filter(header__icontains=text_name)
-        if year_id:
-            # идём по связям: текст -> студент -> группа -> академ. год
-            texts = texts.filter(idstudent__idgroup__idayear=year_id)
-        if group_id:
-            # фильтруем по группе студента
-            texts = texts.filter(idstudent__idgroup=group_id)
-        if text_type_id:
-            texts = texts.filter(idtexttype_id=text_type_id)
-
-        texts = texts.values(
-            "idtext",
-            "header",
-            "idstudent__iduser__lastname",
-            "idstudent__iduser__firstname",
-            "idstudent__iduser__middlename",
-            "idtexttype__texttypename",
-            "modifieddate",
-        )
-
-        finded_text_by_name_data = [
-            {"id": text["idtext"], "header_text": text["header"]} for text in texts
-        ]
-
-        if grouping == "fio":
-            finded_text_by_name_data = []
-            for text in texts:
-                fio_user = (
-                    f"{text['idstudent__iduser__lastname']} "
-                    f"{text['idstudent__iduser__firstname']} "
-                    f"{text['idstudent__iduser__middlename'] or ''}"
-                )
-                if fio_user not in grouped_texts:
-                    grouped_texts[fio_user] = []
-                else:
-                    grouped_texts[fio_user].append(
-                        {"id": text["idtext"], "header_text": text["header"]}
-                    )
-
-        elif grouping == "category":
-            finded_text_by_name_data = []
-            for text in texts:
-                category = (
-                    text["idtexttype__texttypename"]
-                    if text["idtexttype__texttypename"]
-                    else "Не указано"
-                )
-                if category not in grouped_texts:
-                    grouped_texts[category] = []
-                else:
-                    grouped_texts[category].append(
-                        {"id": text["idtext"], "header_text": text["header"]}
-                    )
-
-    texts = Text.objects.all()
-    texts = texts.values(
-        "idtext",
-        "header",
-        "idstudent__iduser__lastname",
-        "idstudent__iduser__firstname",
-        "idstudent__iduser__middlename",
-        "idtexttype__texttypename",
-        "modifieddate",
-    )
-    texts_by_types_for_folders = {}
-    for text in texts:
-        text_type = text["idtexttype__texttypename"]
-        if text_type not in texts_by_types_for_folders:
-            texts_by_types_for_folders[text_type] = []
-        else:
-            texts_by_types_for_folders[text_type].append(
-                {
-                    "id": text["idtext"],
-                    "header_text": text["header"],
-                    "author_lastname": text["idstudent__iduser__lastname"],
-                    "author_firstname": text["idstudent__iduser__firstname"],
-                    "author_middlename": text["idstudent__iduser__middlename"],
-                    "date_modificate": text["modifieddate"],
-                }
-            )
-
-    context = {
-        "groups": group_data,
-        "years": years_data,
-        "text_types": text_type_data,
-        "finded_text_by_name": finded_text_by_name_data,
-        "grouped_texts": grouped_texts,
-        "texts_type_folders": texts_by_types_for_folders,
-        "selected_text": text_name,  # Алена, не удаляй это,пожалуйста, это надо для сохранения введенного поиска
-        "selected_year": year_id,
-        "selected_group": group_id,
-        "selected_text_type": text_type_id,
-        "selected_grouping": grouping,
-        "fio": get_teacher_fio(request),
-    }
-    return render(request, "show_texts.html", context)
 
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
@@ -758,7 +617,7 @@ def search_texts(request):
     text_type_id = ""
     grouping = ""
 
-    finded_text_by_name_data = []
+    found_text_by_name_data = []
     grouped_texts = {}
     if request.method == "POST":
         # Получаем параметры из формы
@@ -792,7 +651,7 @@ def search_texts(request):
         )
 
         # Обновляем структуру данных для результатов поиска
-        finded_text_by_name_data = [
+        found_text_by_name_data = [
             {
                 "id": text["idtext"],
                 "header_text": text["header"],
@@ -805,7 +664,7 @@ def search_texts(request):
         ]
 
         if grouping == "fio":
-            finded_text_by_name_data = []
+            found_text_by_name_data = []
             grouped_texts = {}
             for text in texts:
                 fio_user = (
@@ -824,7 +683,7 @@ def search_texts(request):
                 })
 
         elif grouping == "category":
-            finded_text_by_name_data = []
+            found_text_by_name_data = []
             grouped_texts = {}
             for text in texts:
                 category = (
@@ -873,7 +732,7 @@ def search_texts(request):
         "groups": group_data,
         "years": years_data,
         "text_types": text_type_data,
-        "finded_text_by_name": finded_text_by_name_data,
+        "found_text_by_name": found_text_by_name_data,
         "grouped_texts": grouped_texts,
         "texts_type_folders": texts_by_types_for_folders,
         "selected_text": text_name,  
@@ -884,3 +743,256 @@ def search_texts(request):
         "fio": get_teacher_fio(request),
     }
     return render(request, "search_texts.html", context)
+
+
+def has_student_rights(user):
+    return (
+        user.is_authenticated
+        and hasattr(user, "idrights")
+        and user.idrights
+        and user.idrights.rightsname == "Студент"
+    )
+
+def get_student_fio(request):
+    user = request.user
+    return f"{user.lastname} {user.firstname} {user.middlename or ''}".strip()
+
+@user_passes_test(has_student_rights, login_url="/auth/login/")
+@login_required
+def student_search_texts(request):
+    texts_qs = Text.objects.filter(idstudent__iduser=request.user).select_related(
+        'idtexttype', 
+        'idstudent__idgroup__idayear'
+    )
+
+    text_filter = StudentTextFilter(request.GET, queryset=texts_qs)
+    text_result = text_filter.qs
+    texts_exist = False
+    if len(text_result) > 0:
+        texts_exist = True
+    print(text_result)
+
+    context = {
+        'filter': text_filter,
+        'texts': text_result,
+        'texts_exist': texts_exist,
+        'fio': get_student_fio(request),
+    }
+    return render(request, 'student_search_texts.html', context)
+    # text_type_id = (request.GET.get("text_type") or "").strip()
+    # year_id = (request.GET.get("year") or "").strip()
+
+    # text_types = TextType.objects.all().values("idtexttype", "texttypename").distinct()
+    # text_type_data = [{"id": t["idtexttype"], "name": t["texttypename"]} for t in text_types]
+
+    # texts_qs = (
+    #     Text.objects
+    #     .exclude(idtexttype__isnull=True)
+    #     .filter(idstudent__iduser=request.user)
+    # )
+
+    # years = (
+    #     texts_qs
+    #     .values("idstudent__idgroup__idayear__idayear", "idstudent__idgroup__idayear__title")
+    #     .distinct()
+    #     .order_by("idstudent__idgroup__idayear__title")
+    # )
+    # years_data = [
+    #     {"id": y["idstudent__idgroup__idayear__idayear"], "name": y["idstudent__idgroup__idayear__title"]}
+    #     for y in years
+    # ]
+
+    # if text_type_id:
+    #     qs = texts_qs.filter(idtexttype_id=text_type_id)
+
+    #     if year_id:
+    #         qs = qs.filter(idstudent__idgroup__idayear=year_id)
+
+    #     qs = qs.values(
+    #         "idtext",
+    #         "header",
+    #         "idtexttype__texttypename",
+    #         "createdate",
+    #         "textgrade"
+    #     ).order_by("-modifieddate", "header")
+
+    #     texts_of_type = [
+    #         {
+    #             "id": t["idtext"],
+    #             "header_text": t["header"],
+    #             "date_modificate": t["createdate"],
+    #             "text_type": t["idtexttype__texttypename"],
+    #             "mark": t["textgrade"]
+    #         }
+    #         for t in qs
+    #     ]
+
+    #     context = {
+    #         "texts_of_type": texts_of_type,
+    #         "text_types": text_type_data,
+    #         "years": years_data,
+    #         "selected_text_type": text_type_id,
+    #         "selected_year": year_id,
+    #         "selected_text": "",
+    #         "found_text_by_name": [],
+    #         "texts_type_folders": {},
+    #         "fio": get_student_fio(request),
+    #     }
+    #     return render(request, "student_search_texts.html", context)
+
+    # selected_text = ""
+    # selected_year = ""
+    # selected_text_type = ""
+
+    # found_text_by_name_data = []
+
+    # if request.method == "POST":
+    #     selected_text = (request.POST.get("text") or "").strip()
+    #     selected_year = (request.POST.get("year") or "").strip()
+    #     selected_text_type = (request.POST.get("text_type") or "").strip()
+
+    #     qs = texts_qs
+
+    #     if selected_text:
+    #         qs = qs.filter(header__icontains=selected_text)
+
+    #     if selected_year:
+    #         qs = qs.filter(idstudent__idgroup__idayear=selected_year)
+
+    #     if selected_text_type:
+    #         qs = qs.filter(idtexttype_id=selected_text_type)
+
+    #     qs = qs.values(
+    #         "idtext",
+    #         "header",
+    #         "createdate",
+    #     ).order_by("-modifieddate", "header")
+
+    #     found_text_by_name_data = [
+    #         {
+    #             "id": t["idtext"],
+    #             "header_text": t["header"],
+    #             "date_modificate": t["createdate"],
+    #         }
+    #         for t in qs
+    #     ]
+
+    # qs_for_folders = texts_qs
+
+    # if request.method == "POST" and selected_year:
+    #     qs_for_folders = qs_for_folders.filter(idstudent__idgroup__idayear=selected_year)
+
+    # texts_for_folders = qs_for_folders.values(
+    #     "idtext",
+    #     "header",
+    #     "idtexttype__texttypename",
+    #     "createdate",
+    # )
+
+    # texts_by_types_for_folders = {}
+    # for t in texts_for_folders:
+    #     ttype = t["idtexttype__texttypename"] or "Не указано"
+    #     if ttype not in texts_by_types_for_folders:
+    #         texts_by_types_for_folders[ttype] = []
+    #     texts_by_types_for_folders[ttype].append(
+    #         {
+    #             "id": t["idtext"],
+    #             "header_text": t["header"],
+    #             "date_modificate": t["createdate"],
+    #         }
+    #     )
+
+    # context = {
+    #     "texts_of_type": [],
+    #     "text_types": text_type_data,
+    #     "years": years_data,
+    #     "found_text_by_name": found_text_by_name_data,
+    #     "texts_type_folders": texts_by_types_for_folders,
+    #     "selected_text": selected_text,
+    #     "selected_year": selected_year,
+    #     "selected_text_type": selected_text_type,
+    #     "fio": get_student_fio(request),
+    # }
+    # return render(request, "student_search_texts.html", context)
+
+def student_load_text(request):
+    # student_profile = request.user.student
+    student_profile = get_object_or_404(Student, iduser=request.user)
+    form = StudentLoadTextForm(request.POST)
+    if request.method == "POST":
+        form = StudentLoadTextForm(request.POST, student=student_profile)
+        if form.is_valid():
+            new_text = form.save(commit=False)
+            new_text.student = student_profile
+            new_text.idstudent = student_profile
+            new_text.group = student_profile.idgroup
+            new_text.educationlevel = student_profile.idgroup.studycourse
+            new_text.save()
+
+            sentences = sent_tokenize(new_text.text, language="german")
+
+            print(
+                f"Начинаем токенизацию текста. Количество предложений: {len(sentences)}"
+            )
+
+            for order, sentence_text in enumerate(sentences, start=0):
+                if sentence_text.strip():
+                    sentence_obj = Sentence.objects.create(
+                        sentensetext=sentence_text,
+                        ordernumber=order,
+                        idtext=new_text,
+                    )
+                    print(f"Добавлено предложение {order}: {sentence_text}")
+
+                    tokens = word_tokenize(sentence_text, language="german")
+                    print(
+                        f"Токенизируем предложение {order}, количество слов: {len(tokens)}"
+                    )
+
+                    for t_order, token_text in enumerate(tokens, start=0):
+                        Token.objects.create(
+                            tokentext=token_text,
+                            tokenordernumber=t_order,
+                            idsentence=sentence_obj,
+                        )
+                        print(f"Добавлен токен {t_order}: {token_text}")
+
+            print(
+                f"Токенизация завершена для текста с ID {new_text.idtext}. "
+                f"Всего предложений: {len(sentences)}, слов: {sum(len(word_tokenize(s, language='german')) for s in sentences)}."
+            )
+
+            return redirect("student_search_texts")
+        else:
+            print(f"Форма невалидна. Ошибки: {form.errors}")
+    else:
+        form = StudentLoadTextForm(student=student_profile)
+    return render(
+        request,
+        "student_load_text.html",
+        {"form": form},
+    )
+
+    # return render(request, "student_load_text.html")
+
+
+@require_POST
+@csrf_exempt
+def delete_text_ajax(request, text_id):
+    '''
+    Docstring for delete_text_ajax
+    url для удаления: 
+    Проверяет, что текст не проверен, и удаляет его, если у текста нет аннотаций и оценки
+    '''
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Проверка принадлежности текста студенту
+        text_item = get_object_or_404(Text, idtext=text_id, idstudent__iduser=request.user)
+
+        if text_item.textgrade is not None:
+            return JsonResponse({'success': False, 'error': 'Текст уже оценен'}, status=403)
+        has_errors = ErrorToken.objects.filter(idtoken__idsentence__idtext=text_item).exists()
+        if has_errors:
+            return JsonResponse({'success': False, 'error': 'В тексте есть ошибки'}, status=403)
+        text_item.delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)

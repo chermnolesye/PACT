@@ -100,7 +100,7 @@
       </button>
     </a>
 
-    {% if request.method == "POST" and not grouped_texts and not finded_text_by_name %}
+    {% if request.method == "POST" and not grouped_texts and not found_text_by_name %}
       <div class="no-results">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6C757D" stroke-width="2" stroke-linecap="round"/>
@@ -149,7 +149,7 @@
     
     {% else %}
       <!-- Отображение списка типов текстов (главная страница) -->
-       {% if not grouped_texts and not finded_text_by_name %}
+       {% if not grouped_texts and not found_text_by_name %}
       <div class="text-types-container">
         <div class="text-types-header">
             <svg width="30" height="30" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -175,7 +175,7 @@
       {% endif %}
       
       <!-- Результаты поиска (если есть) -->
-      {% if grouped_texts or finded_text_by_name %}
+      {% if grouped_texts or found_text_by_name %}
         <div class="search-results">
           {% if grouped_texts %}
             <div class="text-types-header">
@@ -222,7 +222,7 @@
             {% endfor %}
           {% endif %}
           
-          {% if finded_text_by_name %}
+          {% if found_text_by_name %}
             <div class="text-types-header">
                 <svg width="30" height="30" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M32.0833 32.0833H8.75M35 46.6666H8.75" stroke="#0D6EFD" stroke-width="3" stroke-linecap="round"/>
@@ -240,7 +240,7 @@
             </a>   
 
             <div class="results">
-              {% for text in finded_text_by_name %}
+              {% for text in found_text_by_name %}
                 <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="result-card">
                     <span class="text-name">
                         <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
