@@ -771,11 +771,15 @@ def student_search_texts(request):
 
     text_filter = StudentTextFilter(request.GET, queryset=texts_qs)
     text_result = text_filter.qs
+    texts_exist = False
+    if len(text_result) > 0:
+        texts_exist = True
     print(text_result)
 
     context = {
         'filter': text_filter,
         'texts': text_result,
+        'texts_exist': texts_exist,
         'fio': get_student_fio(request),
     }
     return render(request, 'student_search_texts.html', context)
