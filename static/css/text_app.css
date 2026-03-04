@@ -40,6 +40,10 @@
     resize: vertical;
 }
 
+#student_text textarea {
+    height: 480px;
+}
+
 .horizontal-wrap > div {
     flex: 1;
 }

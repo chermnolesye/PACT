@@ -85,7 +85,7 @@ def login_student(request):
             if user and user.check_password(password_data):
                 login(request, user)
                 messages.success(request, 'Вы успешно вошли в систему как студент.')
-                return redirect('home_view')  # Заменить
+                return redirect('student_search_texts')  # Заменить
             else:
                 messages.error(request, 'Неправильный логин или пароль.')
     else:
@@ -131,7 +131,7 @@ def user_login(request):
         if request.user.idrights_id in [2, 4]:
             return redirect('search_texts')
         else:
-            return redirect('home_view') #!!!!
+            return redirect('student_search_texts') #!!!!
 
     if request.method == "POST":
         form = LoginForm(request.POST)
@@ -148,7 +148,7 @@ def user_login(request):
                 if user.idrights.idrights in [2, 4]:
                     return redirect('search_texts')
                 else:
-                    return redirect('home_view') #!!!!
+                    return redirect('student_search_texts') #!!!!
             else:
                 messages.error(request, "Неверный логин или пароль.")
     else:

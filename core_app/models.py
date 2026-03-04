@@ -259,6 +259,11 @@ class Text(models.Model):
 
     def __str__(self):
         return self.header
+    
+    def get_grade_status(self):
+        if self.textgrade:
+            return self.get_textgrade_display()
+        return "Не проверено"
 
 class TextType(models.Model):
     idtexttype = models.AutoField(primary_key=True)

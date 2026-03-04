@@ -54,6 +54,17 @@
     cursor: pointer;
 }
 
+.filter {
+    background-color: transparent;
+    border-left: 1px solid #ccc;
+    padding: 10px 15px;
+    border: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .grouping-wrapper {
     display: flex;
     align-items: flex-start;
