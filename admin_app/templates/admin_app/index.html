@@ -1,0 +1,31 @@
+{% extends "admin_base.html" %}
+
+{% load static %}
+
+{% block title %}Админ-панель{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/admin.css' %}" />
+    {% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1 class="highlighted-header">Добро пожаловать, администратор!</h1>
+
+    <div class="admin-menu">
+        <a href="{% url 'admin_students_list' %}" class="button">Студенты</a>
+        <a href="{% url 'admin_teachers_list' %}" class="button">Преподаватели</a>
+    </div>
+
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="message-item message-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

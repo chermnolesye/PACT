@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'students_app',
     'years_and_groups_app',
     'statistics_app',
-    'exercise_app'
+    'exercise_app',
+    'admin_app'
 ]
 
 AUTH_USER_MODEL = 'core_app.User'
