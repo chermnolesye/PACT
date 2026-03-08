@@ -782,16 +782,7 @@
         });
 
         document.getElementById("btn_next").addEventListener("click", function () {
-            if (window.innerWidth < 750) {
-                document.getElementById("arrows").style.display = "flex"
-                document.getElementById("arrows").style.gap = "10px"
-                document.getElementById("arrow_add").setAttribute('transform', 'rotate(90, 50, 50)');
-                document.getElementById("arrow_remove").setAttribute('transform', 'rotate(90, 50, 50)');
-            }
-            else {
-                document.getElementById("arrows").style.display = "block"
-                document.getElementById("arrows").style.gap = "0px"
-            }
+            
             const chosen_year_el = document.querySelector(".chosen_year")
             const chosen_group_el = document.querySelector(".chosen_group")
             const chosen_fio_el = document.querySelector(".chosen_fio")
@@ -803,6 +794,17 @@
                 document.getElementById("errMsg").style.display = "block";
             }
             else {
+                if (window.innerWidth < 750) {
+                    document.getElementById("arrows").style.display = "flex"
+                    document.getElementById("arrows").style.gap = "10px"
+                    document.getElementById("arrow_add").setAttribute('transform', 'rotate(90, 50, 50)');
+                    document.getElementById("arrow_remove").setAttribute('transform', 'rotate(90, 50, 50)');
+                }
+                else {
+                    document.getElementById("arrows").style.display = "block"
+                    document.getElementById("arrows").style.gap = "0px"
+                }
+
                 const gradingFields = document.getElementById('grading-fields');
                 const reviewFields = document.getElementById('review-fields');
                 const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
@@ -819,7 +821,8 @@
                 if (exercise_type_code.innerHTML === '1') {  // код для grading
                     gradingFields.style.display = 'block';
                     document.querySelector('.selected-info-g').style.display = 'block';
-                    loadGradingTexts();
+                    document.getElementById("errMsgFilters").style.display = 'block';
+                    //loadGradingTexts();
                 } else if (exercise_type_code.innerHTML === '2') {  // код для review
                     document.querySelector('.selected-info-r').style.display = 'block';
                     reviewFields.style.display = 'block';
