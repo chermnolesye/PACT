@@ -201,7 +201,7 @@
             <div class="chosen_params">
                 <p>Данные упражнения:</p>
                 <uL>
-                    <li id="exercise_type_id" style="display:none;"></li>
+                    <li id="exercise_type_code" style="display:none;"></li>
                     <li>ФИО: <span class="chosen_fio"></span></li>
                     <li>Группа: <span class="chosen_group"></span> (<span class="chosen_year"></span>)</li>
                     <li>Тип упражнения: <span class="exercise_type"></span></li>
@@ -346,9 +346,9 @@
         exerciseTypeRadios.forEach(radio => {
             radio.addEventListener('change', function () {
                 const exercise_type = document.querySelector(".exercise_type")
-                const exercise_type_id = document.getElementById("exercise_type_id")
+                const exercise_type_code = document.getElementById("exercise_type_code")
                 exercise_type.innerHTML = this.parentElement.querySelector("label").innerHTML
-                exercise_type_id.innerHTML = this.value
+                exercise_type_code.innerHTML = this.value
             });
         });
 
@@ -797,9 +797,9 @@
             const chosen_fio_el = document.querySelector(".chosen_fio")
             const chosen_date_s = document.querySelector(".chosen_date_s")
             const chosen_date_f = document.querySelector(".chosen_date_f")
-            const exercise_type_id = document.getElementById("exercise_type_id")
+            const exercise_type_code = document.getElementById("exercise_type_code")
             if (!chosen_year_el.innerHTML || !chosen_group_el.innerHTML || !chosen_fio_el.innerHTML
-                || !chosen_date_s.innerHTML || !chosen_date_f.innerHTML || !exercise_type_id.innerHTML) {
+                || !chosen_date_s.innerHTML || !chosen_date_f.innerHTML || !exercise_type_code.innerHTML) {
                 document.getElementById("errMsg").style.display = "block";
             }
             else {
@@ -816,14 +816,13 @@
                 document.getElementById('chosen_group').style.display = 'block';
                 document.querySelector('.wrapChosen').style.width = '90%';
 
-                if (exercise_type_id.innerHTML === '1') {  // код для grading
+                if (exercise_type_code.innerHTML === '1') {  // код для grading
                     gradingFields.style.display = 'block';
                     document.querySelector('.selected-info-g').style.display = 'block';
                     loadGradingTexts();
-                } else if (exercise_type_id.innerHTML === '2') {  // код для review
+                } else if (exercise_type_code.innerHTML === '2') {  // код для review
                     document.querySelector('.selected-info-r').style.display = 'block';
                     reviewFields.style.display = 'block';
-
                     loadTexts();
                 }
                 document.getElementById("exerciseForm").style.maxWidth = "750px"

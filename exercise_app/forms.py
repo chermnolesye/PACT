@@ -159,6 +159,7 @@ class AddExerciseForm(forms.Form):
         queryset=ExerciseType.objects.filter(
             exerciseabbr__in=['grading', 'review']
         ),
+        to_field_name='exercisecode',
         label='Тип упражнения',
         widget=forms.RadioSelect
     )
