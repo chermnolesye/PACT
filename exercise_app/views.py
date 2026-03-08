@@ -183,13 +183,13 @@ def add_exercise(request):
 def get_grading_texts(request):
     try:
         queryset = Text.objects.filter(textgrade__isnull=False)
-        exclude_student_id = request.GET.get('exclude_student')
+        '''exclude_student_id = request.GET.get('exclude_student')
         if exclude_student_id:
             try:
                 # ВОЗМОЖНО, на курсы ниже тоже нужно исключать тексты
                 queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
             except (ValueError, TypeError):
-                pass
+                pass'''
         filtered_texts = GradingTextFilter(request.GET, queryset=queryset)
         texts = filtered_texts.qs.order_by('-createdate')
         texts_data = [

@@ -269,8 +269,8 @@ class AddExerciseForm(forms.Form):
                 else:
                     if not grading_text.textgrade:
                         self.add_error('grading_text', 'Выбранный текст не имеет оценки')
-                    if selected_student and grading_text.idstudent == selected_student:
-                        self.add_error('grading_text', 'Нельзя выбрать текст того же студента, для которого создается упражнение')
+                    #if selected_student and grading_text.idstudent == selected_student:
+                    #    self.add_error('grading_text', 'Нельзя выбрать текст того же студента, для которого создается упражнение')
             
             elif exercise_abbr == 'review':
                 review_text_id = cleaned_data.get('review_text_id')
