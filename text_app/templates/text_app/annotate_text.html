@@ -464,19 +464,22 @@
         <button class="button-menu-select" id="button-delete-tokens">Удалить выбранные пустые токены</button>
         <button class="button-menu-select" id="button-remove-highlight">Снять выделение</button>
     </div>
-    <!-- Шапка убрать коммент, если нужна  -->
-    <!-- <script>
-        document.addEventListener('DOMContentLoaded', function() {
-        fetch('/static/templates/base.html')
-            .then(response => response.text())
-            .then(data => {
-            document.getElementById('header-container').innerHTML = data;
-            let user_fio = "{{ fio|escapejs }}";
-            document.getElementById('user-link').textContent = user_fio;
-            });
-        });
 
-    </script> -->
+    <div id="deleteModal" class="modal modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3>Подтверждение удаления</h3>
+            </div>
+            <div class="modal-inner">
+                <p style="margin:15px">Вы уверены, что хотите удалить аннотацию?</p>
+                <div class="modal-actions" style="justify-content:center; display:flex;">
+                    <button id="confirmDelete" class="btn button btn-danger" onclick="deleteText()">Удалить</button>
+                    <button id="cancelDelete" class="btn button btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const chosen = [];
         const chosen_ids = [];
@@ -564,6 +567,10 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
+
+            document.getElementById('cancelDelete').addEventListener('click', () => {
+                document.getElementById('deleteModal').style.display = 'none';
+            });
 
             document.querySelectorAll('.sentence-number').forEach(number => {
                 number.addEventListener('click', () => {
@@ -901,7 +908,7 @@
                 //    console.log('deleteAnnotation', iderror)
                 //    //deleteAnnotation(iderror);
                 //});
-                document.getElementById('delete-annotation').onclick = function () { deleteAnnotation(iderror); };
+                document.getElementById('delete-annotation').onclick = function () { confirmDelete(iderror); };
             }
 
             /*function deleteA (errorId) {
@@ -940,7 +947,6 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert("Изменения сохранены!");
                             location.reload(); // Или обновляем интерфейс без перезагрузки
                         } else {
                             alert("Ошибка: " + data.error);
@@ -949,6 +955,13 @@
                     .catch(error => {
                         console.error("AJAX error:", error);
                     });
+            }
+
+            function confirmDelete(iderror) {
+                document.getElementById('deleteModal').style.display = 'flex';
+                document.getElementById('confirmDelete').onclick = function () {
+                    deleteAnnotation(iderror);
+                }
             }
 
             // Функция для удаления аннотации
@@ -960,9 +973,9 @@
                     return;
                 }
 
-                if (!confirm("Вы уверены, что хотите удалить аннотацию?")) {
-                    return;
-                }
+                //if (!confirm("Вы уверены, что хотите удалить аннотацию?")) {
+                //    return;
+                //}
 
                 const formData = new FormData();
                 formData.append('action', 'delete');
@@ -981,7 +994,6 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            alert("Аннотация удалена!");
                             location.reload();
                         } else {
                             alert("Ошибка: " + data.error);
