@@ -91,6 +91,14 @@
             </div>
 
             <div class="option-group">
+                <p>Исходный вид</p>
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="option-group">
                 <p>Компактный вид</p>
                 <label class="switch">
                     <input type="checkbox">
@@ -403,6 +411,8 @@
         {% endfor %}
     </div>
 
+    <div class="unmarked_text" style="display:none;">{{unmarked_text}}</div>
+
     <!-- Окно для добавления аннотации ошибки -->
     <div id="annotation-modal" class="modal-overlay">
         <div class="modal-content">
@@ -501,9 +511,10 @@
         document.addEventListener('DOMContentLoaded', function () {
 
             const languageRadios = document.querySelectorAll('input[name="language"]');
-            const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
-            const posCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
-            const errorsCheckbox = document.querySelector('.option-group:nth-child(4) input[type="checkbox"]');
+            const originalViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
+            const compactViewCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
+            const posCheckbox = document.querySelector('.option-group:nth-child(4) input[type="checkbox"]');
+            const errorsCheckbox = document.querySelector('.option-group:nth-child(5) input[type="checkbox"]');
             const tokens = document.querySelectorAll('.token');
 
             // Функция обновления отображения
@@ -512,6 +523,16 @@
                 const isCompact = compactViewCheckbox.checked;
                 const showPOS = posCheckbox.checked;
                 const showErrors = errorsCheckbox.checked;
+                const isOriginal = originalViewCheckbox.checked;
+
+                if (isOriginal) {
+                    document.getElementsByClassName("watch-text")[0].style.display = "none";
+                    document.getElementsByClassName("unmarked_text")[0].style.display = "flex";
+                }
+                else {
+                    document.getElementsByClassName("watch-text")[0].style.display = "block";
+                    document.getElementsByClassName("unmarked_text")[0].style.display = "none";
+                }
 
                 tokens.forEach(token => {
                     token.querySelectorAll('.abbr, .error-tag, .word').forEach(el => {
@@ -558,7 +579,7 @@
                 radio.addEventListener('change', updateDisplay);
             });
 
-            [compactViewCheckbox, posCheckbox, errorsCheckbox].forEach(checkbox => {
+            [compactViewCheckbox, posCheckbox, errorsCheckbox, originalViewCheckbox].forEach(checkbox => {
                 checkbox.addEventListener('change', updateDisplay);
             });
 

@@ -718,6 +718,15 @@ label[for="id_iderrortag"] {
     z-index: 900;
 }
 
+.unmarked_text {
+    text-align: justify;
+    white-space: normal;
+    line-height: 1.5;
+    flex: 1;
+    padding: 10px;
+    white-space: pre-line;
+}
+
 @media (max-width: 660px) {
     .text-header-grad{
         margin-top: 258px !important;

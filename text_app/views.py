@@ -351,6 +351,7 @@ def annotate_text(request, text_id=2379):
         annotation_form = AddErrorAnnotationForm()
         
     # Контекст
+    unmarked_text = (text.text).replace("-EMPTY-","")
     student = text.idstudent
     user = student.iduser
     group = student.idgroup
@@ -364,6 +365,7 @@ def annotate_text(request, text_id=2379):
     assesment = text.selfassesment
 
     context = {
+        "unmarked_text": unmarked_text,
         "grade_form": grade_form,
         "annotation_form": annotation_form,
         "text": text,
