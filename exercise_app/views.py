@@ -692,8 +692,22 @@ def student_exercises(request):
             in_time = exercise.completiondate <= exercise.deadline
         else:
             in_time = datetime.date.today() <= exercise.deadline
+        exercise_name = "nameless"
+        exercise_type = exercise.idexercisetype.exerciseabbr
+        if exercise_type == 'grading':
+            exercise_grading = get_object_or_404(ExerciseGrading, idexercise=exercise.idexercise)
+            text_id = exercise_grading.idtext
+            text = get_object_or_404(Text, idtext=text_id.idtext)
+            exercise_name = text.header[0:20]
+        elif exercise_type == 'review':
+            exercisereview = get_object_or_404(ExerciseReview, idexercise=exercise.idexercise)
+            exercisetext = exercisereview.idexercisetext
+            text = get_object_or_404(ExerciseText, idexercisetext=exercisetext.idexercisetext)
+            exercise_name = text.exercisetextname[0:10] + " : " + exercisereview.idexercisetexttask.tasktitle[0:7]
+
         exercises_dict = {
             'exercise_data': exercise,
+            'exercise_name': exercise_name,
             'in_time': in_time
         }
         exercises_list.append(exercises_dict)
