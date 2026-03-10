@@ -6,6 +6,7 @@ from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, Reason,
                             )
 import datetime
 from django.forms import formset_factory
+from django.core.exceptions import ValidationError
 
 class AddExerciseTextForm(forms.Form):
     # loaddate = forms.DateField(
@@ -254,6 +255,12 @@ class AddExerciseForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         exercise_type = cleaned_data.get('idexercisetype')
+        start_date = cleaned_data.get("creationdate")
+        end_date = cleaned_data.get("deadline")
+
+        if start_date and end_date and end_date < start_date:
+            # Ошибка привяжется к конкретному полю end_date
+            self.add_error('deadline', "Дата окончания не может быть раньше даты начала.")        
         
         if exercise_type:
             exercise_abbr = exercise_type.exerciseabbr

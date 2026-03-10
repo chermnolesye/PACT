@@ -43,6 +43,12 @@
                     {{ form.deadline }}
                 </div>
 
+                {% if form.deadline.errors %}
+                    <div class="error-message" style="color: red;">
+                        {{ form.deadline.errors }}
+                    </div>
+                {% endif %}
+
                 <div class="grouping-wrapper">
                     <label>Тип упражнения:</label>
                     <div class="grouping-options">
