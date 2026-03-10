@@ -944,6 +944,24 @@
                 document.getElementById('save-annotation').onclick = function () { };
 
                 const form = document.getElementById('annotation-form');
+
+                // Этот кусок скрипта на валидацию формы, 
+                // чтоб незаполненные обязательные поля подсвечивались,
+                // т. к. тип кнопки Сохранить не submit, a button
+                // ПРОВЕРЯЕМ ВАЛИДНОСТЬ (атрибуты required)
+                 const tagSelect = document.getElementById('id_iderrortag');
+                const selectedTagName = document.getElementById('selected-tag-name');                
+                // ДО ПРОВЕРКИ вытаскиваем ID из кастомного элемента
+                const tagId = selectedTagName.getAttribute('tag_id');
+                // Если тег выбран, записываем его в скрытый селектор
+                if (tagId && tagSelect) {
+                    tagSelect.value = tagId;
+                }
+                if (!form.checkValidity()) {
+                    form.reportValidity(); // Показывает встроенные подсказки браузера
+                    return; // форма не отправится
+                }
+
                 const formData = new FormData(form);
 
                 // Добавляем action и error_id (если редактируем существующую аннотацию)
@@ -1492,6 +1510,17 @@
 
         function addErrorAnnotation() {
             console.log('addErrorAnnotation');
+
+            // Этот кусок скрипта на валидацию формы, 
+            // чтоб незаполненные обязательные поля подсвечивались,
+            // т. к. тип кнопки Сохранить не submit, a button
+            const form = document.getElementById('annotation-form');
+            // ПРОВЕРЯЕМ ВАЛИДНОСТЬ (атрибуты required)
+            if (!form.checkValidity()) {
+                form.reportValidity(); // Показывает встроенные подсказки браузера
+                return; // форма не отправится
+            }
+
             document.getElementById('save-annotation').onclick = function () { };
             //location.reload();
             const chosen_ids = [];
@@ -1530,7 +1559,7 @@
             document.getElementById('sentences').value = JSON.stringify(sentences);
 
             // Устанавливаем флаг формы
-            const form = document.getElementById('annotation-form');
+           // const form = document.getElementById('annotation-form');
             const formInput = document.createElement('input');
             formInput.type = 'hidden';
             formInput.name = 'annotation-form';
