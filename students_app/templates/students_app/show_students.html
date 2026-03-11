@@ -47,20 +47,11 @@
                 <div class="student-name">
                     Студент
                 </div>
-                <!-- <div class="student-inf">
-                    Группа
-                </div>
-                <div class="student-inf">
-                    Номер курса
-                </div>
-                <div class="student-inf">
-                    Год обучения
-                </div> -->
                 <div class="student-login">
                     Логин
                 </div>
             </div>
-            {% for student in students %}
+             {% for student in page_obj %}
             <div class="student-card">
                 <div class="student-name">
                     <p>
@@ -72,14 +63,37 @@
                         </a>
                     </p>
                 </div>
-                <!-- <div class="student-inf">{{ student.idgroup.groupname }}</div>                
-                <div class="student-inf">{{ student.idgroup.studycourse }}</div>
-                <div class="student-inf">{{ student.idgroup.idayear.title }}</div> -->
                 <div class="student-login">{{ student.iduser.login }}</div>
             </div>
             {% empty %}
             <div class="no-results">Студенты не найдены</div>
             {% endfor %}
-        </div>       
+        </div>
+
+        <div class="pagination">            
+            {% if page_obj.has_previous %}
+            <span class="step-links">
+                <a href="?page=1&q={{ query }}&group={{ group_id }}">&laquo; Первая</a>
+            </span>
+            <span class="step-links">
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&group={{ group_id }}">&#8249; Назад</a>
+            </span>
+            {% endif %}
+
+            <span class="current">
+                Страница <span class="current-number">{{ page_obj.number }}</span> из {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <span class="step-links">
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&group={{ group_id }}">Вперед &#8250;</a>
+            </span>
+            <span class="step-links">
+                <a href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}&group={{ group_id }}">Последняя &raquo;</a>
+            </span>
+            {% endif %}
+        </div>
+        
     </div>
+
 {% endblock %}

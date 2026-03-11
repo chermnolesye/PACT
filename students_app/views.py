@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count, Q, F
 from .forms import EditStudentForm, AddStudentForm
+from django.core.paginator import Paginator
 from core_app.models import (
     Student,
     Text,
@@ -16,6 +17,7 @@ from core_app.models import (
 def show_students(request):
     query = request.GET.get('q', '').strip()
     group_id = request.GET.get('group', '').strip()
+    page_number = request.GET.get('page')
 
     students_qs = Student.objects.select_related('iduser', 'idgroup')
 
@@ -38,12 +40,20 @@ def show_students(request):
     users = User.objects.filter(iduser__in=[u['iduser'] for u in unique_users])
     users = users.annotate(student_id=Subquery(first_student.values('idstudent')[:1]))
 
-    students = Student.objects.select_related('iduser', 'idgroup').filter(idstudent__in=[u.student_id for u in users])
+    # students = Student.objects.select_related('iduser', 'idgroup').filter(idstudent__in=[u.student_id for u in users])
+    students = Student.objects.select_related('iduser', 'idgroup').filter(
+        idstudent__in=[u.student_id for u in users]
+    ).order_by('iduser__lastname')
 
-    groups = Group.objects.all()
+    # groups = Group.objects.all().order_by('idayear__title')
+    groups = Group.objects.select_related('idayear').all().order_by('-idayear__title', 'groupname')
+
+    paginator = Paginator(students, 15)
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'students': students,
+        'page_obj': page_obj,
+        # 'students': students,
         'query': query,
         'group_id': group_id,
         'groups': groups,

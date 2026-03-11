@@ -1,6 +1,8 @@
 from django import forms
 from core_app.models import User, Student, Group, Rights
 from datetime import date
+from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class AddStudentForm(forms.Form):
     user = forms.ModelChoiceField(
@@ -31,7 +33,11 @@ class EditStudentForm(forms.ModelForm):
         model = User
         fields = ['lastname', 'firstname', 'middlename', 'birthdate', 'gender']
         widgets = {
-            'birthdate': forms.DateInput(attrs={'type': 'date'}),
+            'birthdate': forms.DateInput(format='%Y-%m-%d',
+                attrs={
+                'type': 'date',
+                'max': timezone.now().date().isoformat()
+                }),                
         }
         labels = {
             'lastname': 'Фамилия',
@@ -39,3 +45,8 @@ class EditStudentForm(forms.ModelForm):
             'middlename': 'Отчество',
             'birthdate': 'Дата рождения'
         }
+    def clean_birthdate(self):
+        birthdate = self.cleaned_data.get('birthdate')
+        if birthdate and birthdate > timezone.now().date():
+            raise ValidationError("Дата рождения не может быть в будущем.")
+        return birthdate
