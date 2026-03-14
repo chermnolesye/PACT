@@ -16,79 +16,89 @@
         </svg>
     </div>
 
-    <form method="get" class="filter-block" style="max-width: 100%;">
-        {% csrf_token %}
-        {{ filter.form.as_p }}
-        <div class="filter-buttons">
-            <button type="submit" class="button">Найти</button>
-            <button type="button" class="btn-link button grey-button" onclick="window.location.href = window.location.pathname;">Сбросить фильтры</button>
-        </div>
-    </form>
+    <div class="column_wrap">
+        <div id="filters">
+            <label class="sub-header">Фильры для текстов:</label>
+            <form method="get" class="filter-block">
+                {% csrf_token %}
+                {{ filter.form.as_p }}
+                <div class="filter-buttons">
+                    <button type="submit" class="button">Найти</button>
+                    <button type="button" class="btn-link button grey-button" onclick="window.location.href = window.location.pathname;">Сбросить фильтры</button>
+                </div>
+            </form>
 
-    <a href="{% url 'student_load_text' %}">
-        <button class="new-text-button button">
-            <svg width="24" height="24" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round" />
-            </svg>
-            Новый текст
-        </button>
-    </a>
+            <a href="{% url 'student_load_text' %}">
+                <button class="new-text-button button">
+                    <svg width="24" height="24" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round" />
+                    </svg>
+                    Новый текст
+                </button>
+            </a>
+        </div>
 
-    {% if not texts_exist %}
-    <div class="no-results" style="width:80%;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6C757D" stroke-width="2" stroke-linecap="round" />
-        </svg>
-        <p>По вашему запросу ничего не найдено</p>
-    </div>
-    {% else %}
-    <div class="texts-container" style="width:80%;">
-        <div class="texts-list">
-            <div class="texts-header">
-                <span class="text-name" id="result-card-header">Название</span>
-                <span class="small_column" id="result-card-header">Оценка</span>
-                <span class="small_column" id="result-card-header">Дата</span>
-                <span class="small_column" id="result-card-header">Удаление</span>
+        <div id="text_list">
+            <label class="sub-header">Список найденных текстов:</label>
+            {% if not texts_exist %}
+            <div class="no-results" style="margin-top:10px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6C757D" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <p>По вашему запросу ничего не найдено</p>
             </div>
-            <div class="texts-header-slim">
-                <span class="text-name" id="result-card-header">Тексты</span>
+            {% else %}
+            <div class="texts-container" style="margin-top:10px;">
+                <div class="texts-list">
+                    <div class="texts-header">
+                        <span class="text-name" id="result-card-header">Название</span>
+                        <span class="small_column" id="result-card-header">Оценка</span>
+                        <span class="small_column" id="result-card-header">Дата</span>
+                        <span class="small_column" id="result-card-header">Удаление</span>
+                    </div>
+                    <div class="texts-header-slim">
+                        <span class="text-name" id="result-card-header">Тексты</span>
+                    </div>
+                    {% for text in texts %}
+                    <div class="texts-result-card-slim" id={{ text.idtext }}>
+                        <span id="result-card-delete">
+                            <svg height="15px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
+                                <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
+                            </svg>
+                        </span>
+                        <a class="text-name" href="{% url 'student_show_text_markup' text.idtext %}">
+                            <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
+                                <path stroke-linecap="round" stroke-width="1.5" d="M8 13h2.5M8 9h6.5M8 17h1.5M3 14v-4c0-3.771 0-5.657 1.172-6.828C5.343 2 7.229 2 11 2h2c3.771 0 5.657 0 6.828 1.172M21 14c0 3.771 0 5.657-1.172 6.828m-15.656 0C5.343 22 7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172m0 0c.944-.943 1.127-2.348 1.163-4.828"></path>
+                            </svg>
+                            {{ text.header }}
+                        </a>
+                        <span class="small_column" id="result-card-header">Оценка: {{ text.get_grade_status }}</span>
+                        <span class="small_column" id="result-card-header">Дата: {{ text.createdate|date:"d.m.Y" }}</span>
+                    </div>
+                    <div class="texts-result-card" id={{ text.idtext }}>
+                        <a class="text-name" href="{% url 'student_show_text_markup' text.idtext %}">
+                            <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                                <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
+                                <path stroke-linecap="round" stroke-width="1.5" d="M8 13h2.5M8 9h6.5M8 17h1.5M3 14v-4c0-3.771 0-5.657 1.172-6.828C5.343 2 7.229 2 11 2h2c3.771 0 5.657 0 6.828 1.172M21 14c0 3.771 0 5.657-1.172 6.828m-15.656 0C5.343 22 7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172m0 0c.944-.943 1.127-2.348 1.163-4.828"></path>
+                            </svg>
+                            {{ text.header }}
+                        </a>
+                        <span class="small_column" id="result-card-header">{{ text.get_grade_status }}</span>
+                        <span class="small_column" id="result-card-header">{{ text.createdate|date:"d.m.Y" }}</span>
+                        <span class="small_column" id="result-card-header">
+                            <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
+                                <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
+                            </svg>
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-            {% for text in texts %}
-            <div class="texts-result-card-slim" id={{ text.idtext }}>
-                <span id="result-card-delete">
-                    <svg height="15px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
-                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-                <a class="text-name" href="{% url 'student_show_text_markup' text.idtext %}">
-                    <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
-                        <path stroke-linecap="round" stroke-width="1.5" d="M8 13h2.5M8 9h6.5M8 17h1.5M3 14v-4c0-3.771 0-5.657 1.172-6.828C5.343 2 7.229 2 11 2h2c3.771 0 5.657 0 6.828 1.172M21 14c0 3.771 0 5.657-1.172 6.828m-15.656 0C5.343 22 7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172m0 0c.944-.943 1.127-2.348 1.163-4.828"></path>
-                    </svg>
-                    {{ text.header }}
-                </a>
-                <span class="small_column" id="result-card-header">Оценка: {{ text.get_grade_status }}</span>
-                <span class="small_column" id="result-card-header">Дата: {{ text.createdate|date:"d.m.Y" }}</span>
-            </div>
-            <div class="texts-result-card" id={{ text.idtext }}>
-                <a class="text-name" href="{% url 'student_show_text_markup' text.idtext %}">
-                    <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
-                        <path stroke-linecap="round" stroke-width="1.5" d="M8 13h2.5M8 9h6.5M8 17h1.5M3 14v-4c0-3.771 0-5.657 1.172-6.828C5.343 2 7.229 2 11 2h2c3.771 0 5.657 0 6.828 1.172M21 14c0 3.771 0 5.657-1.172 6.828m-15.656 0C5.343 22 7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172m0 0c.944-.943 1.127-2.348 1.163-4.828"></path>
-                    </svg>
-                    {{ text.header }}
-                </a>
-                <span class="small_column" id="result-card-header">{{ text.get_grade_status }}</span>
-                <span class="small_column" id="result-card-header">{{ text.createdate|date:"d.m.Y" }}</span>
-                <span class="small_column" id="result-card-header">
-                    <svg height="20px" viewBox="0 0 43 43" fill="none" xmlns="http://www.w3.org/2000/svg" onclick="confirmDelete(this)">
-                        <path d="M1.5 1.5L29 29M41.5 41.5L35 35M41.5 1.5L1.5 41.5" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-            </div>
-            {% endfor %}
         </div>
     </div>
+
+    
     {% endif %}
 
     <div id="deleteModal" class="modal modal-overlay">

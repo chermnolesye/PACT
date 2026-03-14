@@ -64,7 +64,7 @@ def student_info(request, student_id):
     texts = Text.objects.filter(idstudent__in=all_student_records).annotate(
         error_count=Count('sentence__tokens__errortoken__iderror', distinct=True),
         text_type=F('idtexttype__texttypename')
-    )
+    ).order_by('-modifieddate', '-createdate')
 
     if query:
         texts = texts.filter(header__icontains=query)
