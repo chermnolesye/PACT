@@ -135,25 +135,28 @@ class AddErrorAnnotationForm(forms.ModelForm):
     iderrortag = forms.ModelChoiceField(
         queryset=ErrorTag.objects.all(),
         label="Выберите тег",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
 
     idreason = forms.ModelChoiceField(
         queryset=Reason.objects.all(),
         label="Причина ошибки",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
 
     iderrorlevel = forms.ModelChoiceField(
         queryset=ErrorLevel.objects.all(),
         label="Степень грубости",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
 
     correct = forms.CharField(
         label="Исправление",
         widget=forms.TextInput(attrs={'class': 'form-control'}),
-        required=False
+        required=True
     )
 
     comment = forms.CharField(
