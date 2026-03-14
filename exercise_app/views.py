@@ -679,8 +679,9 @@ def grade_text(request, idexercise=2):
 # Поменять на тест с правами студента
 # @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def student_exercises(request):
-    student_id = get_object_or_404(Student, iduser=request.user)
-    base_queryset = Exercise.objects.filter(idstudent=student_id)
+    student_ids = Student.objects.filter(iduser=request.user).values_list('idstudent', flat=True)
+    base_queryset = Exercise.objects.filter(idstudent__in=student_ids)
+    
     exercise_filter = ExerciseFilter(request.GET, queryset=base_queryset)
 
     # exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.filter(idstudent=student_id).all())
