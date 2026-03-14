@@ -267,6 +267,26 @@
         const gradingFields = document.getElementById('grading-fields');
         const reviewFields = document.getElementById('review-fields');
 
+        function fillChosenFieldsFromCurrentValues() {
+            const chosenYearEl = document.querySelector(".chosen_year");
+            const chosenGroupEl = document.querySelector(".chosen_group");
+            const chosenFioEl = document.querySelector(".chosen_fio");
+
+            if (yearSelect && yearSelect.selectedIndex > -1 && yearSelect.value) {
+                chosenYearEl.innerHTML = yearSelect.options[yearSelect.selectedIndex].text;
+            }
+
+            if (groupSelect && groupSelect.selectedIndex > -1 && groupSelect.value) {
+                chosenGroupEl.innerHTML = groupSelect.options[groupSelect.selectedIndex].text;
+            }
+
+            if (studentSelect && studentSelect.selectedIndex > -1 && studentSelect.value) {
+                chosenFioEl.innerHTML = studentSelect.options[studentSelect.selectedIndex].text;
+            }
+        }
+
+        fillChosenFieldsFromCurrentValues();
+
         // Скрытые поля для review
         const reviewTextIdInput = document.getElementById('id_review_text_id');
         const reviewTaskIdInput = document.getElementById('id_review_task_id');

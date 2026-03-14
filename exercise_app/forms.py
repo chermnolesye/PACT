@@ -216,7 +216,11 @@ class AddExerciseForm(forms.Form):
     )
     
     def __init__(self, *args, **kwargs):
+        preselected_student = kwargs.pop('preselected_student', None)
         super().__init__(*args, **kwargs)
+
+        self.fields['idstudent'].label_from_instance = lambda obj: obj.get_full_name()
+
         if self.data:
             # Для студентов
             if 'year' in self.data:
@@ -250,7 +254,21 @@ class AddExerciseForm(forms.Form):
                         self.fields['grading_text'].queryset = Text.objects.filter(idtext=text_id)
                 except (ValueError, TypeError):
                     self.fields['grading_text'].queryset = Text.objects.none()
-                
+
+        elif preselected_student:
+            student_group = preselected_student.idgroup
+            student_year = student_group.idayear if student_group else None
+
+            if student_year:
+                self.fields['group'].queryset = Group.objects.filter(idayear=student_year)
+                self.initial['year'] = student_year
+
+            if student_group:
+                self.fields['idstudent'].queryset = Student.objects.filter(idgroup=student_group)
+                self.initial['group'] = student_group
+
+            self.initial['idstudent'] = preselected_student
+                    
         
     def clean(self):
         cleaned_data = super().clean()

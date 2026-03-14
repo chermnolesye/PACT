@@ -167,7 +167,16 @@ def add_exercise(request):
                 print(f"Field '{field}': {errors}")
             print("=== END ERRORS ===")
     else:
-        form = AddExerciseForm()
+        student_id = request.GET.get('student_id')
+        preselected_student = None
+
+        if student_id:
+            preselected_student = get_object_or_404(
+                Student.objects.select_related('idgroup', 'idgroup__idayear', 'iduser'),
+                idstudent=student_id
+            )
+
+        form = AddExerciseForm(preselected_student=preselected_student)
 
     review_texts = ExerciseText.objects.all()
     grading_texts = Text.objects.all().order_by('idtext')[:10]
