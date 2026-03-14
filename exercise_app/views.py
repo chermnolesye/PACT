@@ -167,7 +167,16 @@ def add_exercise(request):
                 print(f"Field '{field}': {errors}")
             print("=== END ERRORS ===")
     else:
-        form = AddExerciseForm()
+        student_id = request.GET.get('student_id')
+        preselected_student = None
+
+        if student_id:
+            preselected_student = get_object_or_404(
+                Student.objects.select_related('idgroup', 'idgroup__idayear', 'iduser'),
+                idstudent=student_id
+            )
+
+        form = AddExerciseForm(preselected_student=preselected_student)
 
     review_texts = ExerciseText.objects.all()
     grading_texts = Text.objects.all().order_by('idtext')[:10]
@@ -183,13 +192,13 @@ def add_exercise(request):
 def get_grading_texts(request):
     try:
         queryset = Text.objects.filter(textgrade__isnull=False)
-        exclude_student_id = request.GET.get('exclude_student')
+        '''exclude_student_id = request.GET.get('exclude_student')
         if exclude_student_id:
             try:
                 # ВОЗМОЖНО, на курсы ниже тоже нужно исключать тексты
                 queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
             except (ValueError, TypeError):
-                pass
+                pass'''
         filtered_texts = GradingTextFilter(request.GET, queryset=queryset)
         texts = filtered_texts.qs.order_by('-createdate')
         texts_data = [
