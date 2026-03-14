@@ -18,6 +18,9 @@ USE_WSL_FOR_RFTAGGER = True
 RFTAGGER_PATH = "/home/chermnolesye/rftagger/RFTagger"
 RFTAGGER_LANGUAGE = "german"
 
+# Переменная языка системы
+PACT_LANGUAGE_NAME = 'Deutsche'
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -88,6 +91,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'pact.context_processors.language_context',
             ],
         },
     },
