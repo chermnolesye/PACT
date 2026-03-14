@@ -140,7 +140,7 @@ def show_text_markup(request, text_id=None):
         "write_place": write_place.writeplacename if write_place else "Не указано",
         "write_tool": write_tool.writetoolname if write_tool else "Не указано",
         "text_type": text_type.texttypename if text_type else "Не указано",
-        "emotion": emotion.emotionname,
+        "emotion": emotion.emotionname if emotion else "Не указано",
         "year_study_language": year_study_language,
         "self_rating": self_rating,
         "self_assesment": assesment,
@@ -874,7 +874,7 @@ def student_search_texts(request):
     )
 
     text_filter = StudentTextFilter(request.GET, queryset=texts_qs)
-    text_result = text_filter.qs
+    text_result = text_filter.qs.order_by('-modifieddate')
     texts_exist = False
     if len(text_result) > 0:
         texts_exist = True
