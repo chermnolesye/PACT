@@ -2,6 +2,7 @@ from authorization_app.utils import has_teacher_rights
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.contrib import messages
 from core_app.models import (
     Group,
     AcademicYear,
@@ -55,10 +56,11 @@ def add_group(request):
     if request.method == 'POST':
         form = AddGroupForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('add_group')
+            group = form.save()
+            messages.success(request, f'Группа "{group.groupname}" успешно создана.')
+            return redirect('show_groups')
         else:
-            print(form.errors)  
+            print(form.errors)
     else:
         form = AddGroupForm()
 
