@@ -10,7 +10,7 @@ class AddStudentForm(forms.Form):
         label="Пользователь"
     )
     
-    group = forms.ModelChoiceField(queryset=Group.objects.all(), label="Группа")
+    group = forms.ModelChoiceField(queryset=Group.objects.all().order_by('-idayear', 'groupname'), label="Группа")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

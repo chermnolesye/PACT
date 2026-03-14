@@ -8,15 +8,16 @@ from django.utils.translation import gettext_lazy as _
 
 class TeacherLoadTextForm(forms.ModelForm):
     group = forms.ModelChoiceField(
-        queryset=Group.objects.all(),
+        queryset=Group.objects.all().order_by('-idayear', 'groupname'),
         label="Группа"
     )
     student = forms.ModelChoiceField(
         queryset=Student.objects.none(),
         label="Студент"
     )
+    
     createdate = forms.DateField(
-        initial=date.today(),
+        initial=date.today().isoformat(),
         widget=forms.DateInput(
             attrs={'type': 'date', 'class': 'form-control'}
         ),

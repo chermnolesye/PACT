@@ -100,6 +100,7 @@ def statistics_view(request):
         .all()
         .values("idgroup", "groupname", "idayear__title")
         .distinct()
+        .order_by('-idayear', 'groupname')
     )
     group_data = [
         {
