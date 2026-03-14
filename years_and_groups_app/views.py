@@ -2,6 +2,7 @@ from authorization_app.utils import has_teacher_rights
 from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
+from django.contrib import messages
 from core_app.models import (
     Group,
     AcademicYear,
@@ -21,7 +22,8 @@ def show_groups(request):
     query = request.GET.get('q', '')
     course = request.GET.get('course')
     year_str = request.GET.get('year')
-    groups = Group.objects.all()
+
+    groups = Group.objects.select_related('idayear').all()
 
     if query:
         groups = groups.filter(groupname__icontains=query)
@@ -33,12 +35,35 @@ def show_groups(request):
     if year_str:
         try:
             year = int(year_str)
-            groups = groups.filter(idayear=year)  
+            groups = groups.filter(idayear=year)
         except ValueError:
-            pass
-        
-    course_numbers = Group.objects.values_list('studycourse', flat=True).distinct().order_by('studycourse')
-    academic_years = AcademicYear.objects.all()
+            year = None
+
+    # Курсы в фильтре зависят от выбранного года
+    course_numbers_qs = Group.objects.all()
+    if year:
+        course_numbers_qs = course_numbers_qs.filter(idayear=year)
+
+    if query:
+        course_numbers_qs = course_numbers_qs.filter(groupname__icontains=query)
+
+    course_numbers = (
+        course_numbers_qs
+        .values_list('studycourse', flat=True)
+        .distinct()
+        .order_by('studycourse')
+    )
+
+    # Учебные годы в фильтре зависят от выбранного курса
+    academic_years_qs = AcademicYear.objects.filter(group__isnull=False)
+
+    if course:
+        academic_years_qs = academic_years_qs.filter(group__studycourse=course)
+
+    if query:
+        academic_years_qs = academic_years_qs.filter(group__groupname__icontains=query)
+
+    academic_years = academic_years_qs.distinct().order_by('title')
 
     return render(request, 'show_groups.html', {
         'groups': groups,
@@ -55,10 +80,11 @@ def add_group(request):
     if request.method == 'POST':
         form = AddGroupForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('add_group')
+            group = form.save()
+            messages.success(request, f'Группа "{group.groupname}" успешно создана.')
+            return redirect('show_groups')
         else:
-            print(form.errors)  
+            print(form.errors)
     else:
         form = AddGroupForm()
 

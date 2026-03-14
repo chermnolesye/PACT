@@ -13,6 +13,15 @@
 <div class="show-groups-container">
 
     <h2 class="highlighted-header"> Управление группами </h2>
+    <!-- {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %} -->
 
     <div class="add-group">
         <a href="{% url 'add_group' %}"><button class="button">Добавить группу</button></a>
