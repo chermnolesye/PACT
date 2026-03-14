@@ -542,44 +542,58 @@ def get_tags(request):
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def search_texts(request):
     group_data = [
-        {"id": g["idgroup"], "name": g["groupname"], "year": g["idayear__title"]}
+        {
+            "id": g["idgroup"],
+            "name": g["groupname"],
+            "year": g["idayear__title"]
+        }
         for g in Group.objects.select_related("idayear").values("idgroup", "groupname", "idayear__title")
     ]
-    years_data = list(AcademicYear.objects.values("idayear", "title"))
+
+    years_data = [
+        {
+            "id": y["idayear"],
+            "name": y["title"]
+        }
+        for y in AcademicYear.objects.values("idayear", "title")
+    ]
+
     text_type_data = [
-        {"id": tt["idtexttype"], "name": tt["texttypename"]}
+        {
+            "id": tt["idtexttype"],
+            "name": tt["texttypename"]
+        }
         for tt in TextType.objects.values("idtexttype", "texttypename")
     ]
 
-    # Вспомогательная функция для сборки словаря текста
     def serialize_text(text_obj):
         return {
             "id": text_obj.idtext,
-            "header_text": str(text_obj), # Вызов str модели Text
+            "header_text": str(text_obj),
             "author_lastname": text_obj.idstudent.iduser.lastname,
             "author_firstname": text_obj.idstudent.iduser.firstname,
             "author_middlename": text_obj.idstudent.iduser.middlename or "",
             "date_modificate": text_obj.modifieddate,
             "text_type": text_obj.idtexttype.texttypename if text_obj.idtexttype else "Не указано",
-            "grade_status": text_obj.get_grade_status(), # Метод модели Text
-            "group_display": str(text_obj.idstudent.idgroup), # Метод str модели Group
+            "grade_status": text_obj.get_grade_status(),
+            "group_display": str(text_obj.idstudent.idgroup),
         }
 
     base_queryset = Text.objects.select_related(
-        'idstudent__iduser', 
-        'idstudent__idgroup__idayear', 
+        'idstudent__iduser',
+        'idstudent__idgroup__idayear',
         'idtexttype'
     ).exclude(idtexttype__isnull=True)
 
-    text_type_id = request.GET.get('text_type', '')
+    text_type_id = request.GET.get("text_type", "")
     found_text_by_name_data = []
     grouped_texts = {}
     texts_of_type = []
-    
+
     if text_type_id:
         texts = base_queryset.filter(idtexttype_id=text_type_id)
         texts_of_type = [serialize_text(t) for t in texts]
-    # Если поиск через POST
+
     text_name = request.POST.get("text", "")
     year_id = request.POST.get("year", "")
     group_id = request.POST.get("group", "")
@@ -588,10 +602,18 @@ def search_texts(request):
 
     if request.method == "POST":
         search_qs = base_queryset
-        if text_name: search_qs = search_qs.filter(header__icontains=text_name)
-        if year_id: search_qs = search_qs.filter(idstudent__idgroup__idayear=year_id)
-        if group_id: search_qs = search_qs.filter(idstudent__idgroup=group_id)
-        if post_text_type_id: search_qs = search_qs.filter(idtexttype_id=post_text_type_id)
+
+        if text_name:
+            search_qs = search_qs.filter(header__icontains=text_name)
+
+        if year_id:
+            search_qs = search_qs.filter(idstudent__idgroup__idayear=year_id)
+
+        if group_id:
+            search_qs = search_qs.filter(idstudent__idgroup=group_id)
+
+        if post_text_type_id:
+            search_qs = search_qs.filter(idtexttype_id=post_text_type_id)
 
         if grouping == "fio":
             for t in search_qs:
@@ -617,7 +639,7 @@ def search_texts(request):
         "found_text_by_name": found_text_by_name_data,
         "grouped_texts": grouped_texts,
         "texts_type_folders": texts_by_types_for_folders,
-        "selected_text": text_name,  
+        "selected_text": text_name,
         "selected_year": year_id,
         "selected_group": group_id,
         "selected_text_type": text_type_id or post_text_type_id,
