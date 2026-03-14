@@ -16,6 +16,8 @@
 
         <form method="post" id="load-text">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <input type="hidden" name="source_student_id" value="{{ source_student_id }}">
 
             <div>
                 <div class="horizontal-wrap">

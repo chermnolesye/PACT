@@ -427,10 +427,21 @@ def teacher_load_text(request):
 
             selected_student_id = request.POST.get("student")
             group_id = request.POST.get("group")
+            next_page = request.POST.get("next")
+            source_student_id = request.POST.get("source_student_id")
 
             if not selected_student_id:
                 form.add_error("student", "Не выбран студент")
-                return render(request, "teacher_load_text.html", {"form": form})
+                return render(
+                    request,
+                    "teacher_load_text.html",
+                    {
+                        "form": form,
+                        "fio": get_teacher_fio(request),
+                        "next": next_page,
+                        "source_student_id": source_student_id,
+                    }
+                )
 
             text_obj.idstudent = get_object_or_404(
                 Student, idstudent=selected_student_id
@@ -492,6 +503,9 @@ def teacher_load_text(request):
             except Exception as e:
                 print(f"Ошибка POS-разметки для текста {text_obj.idtext}: {e}")
 
+            if next_page == "student_info" and source_student_id:
+                return redirect("student_info", student_id=source_student_id)
+
             return redirect("search_texts")
         else:
             print(f"Форма невалидна. Ошибки: {form.errors}")
@@ -505,7 +519,12 @@ def teacher_load_text(request):
     return render(
         request,
         "teacher_load_text.html",
-        {"form": form, "fio": get_teacher_fio(request)},
+        {
+            "form": form,
+            "fio": get_teacher_fio(request),
+            "next": request.GET.get("next", ""),
+            "source_student_id": request.GET.get("student_id", ""),
+        },
     )
 
 
