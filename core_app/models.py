@@ -248,6 +248,7 @@ class Text(models.Model):
     selfassesment = models.IntegerField(null=True, blank=True, choices=RATES)
     poscheckflag = models.BooleanField(null=True, blank=True)
     errorcheckflag = models.BooleanField(null=True, blank=True)
+    aisuspectedflag = models.BooleanField(null=True, blank=True)
     poscheckdate = models.DateField(null=True, blank=True)
     errorcheckdate = models.DateField(null=True, blank=True)
     iduserteacher = models.ForeignKey('User', on_delete=models.CASCADE, db_column='iduserteacher', null=True, blank=True, related_name='teacher_texts')

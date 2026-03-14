@@ -126,7 +126,7 @@ def show_text_markup(request, text_id=None):
     write_place = text.idwriteplace
     write_tool = text.idwritetool
     emotion = text.idemotion
-    year_study_language = text.educationlevel
+    year_study_language = text.educationlevel if text.educationlevel else (group.studycourse if group else "Не указано")
     self_rating = text.selfrating
     assesment = text.selfassesment
 
@@ -154,6 +154,7 @@ def show_text_markup(request, text_id=None):
         "errorcheckflag": text.errorcheckflag,
         "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано",
         "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
+        "aisuspectedflag": text.aisuspectedflag
     }
 
     return render(request, "student_show_text_markup.html", context)
@@ -361,7 +362,8 @@ def annotate_text(request, text_id=2379):
     write_place = text.idwriteplace
     write_tool = text.idwritetool
     emotion = text.idemotion
-    year_study_language = text.educationlevel
+    year_study_language = text.educationlevel if text.educationlevel else (group.studycourse if group else "Не указано")
+    aisuspectedflag = text.aisuspectedflag
     self_rating = text.selfrating
     assesment = text.selfassesment
 
@@ -393,6 +395,7 @@ def annotate_text(request, text_id=2379):
         "errorcheckflag": text.errorcheckflag,
         "usererrorcheck": text.idusererrorcheck.get_full_name() if text.idusererrorcheck else "Не указано", 
         "userteacher": text.iduserteacher.get_full_name() if text.iduserteacher else "Не указано", 
+        "aisuspectedflag": text.aisuspectedflag
     }
 
     return render(request, "annotate_text.html", context)

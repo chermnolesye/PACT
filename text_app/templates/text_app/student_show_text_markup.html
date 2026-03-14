@@ -184,6 +184,15 @@
                             <p>Проверяющий:</p>
                             <p class="p-dark">  {{usererrorcheck}} </p>
                         </div>
+                        <p>Проверка на ИИ</p>
+                        <div class="menu-content-data">
+                            <p>Статус:</p>
+                            {% if aisuspectedflag %}
+                                <p class="p-red">Есть подозрение на ИИ</p>
+                            {% else %}
+                                <p class="p-green">Нет подозрений</p>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="menu-content-grade-col ">
