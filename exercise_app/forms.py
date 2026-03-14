@@ -166,12 +166,12 @@ class AddExerciseForm(forms.Form):
     )
     
     year = forms.ModelChoiceField(
-        queryset=AcademicYear.objects.all(),
+        queryset=AcademicYear.objects.all().order_by('-idayear'),
         label='Учебный год',
         required=True
     ) 
     group = forms.ModelChoiceField(
-        queryset=Group.objects.none(),
+        queryset=Group.objects.none().order_by('-idayear', 'groupname'),
         label='Группа',
         required=True
     )   

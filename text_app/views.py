@@ -583,7 +583,9 @@ def search_texts(request):
             "name": g["groupname"],
             "year": g["idayear__title"]
         }
-        for g in Group.objects.select_related("idayear").values("idgroup", "groupname", "idayear__title")
+        for g in Group.objects.select_related("idayear")
+            .order_by("-idayear__title", "groupname")
+            .values("idgroup", "groupname", "idayear__title")
     ]
 
     years_data = [
@@ -591,7 +593,7 @@ def search_texts(request):
             "id": y["idayear"],
             "name": y["title"]
         }
-        for y in AcademicYear.objects.values("idayear", "title")
+        for y in AcademicYear.objects.order_by("-title").values("idayear", "title")
     ]
 
     text_type_data = [

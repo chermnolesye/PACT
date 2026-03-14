@@ -23,7 +23,11 @@ def show_groups(request):
     course = request.GET.get('course')
     year_str = request.GET.get('year')
 
-    groups = Group.objects.select_related('idayear').all()
+    groups = (
+        Group.objects
+        .select_related('idayear')
+        .order_by('-idayear', '-studycourse', 'groupname')
+    )
 
     if query:
         groups = groups.filter(groupname__icontains=query)
@@ -63,7 +67,7 @@ def show_groups(request):
     if query:
         academic_years_qs = academic_years_qs.filter(group__groupname__icontains=query)
 
-    academic_years = academic_years_qs.distinct().order_by('title')
+    academic_years = academic_years_qs.distinct().order_by('-idayear')
 
     return render(request, 'show_groups.html', {
         'groups': groups,
