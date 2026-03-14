@@ -72,7 +72,7 @@
                             </button>
                         <span class="task-name">Добавить задание</span>
                     </div>
-                    <div class="task-content">
+                    <div class="task-content" id="create-form-container">
                         <form id="create-task-form" method="post" class="create-task-form">
                             {% csrf_token %}
                             <input type="hidden" name="form_type" value="create_task">
@@ -273,11 +273,17 @@
             });
         });
         
-        // Отмена создания
+        // Отмена создания и скрытие формы добавления задания
         document.querySelectorAll('.cancel-create').forEach(button => {
             button.addEventListener('click', function() {
                 const form = this.closest('form');
                 form.reset();
+                const mainWrapper = form.closest('.task-content');
+                mainWrapper.classList.remove('active');
+                const toggleBtn = mainWrapper.previousElementSibling.querySelector('.toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.classList.remove('active');
+                }
             });
         });
         
