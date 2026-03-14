@@ -26,6 +26,7 @@ from core_app.models import (
     Sentence,
     User,
 )
+from .pos_tagger import annotate_text_pos
 
 def show_text_markup(request, text_id=None):
     if text_id is None:
@@ -423,12 +424,26 @@ def teacher_load_text(request):
         if form.is_valid():
             text_obj = form.save(commit=False)
 
+            if text_obj.idtexttype is None:
+                text_obj.idtexttype = get_default_text_type()
+
             selected_student_id = request.POST.get("student")
             group_id = request.POST.get("group")
+            next_page = request.POST.get("next")
+            source_student_id = request.POST.get("source_student_id")
 
             if not selected_student_id:
                 form.add_error("student", "Не выбран студент")
-                return render(request, "teacher_load_text.html", {"form": form})
+                return render(
+                    request,
+                    "teacher_load_text.html",
+                    {
+                        "form": form,
+                        "fio": get_teacher_fio(request),
+                        "next": next_page,
+                        "source_student_id": source_student_id,
+                    }
+                )
 
             text_obj.idstudent = get_object_or_404(
                 Student, idstudent=selected_student_id
@@ -484,6 +499,15 @@ def teacher_load_text(request):
                 f"Всего предложений: {len(sentences)}, слов: {sum(len(word_tokenize(s, language='german')) for s in sentences)}."
             )
 
+            try:
+                pos_result = annotate_text_pos(text_obj.idtext)
+                print(f"POS-разметка для текста {text_obj.idtext}: {pos_result}")
+            except Exception as e:
+                print(f"Ошибка POS-разметки для текста {text_obj.idtext}: {e}")
+
+            if next_page == "student_info" and source_student_id:
+                return redirect("student_info", student_id=source_student_id)
+
             return redirect("search_texts")
         else:
             print(f"Форма невалидна. Ошибки: {form.errors}")
@@ -497,7 +521,12 @@ def teacher_load_text(request):
     return render(
         request,
         "teacher_load_text.html",
-        {"form": form, "fio": get_teacher_fio(request)},
+        {
+            "form": form,
+            "fio": get_teacher_fio(request),
+            "next": request.GET.get("next", ""),
+            "source_student_id": request.GET.get("student_id", ""),
+        },
     )
 
 
@@ -540,6 +569,11 @@ def get_tags(request):
     
     return JsonResponse(context)
 
+def get_default_text_type():
+    text_type = TextType.objects.filter(texttypename="Не указано").first()
+    if text_type:
+        return text_type
+    return get_object_or_404(TextType, idtexttype=14)
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def search_texts(request):
@@ -1024,13 +1058,17 @@ def student_search_texts(request):
     # return render(request, "student_search_texts.html", context)
 
 def student_load_text(request):
-    # student_profile = request.user.student
     student_profile = get_object_or_404(Student, iduser=request.user)
     form = StudentLoadTextForm(request.POST)
+
     if request.method == "POST":
         form = StudentLoadTextForm(request.POST, student=student_profile)
         if form.is_valid():
             new_text = form.save(commit=False)
+
+            if new_text.idtexttype is None:
+                new_text.idtexttype = get_default_text_type()
+
             new_text.student = student_profile
             new_text.idstudent = student_profile
             new_text.group = student_profile.idgroup
@@ -1070,18 +1108,23 @@ def student_load_text(request):
                 f"Всего предложений: {len(sentences)}, слов: {sum(len(word_tokenize(s, language='german')) for s in sentences)}."
             )
 
+            try:
+                pos_result = annotate_text_pos(new_text.idtext)
+                print(f"POS-разметка для текста {new_text.idtext}: {pos_result}")
+            except Exception as e:
+                print(f"Ошибка POS-разметки для текста {new_text.idtext}: {e}")
+
             return redirect("student_search_texts")
         else:
             print(f"Форма невалидна. Ошибки: {form.errors}")
     else:
         form = StudentLoadTextForm(student=student_profile)
+
     return render(
         request,
         "student_load_text.html",
         {"form": form},
     )
-
-    # return render(request, "student_load_text.html")
 
 
 @require_POST

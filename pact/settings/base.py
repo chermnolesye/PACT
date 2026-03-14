@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 
+# RFTagger
+USE_WSL_FOR_RFTAGGER = True
+RFTAGGER_PATH = "/home/chermnolesye/rftagger/RFTagger"
+RFTAGGER_LANGUAGE = "german"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
