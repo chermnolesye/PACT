@@ -912,7 +912,7 @@ def student_search_texts(request):
         'idstudent__idgroup__idayear'
     )
 
-    text_filter = StudentTextFilter(request.GET, queryset=texts_qs)
+    text_filter = StudentTextFilter(request.GET, queryset=texts_qs, request=request)
     text_result = text_filter.qs.order_by('-modifieddate')
     texts_exist = False
     if len(text_result) > 0:

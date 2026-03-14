@@ -17,7 +17,8 @@ class StudentTextFilter(django_filters.FilterSet):
     
     year = django_filters.ModelChoiceFilter(
         field_name='idstudent__idgroup__idayear',
-        queryset=AcademicYear.objects.all(),
+        # queryset=AcademicYear.objects.all(),
+        queryset=AcademicYear.objects.none(),
         label="Учебный год",
         empty_label="Все годы",
         widget=forms.Select(attrs={'class': 'form-control'})
@@ -44,3 +45,12 @@ class StudentTextFilter(django_filters.FilterSet):
     class Meta:
         model = Text
         fields = ['idtexttype', 'year', 'header']
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.get('request').user if kwargs.get('request') else None
+        super().__init__(*args, **kwargs)
+        # В фильтрах отображаются только те учебные года, в которые учился User
+        if user and user.is_authenticated:
+            qs = AcademicYear.objects.filter(group__student__iduser=user).distinct().order_by('-title')
+            self.filters['year'].extra['queryset'] = qs
+            self.form.fields['year'].queryset = qs
