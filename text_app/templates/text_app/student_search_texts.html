@@ -21,7 +21,11 @@
             <label class="sub-header">Фильры для текстов:</label>
             <form method="get" class="filter-block">
                 {% csrf_token %}
-                {{ filter.form.as_p }}
+                <!-- {{ filter.form.as_p }} -->
+                {{ filter.form.header }}
+                {{ filter.form.idtexttype }}
+                {{ filter.form.year }}
+                {{ filter.form.is_graded }}
                 <div class="filter-buttons">
                     <button type="submit" class="button">Найти</button>
                     <button type="button" class="btn-link button grey-button" onclick="window.location.href = window.location.pathname;">Сбросить фильтры</button>

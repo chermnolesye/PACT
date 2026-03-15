@@ -133,6 +133,14 @@
             <p>Дата создания:</p>
             <p class="p-dark"> {{ create_date|default:"Нет данных" }} </p>
         </div>
+        <div class="menu-content-data">
+            <button type="button" id="run-pos-tagger" class="button" data-text-id="{{ text.idtext }}">
+                Обновить частеречную разметку
+            </button>            
+        </div>
+        <div class="menu-content-data">
+            <div id="pos-tagger-result" class="pos-tagger-result" style="display: none; margin-top: 15px;"></div>
+        </div>
     </div>
     <div class="menu-content" id="author-content">
 
@@ -950,7 +958,7 @@
             function saveAnnotation(errorId) {
                 console.log('saveAnnotation', errorId);
                 //location.reload();
-                document.getElementById('save-annotation').onclick = function () { };
+                // document.getElementById('save-annotation').onclick = function () { };
 
                 const form = document.getElementById('annotation-form');
 
@@ -1657,6 +1665,133 @@
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
+        }
+
+
+        // Отправка AJAX-запроса для запуска POS-теггера
+        const runPosTaggerBtn = document.getElementById('run-pos-tagger');
+    
+        if (runPosTaggerBtn) {
+            runPosTaggerBtn.addEventListener('click', function() {
+                const textId = this.getAttribute('data-text-id');
+                runPosTagger(textId);
+            });
+        }
+
+        function runPosTagger(textId) {
+            const btn = document.getElementById('run-pos-tagger');
+            const resultDiv = document.getElementById('pos-tagger-result');
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">Отправка запроса...</div>';
+
+            btn.disabled = true;
+            btn.textContent = 'Выполняется...';
+            
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            
+            if (!csrftoken) {
+                resultDiv.innerHTML = '<div class="error-message">CSRF токен не найден</div>';
+                btn.disabled = false;
+                btn.textContent = 'Обновить частеречную разметку';
+                return;
+            }
+            
+            console.log('Отправка запроса для text_id:', textId);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'action': 'run_pos_tagger',
+                    'text_id': textId
+                })
+            })
+
+            .then(data => {
+                console.log('ДАННЫЕ ОТВЕТА:', data);
+                
+                // Проверяем успешность выполнения функции POS-теггера
+                if (data.result && data.result.success === true) {
+                    console.log('POS-теггер выполнен успешно');
+                    resultDiv.innerHTML = '<div class="success-message">Частеречныя разметка обновлена. Страница будет перезагружена...</div>';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    console.log('POS-теггер вернул ошибку');
+                    
+                    // Берем сообщение из result
+                    const errorMessage = data.result?.message || data.message || 'Неизвестная ошибка';
+                    const errorsList = data.result?.errors ? data.result.errors.join('<br>') : '';
+                    
+                    resultDiv.innerHTML = `
+                        <div class="error-message">
+                            <strong>Ошибка:</strong> ${errorMessage}<br>
+                            ${errorsList ? `<small>${errorsList}</small>` : ''}
+                            <br><br>
+                            <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
+                        </div>
+                    `;
+                    
+                    btn.disabled = false;
+                    btn.textContent = 'Обновить частеречную разметку';
+                }
+            })
+
+            // .then(response => {
+                
+
+            //     console.log('Статус ответа:', response.status);
+            //     console.log('Headers:', response.headers);
+                
+            //     // Проверяем content-type
+            //     const contentType = response.headers.get('content-type');
+            //     console.log('Content-Type:', contentType);
+                
+            //     if (!response.ok) {
+            //         throw new Error(`HTTP ошибка: ${response.status}`);
+            //     }
+
+
+            //     console.log('Статус ответа:', response.status);
+            //     if (!response.ok) {
+            //         throw new Error(`HTTP ошибка: ${response.status}`);
+            //     }
+            //     return response.json();
+            // })
+            // .then(data => {        
+            //     if (data.success === true) {
+            //         resultDiv.innerHTML = '<div class="success-message">POS-разметка выполнена успешно. Страница будет перезагружена...</div>';
+            //         setTimeout(() => {
+            //             // location.reload();
+            //         }, 2000);
+            //     } else {
+            //         const errorMessage = data.message || data.error || 'Неизвестная ошибка';
+            //         const errorsList = data.errors ? data.errors.join('<br>') : '';
+                    
+            //         resultDiv.innerHTML = `
+            //             <div class="error-message">
+            //                 <strong>✗ Ошибка:</strong> ${errorMessage}<br>
+            //                 ${errorsList ? `<small>${errorsList}</small>` : ''}
+            //                 <br><br>
+            //                 <em>Обновлено токенов: ${data.updated_tokens || 0}, пропущено: ${data.skipped_tokens || 0}</em>
+            //             </div>
+            //         `;
+                    
+            //         btn.disabled = false;
+            //         btn.textContent = 'Обновить частеречную разметку';
+            //     }
+            // })
+            // .catch(error => {
+            //     console.error('Ошибка:', error);
+            //     resultDiv.innerHTML = `<div class="error-message">Ошибка при отправке запроса: ${error.message}</div>`;
+            //     btn.disabled = false;
+            //     btn.textContent = 'Обновить частеречную разметку';
+            // });
         }
 
     </script>
