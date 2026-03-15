@@ -261,7 +261,7 @@
     margin-right: 5px;
 }
 
-.exercise-card .full_name, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
+.exercise-card .full_name, .exercise-card .title, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
 .exercise-card .deadline, .exercise-card .completion_date, .exercise-card .mark {
     text-align: left;
 }
