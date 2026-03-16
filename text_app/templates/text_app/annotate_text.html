@@ -511,15 +511,7 @@
         const chosen = [];
         const chosen_ids = [];
 
-        function open_overlay() {
-            const height = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            );
-
+        function open_overlay(height) {
             document.getElementById('overlay').style.height = height + "px";
             document.getElementById('overlay').style.display = "block";
         }
@@ -827,7 +819,15 @@
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
                 document.getElementById('delete-annotation').style.display = "block";
 
-                open_overlay()
+                const height = Math.max(
+                    document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight
+                );
+
+                open_overlay(height)
                 //windowElement.style.top = "100px";
                 //document.getElementById('annotation-form').style.left = (viewportWidth - elementWidth) / 2 + 'px';
                 //document.getElementById('annotation-form').style.top = (viewportHeight - elementHeight) / 2 + 'px';
@@ -1371,7 +1371,15 @@
 
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
-            open_overlay()
+            
+                const height = Math.max(
+                    document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight
+                );
+            open_overlay(height)
             /*
                 const tags = [
                     { name: 'Tag1' },
@@ -1631,35 +1639,45 @@
             console.log(data);
         }
 
-
+        //перемещение окна аннотации
         const windowElement = document.getElementById("annotation-modal");
-        // Select the header element, which is the drag handle
         const headerElement = windowElement.getElementsByClassName("modal-head")[0];
-
-        // Variables to store initial positions and offsets
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-        // Add mousedown event listener to the header
-        headerElement.onmousedown = dragMouseDown;
+        const height = document.body.offsetHeight;
 
-        function dragMouseDown(e) {
+        headerElement.onmousedown = function (e) { dragMouseDown(e, height) };
+
+        function dragMouseDown(e, height) {
             e = e || window.event;
             e.preventDefault();
             pos3 = e.clientX;
             pos4 = e.clientY;
             document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
+
+            const rect = headerElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            border_bottom = window.innerHeight - windowElement.offsetHeight
+            border_right = window.innerWidth - windowElement.offsetWidth
+
+            document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) }; 
         }
 
-        function elementDrag(e) {
+        function elementDrag(e, x, y, border_bottom) {
             e = e || window.event;
             e.preventDefault();
             pos1 = pos3 - e.clientX;
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-            windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
-            windowElement.style.left = (windowElement.offsetLeft - pos1) + "px";
+
+            if (pos4 >= y + 10 && border_bottom - pos4 >= 10 - y) {
+                windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
+            }
+            if (pos3 >= x + 10 && border_right - pos3 >= 25 - x) {
+                windowElement.style.left = (windowElement.offsetLeft - pos1) + "px";
+            }
         }
 
         function closeDragElement() {
