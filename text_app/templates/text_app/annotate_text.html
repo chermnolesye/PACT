@@ -828,7 +828,7 @@
                 );
 
                 open_overlay(height)
-                //windowElement.style.top = "100px";
+                document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight/2) + "px";
                 //document.getElementById('annotation-form').style.left = (viewportWidth - elementWidth) / 2 + 'px';
                 //document.getElementById('annotation-form').style.top = (viewportHeight - elementHeight) / 2 + 'px';
                 // document.getElementById('selected-tag-name').innerHTML = tokenElement.dataset.errorTag;
@@ -1371,14 +1371,16 @@
 
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
-            
-                const height = Math.max(
-                    document.body.scrollHeight,
-                    document.body.offsetHeight,
-                    document.documentElement.clientHeight,
-                    document.documentElement.scrollHeight,
-                    document.documentElement.offsetHeight
-                );
+
+            const height = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight
+            );
+
+            document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight / 2) + "px";
             open_overlay(height)
             /*
                 const tags = [
@@ -1411,7 +1413,6 @@
         // Закрытие модального окна
         document.getElementById('close-modal').addEventListener('click', function () {
             document.getElementById('annotation-modal').style.display = 'none';
-            document.getElementById('annotation-modal').style.top = '50%';
             document.getElementById('annotation-modal').style.left = '50%';
             document.getElementById('overlay').style.display = "none";
             document.getElementById('delete-annotation').onclick = function () { };
