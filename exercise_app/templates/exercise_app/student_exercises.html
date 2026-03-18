@@ -412,16 +412,7 @@
     document.addEventListener('DOMContentLoaded', function () {
 
         const filters = document.getElementById("filters")
-        console.log(filters.querySelector("#id_student_name"))
-        if (filters.querySelector("#id_student_name").value!="") {
-            var filter = document.getElementById("remove_fio_filter_btn")
-            filter.style.display = "flex";
-            filter.children[0].innerHTML = "ФИО: " + filters.querySelector("#id_student_name").value;
-            filter.addEventListener("click", function () {
-                filters.querySelector("#id_student_name").value = ""
-                document.querySelector(".filter-form").submit()
-            })
-        }
+        
         if (filters.querySelector("#id_idexercisetype").value != "") {
             var filter = document.getElementById("remove_type_filter_btn")
             filter.style.display = "flex";
@@ -500,9 +491,6 @@
                 document.querySelector(".filter-form").submit()
             })
         }
-
-        const input = document.getElementById("id_student_name");
-        input.value = "";
 
         document.getElementById('toggle').addEventListener('click', toggle);
         const select_stat = document.getElementById('id_exercisestatus');
