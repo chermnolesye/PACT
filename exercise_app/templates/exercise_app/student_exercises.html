@@ -164,13 +164,11 @@
              {% endif %}
              ">
             <span class="title">
-                {% if exercise.exercise_data.exercisestatus %}
                 {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-                <a href="{% url 'grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_name }}</a>
+                <a href="{% url 'student_grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_name }}</a>
                 {% else %}
                 <a href="{% url 'review_teacher' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_name }}</a>
                 {% endif %}
-                {% else %}{{ exercise.exercise_name }}{% endif %}
             </span>
             <span class="group">{{ exercise.exercise_data.idstudent.idgroup }}</span>
             {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}

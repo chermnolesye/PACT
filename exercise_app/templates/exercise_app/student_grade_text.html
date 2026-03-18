@@ -1,0 +1,1332 @@
+{% extends "student_base.html" %}
+
+{% load static %}
+
+{% block title %}Поиск ошибок{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
+<link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
+    {% endblock %}
+
+{% block content %}
+<div class="text-app-container">
+    <div class="menu-container">
+        <!-- Блоки меню -->
+        <div class="menu-block-watch return_btn" id="gray_border">
+            <a href='{% url 'student_exercises' %}'>
+                К списку упражнений
+            </a>
+            <svg width="25" height="25" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.6666 20.4167H43.75C47.6177 20.4167 51.327 21.9532 54.0619 24.6881C56.7968 27.423 58.3333 31.1323 58.3333 35.0001C58.3333 38.8678 56.7968 42.5772 54.0619 45.3121C51.327 48.047 47.6177 49.5834 43.75 49.5834M11.6666 20.4167L20.4166 11.6667M11.6666 20.4167L20.4166 29.1667M23.3333 49.5834H32.0833" stroke="black" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </div>
+
+        <div class="menu-block" data-target="view-content" id="gray_border">
+            <span>
+                Вид
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+
+        {% if exercise.exercisestatus %}
+        {% if in_time %}
+        <div class="menu-block green_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;{{ exercise.completiondate }}
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        {% else %}
+        <div class="menu-block red_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;{{ exercise.completiondate }}
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        {% endif %}
+        {% else %}
+        {% if in_time %}
+        <div class="menu-block" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;-
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        {% else %}
+        <div class="menu-block red_background" id="gray_border" data-target="date-content">
+            <span>
+                Дата завершения:&nbsp;-
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% if exercise.exercisemark %}
+        <div class="menu-block" id="gray_border" data-target="mark-content">
+            <span>
+                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
+            </span>
+            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+            </svg>
+        </div>
+        {% else %}
+        <div class="menu-block-watch" id="gray_border">Оценка:&nbsp;-</div>
+        {% endif %}
+        <button class="rate-btn">Завершить</button>
+    </div>
+
+    <div id="header-container"></div>
+    <!-- Всплывающее окно с информацией об ошибке -->
+    <div class="error-popup" id="error-popup">
+        <h3>
+            <span id="error-tag"></span>
+            <span id="error-tag-abbrev"></span>
+        </h3>
+        <p><strong>Степень грубости:</strong> <span id="error-level"></span></p>
+        <p><strong>Причина ошибки:</strong> <span id="error-reason"></span></p>
+        <p><strong>Исправление:</strong> <span id="error-correct"></span></p>
+        <p><strong>Комментарий:</strong> <span id="error-comment"></span></p>
+    </div>
+
+
+    <!-- Контентные блоки -->
+    <div class="menu-content" id="view-content">
+        <div class="menu-content-view">
+
+            <div class="option-group">
+                <p>Язык разметки</p>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="language" value="{{ pact_language_name }}" checked>
+                        <span class="radio-custom"></span>
+                        <span>{{ pact_language_name }}</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="language" value="russian">
+                        <span class="radio-custom"></span>
+                        <span>Русский</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <p>Компактный вид</p>
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="option-group">
+                <p>Ошибки</p>
+                <label class="switch">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-content" id="date-content">
+        <div class="menu-content-data">
+            <p>Дата выдачи:</p>
+            <p class="p-dark"> {{ exercise.creationdate }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Дата сдачи:</p>
+            <p class="p-dark"> {{ exercise.deadline }} </p>
+        </div>
+        {% if exercise.exercisestatus %}
+        <div class="menu-content-data">
+            <p>Дата завершения:</p>
+            <p class="p-dark"> {{ exercise.completiondate }} </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="menu-content" id="mark-content">
+        <div class="menu-content-data">
+            <p>Оценка:</p>
+            <p class="p-dark"> {{ exercise.get_exercisemark_display }} </p>
+        </div>
+        <div class="menu-content-data">
+            <p>Комментарий:</p>
+            <p class="p-dark"> {{ exercise.exercisemarkcomment }} </p>
+        </div>
+    </div>
+
+    <div class="text-header-grad">
+        <h1 class="text-title">Название текста: {{ text.header }}</h1>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Оценить текст</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <form method="post" id="grade-form">
+                {% csrf_token %}
+                <div class="grade-form-selects" style="width:100%;">
+                    <div class="grade-group" style="width:90%;">
+                        <p class="mistakes">Количество верно найденных ошибок: 4</p>
+                        <p class="mistakes">Количество неверно найденных ошибок: 0</p>
+                        <p class="mistakes" style="margin-bottom:10px;">Количество пропущенных ошибок: 0</p>
+                        <label for="id_textgrade">Оценка:</label>
+                        <select name="textgrade" class="form-control" id="id_textgrade">
+                            <option value="1">1</option>
+                            <option value="2">2-</option>
+                            <option value="3">2</option>
+                            <option value="4">2+</option>
+                            <option value="5">3-</option>
+                            <option value="6">3</option>
+                            <option value="7">3+</option>
+                            <option value="8">4-</option>
+                            <option value="9">4</option>
+                            <option value="10">4+</option>
+                            <option value="11">5-</option>
+                            <option value="12" selected="">5</option>
+                        </select>
+                        <label for="id_firstname">Комментарий:</label>
+                        <input type="text" name="comment" maxlength="100" required="" id="id_comment">
+                    </div>
+                </div>
+
+                <div class="grade-buttons">
+                    <button type="submit" name="grade-form" class="button" onclick="addAnnotation()">Сохранить</button>
+                    <button type="submit" class="button grey-button">Назад</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="overlay"></div>
+
+    <!-- Окно для добавления аннотации ошибки -->
+    <div id="annotation-modal" class="modal-overlay">
+        <div class="modal-content">
+
+            <div class="modal-head">
+                <p>Аннотация</p>
+                <button class="close-modal" id="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <form method="post" id="annotation-form">
+                {% csrf_token %}
+                <input type="hidden" id="chosen-ids" name="chosen_ids">
+                <input type="hidden" id="sentences" name="sentences">
+                <div class="annotation-modal-content">
+                    <div style="width: 100%; overflow: hidden;">
+                        <label id="tags-label" for="id_iderrortag" style="width: 550px; float: left; margin-top:15px;">Выберите тег:</label>
+                        <!--<input type="text" id="tag-search" placeholder="Поиск тега" class="tag-search" style="width: 420px;">-->
+                    </div>
+
+                    <div class="selected-tag-display">
+                        Выбранный тег: <span id="selected-tag-name">Не выбран</span>
+                    </div>
+
+                    {{ annotation_form.iderrortag.label_tag }}
+                    {{ annotation_form.iderrortag }}
+                    <div class="annotation-wrap">
+                        {{ annotation_form.idreason.label_tag }}
+                        {{ annotation_form.idreason }}
+                    </div>
+
+                    <div class="annotation-wrap">
+                        {{ annotation_form.iderrorlevel.label_tag }}
+                        {{ annotation_form.iderrorlevel }}
+                    </div>
+
+                    <div class="annotation-wrap">
+                        {{ annotation_form.correct.label_tag}}
+                        {{ annotation_form.correct }}
+                    </div>
+
+                    {{ annotation_form.comment.label_tag }}
+                    {{ annotation_form.comment }}
+
+                    <div class="grade-buttons">
+                        <button type="button" class="button" id="save-annotation">Сохранить</button>
+                        <button type="button" class="button red-button" id="delete-annotation">Удалить</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="select-menu" class="hide">
+        <button class="button-menu-select" id="button-add-annotation">Добавить аннотацию</button>
+        <button class="button-menu-select" id="button-delete-tokens">Удалить выбранные пустые токены</button>
+        <button class="button-menu-select" id="button-remove-highlight">Снять выделение</button>
+    </div>
+
+    <div id="deleteModal" class="modal modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3>Подтверждение удаления</h3>
+            </div>
+            <div class="modal-inner">
+                <p style="margin:15px">Вы уверены, что хотите удалить аннотацию?</p>
+                <div class="modal-actions" style="justify-content:center; display:flex;">
+                    <button id="confirmDelete" class="btn button btn-danger" onclick="deleteText()">Удалить</button>
+                    <button id="cancelDelete" class="btn button btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="watch-text">
+        {% for sentence in sentence_data %}
+        <div class="sentence">
+            <div class="tokens-container" id_sentence="{{ sentence.id_sentence }}">
+                <p class="sentence-number">{{ sentence.sentence.ordernumber|add:1 }}:</p>
+                {% for token in sentence.tokens %}
+                <svg class="clickable-icon" width="20" height="20" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="#768088" stroke-width="4" stroke-linecap="round" />
+                </svg>
+                <span class="token"
+                      id_token="{{ token.token_id }}"
+                      data-pos-tag="{{ token.pos_tag }}"
+                      data-pos-tag-russian="{{ token.pos_tag_russian }}"
+                      data-pos-tag-abbrev="{{ token.pos_tag_abbrev }}"
+                      data-pos-color="{{ token.pos_tag_color }}"
+                      data-position="{{ token.token_order_number }}">
+
+                    {% if token.errors %}
+                    {% for error in token.errors %}
+                    <span class="error-tag"
+                          style="background-color: {{ error.error_color }}; display: none;"
+                          data-error-id="{{ error.error_id }}"
+                          data-error-tag="{{ error.error_tag }}"
+                          tag_id="{{ error.error_tag_id }}"
+                          data-error-tag-russian="{{ error.error_tag_russian }}"
+                          data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
+                          data-error-level="{{ error.error_level }}"
+                          data-error-correct="{{ error.error_correct }}"
+                          data-error-comment="{{ error.error_comment }}"
+                          data-error-reason="{{ error.error_reason }}">
+                        {{ error.error_tag }}
+                    </span>
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if token.pos_tag %}
+                    <span class="abbr"
+                          style="background-color: {{ token.pos_tag_color }}; display: none;"
+                          data-pos-tag="{{ token.pos_tag }}"
+                          data-pos-tag-russian="{{ token.pos_tag_russian }}"
+                          data-pos-tag-abbrev="{{ token.pos_tag_abbrev }}">
+                        {{ token.pos_tag }}
+                    </span>
+                    {% endif %}
+
+                    {% if token.token == '-EMPTY-' %}
+                    <span class="word">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>
+                    </span>
+                    {% else %}
+                    <span class="word">{{ token.token }}</span>
+                    {% endif %}
+                </span>
+                {% endfor %}
+                <svg class="clickable-icon" width="20" height="20" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="#768088" stroke-width="4" stroke-linecap="round" />
+                </svg>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        const chosen = [];
+        const chosen_ids = [];
+
+        function open_overlay(height) {
+            document.getElementById('overlay').style.height = height + "px";
+            document.getElementById('overlay').style.display = "block";
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const languageRadios = document.querySelectorAll('input[name="language"]');
+            const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
+            const errorsCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
+            const tokens = document.querySelectorAll('.token');
+
+            // Функция обновления отображения
+            function updateDisplay() {
+                const language = document.querySelector('input[name="language"]:checked').value;
+                const isCompact = compactViewCheckbox.checked;
+                const showErrors = errorsCheckbox.checked;
+
+                tokens.forEach(token => {
+                    token.querySelectorAll('.abbr, .error-tag, .word').forEach(el => {
+                        el.style.display = 'none';
+                    });
+
+                    const word = token.querySelector('.word');
+                    if (word) word.style.display = 'inline';
+
+                    // Обработка ошибок
+                    if (showErrors) {
+                        const errorTags = token.querySelectorAll('.error-tag');
+                        if (errorTags.length > 0) {
+                            errorTags.forEach(tag => {
+                                tag.style.display = 'inline';
+                                if (isCompact) {
+                                    tag.textContent = tag.dataset.errorTagAbbrev;
+                                } else {
+                                    tag.textContent = language === 'russian' ?
+                                        tag.dataset.errorTagRussian : tag.dataset.errorTag;
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Обработчики событий
+            languageRadios.forEach(radio => {
+                radio.addEventListener('change', updateDisplay);
+            });
+
+            [compactViewCheckbox, errorsCheckbox].forEach(checkbox => {
+                checkbox.addEventListener('change', updateDisplay);
+            });
+
+            // Инициализация
+            updateDisplay();
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.getElementById('cancelDelete').addEventListener('click', () => {
+                document.getElementById('deleteModal').style.display = 'none';
+            });
+
+            document.querySelectorAll('.sentence-number').forEach(number => {
+                number.addEventListener('click', () => {
+                    number.parentElement.querySelectorAll('.word').forEach(word => {
+                        ClickOnWord(word);
+                    });
+                });
+            });
+
+            const popup = document.getElementById('error-popup');
+            const closePopupBtn = document.getElementById('close-popup');
+            let list_tags = {};
+
+            function AddEllWithChildren(category_content, inner_tag, children) {
+                const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                const iconPath = document.createElementNS(
+                    'http://www.w3.org/2000/svg',
+                    'path'
+                );
+
+                iconSvg.setAttribute('fill', 'none')
+                iconSvg.setAttribute('viewBox', '0 0 24 24');
+                iconSvg.setAttribute('stroke', 'black');
+                iconPath.setAttribute(
+                    'd',
+                    'M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5'
+                );
+                iconPath.setAttribute('stroke-linecap', 'round');
+                iconPath.setAttribute('stroke', '#768088');
+                iconPath.setAttribute('stroke-width', '1.5');
+
+                iconSvg.appendChild(iconPath);
+
+                const iconPath1 = document.createElementNS(
+                    'http://www.w3.org/2000/svg',
+                    'path'
+                );
+
+                iconPath1.setAttribute(
+                    'd',
+                    'm10.5 9 3 3-3 3'
+                );
+                iconPath1.setAttribute('stroke-linecap', 'round');
+                iconPath1.setAttribute('stroke', '#768088');
+                iconPath1.setAttribute('stroke-width', '1.5');
+
+                iconSvg.appendChild(iconPath1);
+                iconSvg.style.height = "35px";
+                iconSvg.style.width = "35px";
+                iconSvg.style.display = 'inline-block';
+                iconSvg.style.paddingTop = '5px';
+                iconSvg.classList.add('tag-icon');
+                iconSvg.classList.add('tag-icon-close');
+
+                iconSvg.addEventListener('click', () => {
+                    //console.log(iconSvg.children);
+                    const path1 = iconSvg.children[0];
+                    const path2 = iconSvg.children[1];
+
+                    if (iconSvg.classList.contains('tag-icon-close')) {
+                        children.style.display = 'block';
+                        path1.setAttribute(
+                            'd',
+                            'm15 10.5-3 3-3-3'
+                        );
+                        path2.setAttribute(
+                            'd',
+                            'M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5'
+                        );
+                        iconSvg.classList.remove('tag-icon-close');
+                    }
+                    else {
+                        children.style.display = 'none';
+                        path1.setAttribute(
+                            'd',
+                            'M7 3.338A9.954 9.954 0 0 1 12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12c0-1.821.487-3.53 1.338-5'
+                        );
+                        path2.setAttribute(
+                            'd',
+                            'm10.5 9 3 3-3 3'
+                        );
+                        iconSvg.classList.add('tag-icon-close');
+                    }
+                });
+                category_content.appendChild(iconSvg);
+                inner_tag.style.display = 'inline-block';
+                inner_tag.style.marginLeft = '10px';
+
+            }
+
+            function TagAddChildren(index, parent_id, newToken) {
+                for (var i = index; i < tags_info.length; i++) {
+                    tag = tags_info[i];
+
+                    if (tag["parent_id"] === parent_id) {
+                        //console.log(tag);
+                        const category = document.createElement('div');
+                        category.classList.add('category');
+
+                        const category_content = document.createElement('div');
+                        category_content.style.display = 'flex';
+                        const inner_tag = document.createElement('div');
+                        inner_tag.classList.add('tag');
+                        inner_tag.style.width = "fit-content";
+                        inner_tag.style.backgroundColor = tag['tag_color'];
+                        category_content.style.marginBottom = '5px';
+                        inner_tag.id = tag['tag_id'];
+                        inner_tag.innerHTML = tag['tag_text'];
+                        inner_tag.addEventListener('click', () => {
+                            document.getElementById('selected-tag-name').innerHTML = inner_tag.innerHTML;
+                            document.getElementById('selected-tag-name').setAttribute('tag_id', inner_tag.id)
+                            // найти iderrortag и установить его значение в tag_id
+                            const idErrorTagInput = document.getElementById('id_iderrortag');
+                            if (idErrorTagInput) {
+                                idErrorTagInput.value = inner_tag.id;
+                            } else {
+                                console.warn("Не найден элемент с id 'id_iderrortag'");
+                            }
+                        })
+
+                        const children = document.createElement('div');
+                        children.style.display = 'none';
+                        children.style.marginLeft = '50px';
+                        if (tag['has_children'] === true) {
+                            AddEllWithChildren(category_content, inner_tag, children);
+                        }
+                        category_content.appendChild(inner_tag);
+                        category.appendChild(category_content);
+                        newToken.appendChild(category);
+
+                        if (tag['has_children'] === true) {
+                            TagAddChildren(i, tag['tag_id'], children)
+                            category.appendChild(children);
+                        }
+                    }
+                }
+            }
+
+            function createSelect(list_tags) {
+                const parent = document.getElementsByClassName('annotation-modal-content')[0];
+                const newToken = document.createElement('div');
+                newToken.classList.add('select-for-tags');
+                const nextElement = document.getElementsByClassName('selected-tag-display')[0];
+                tags_info = list_tags["tags_info"];
+
+                TagAddChildren(0, 0, newToken);
+                newToken.style.height = "auto";
+                newToken.style.maxHeight = "200px";
+                newToken.style.overflowY = "scroll";
+                parent.insertBefore(newToken, nextElement);
+            }
+
+            async function fetchDataAsync(url, let_tags) {
+                const response = await fetch(url);
+                list_tags = await response.json();
+                console.log(list_tags);
+                createSelect(list_tags);
+            }
+
+            fetchDataAsync("{% url 'get_tags' %}", list_tags);
+
+            // Функция для отображения всплывающего окна с информацией об ошибке
+            function showPopup(tokenElement) {
+                const errorTag = tokenElement.dataset.errorTag;
+                const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
+                const errorLevel = tokenElement.dataset.errorLevel;
+                const errorReason = tokenElement.dataset.errorReason;
+                const errorCorrect = tokenElement.dataset.errorCorrect;
+                const errorComment = tokenElement.dataset.errorComment;
+
+                if (!errorTag) {
+                    return;
+                }
+
+                document.getElementById('error-tag').textContent = errorTag || 'Не указано';
+                document.getElementById('error-tag-abbrev').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
+                document.getElementById('error-level').textContent = errorLevel || 'Не указано';
+                document.getElementById('error-reason').textContent = errorReason || 'Не указано';
+                document.getElementById('error-correct').textContent = errorCorrect || 'Не указано';
+                document.getElementById('error-comment').textContent = errorComment || 'Не указано';
+
+                const rect = tokenElement.getBoundingClientRect();
+                const offsetLeft = rect.left + window.scrollX;
+                const offsetTop = rect.top + window.scrollY;
+                const height = rect.height;
+
+                const popup = document.getElementById('error-popup');
+                popup.style.display = 'block'; // Нужно, чтобы offsetHeight был доступен
+                popup.classList.add('show');
+
+                const popupHeight = popup.offsetHeight;
+                const spaceAbove = rect.top;
+                const spaceBelow = window.innerHeight - rect.bottom;
+
+                let top;
+                if (spaceAbove >= popupHeight + 10) {
+                    // Есть место сверху — показываем над токеном
+                    top = offsetTop - popupHeight - 6;
+                } else {
+                    // Места сверху нет — показываем под токеном
+                    top = offsetTop + height + 6;
+                }
+
+                popup.style.left = `${offsetLeft}px`;
+                popup.style.top = `${top}px`;
+            }
+            /*
+                            РЕДАКТИРОВАНИЕ
+            */
+            function EditAnnotationForm(tokenElement) {
+                console.log("РЕДАКТИРОВАНИЕ ОТКРЫТО")
+                // let iderror = tokenElement.data.errorId;
+                let iderror = tokenElement?.dataset.errorId || null;
+                document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
+                document.getElementById('delete-annotation').style.display = "block";
+
+                open_overlay(height)
+                document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight / 2) + "px";
+
+                // Заполняем выбранный тег
+                document.getElementById('selected-tag-name').textContent =
+                    tokenElement.dataset.errorTag || "Не указано";
+
+                document.getElementById('selected-tag-name').setAttribute('tag_id', tokenElement.getAttribute('tag_id'))
+
+                // Устанавливаем причину ошибки (idreason)
+                const reasonSelect = document.getElementById('id_idreason');
+                if (reasonSelect) {
+                    const reasonText = tokenElement.dataset.errorReason;
+
+
+                    if (reasonText) {
+                        let chosen = '';
+                        let i = 0;
+                        Array.from(reasonSelect.options).forEach(option => {
+                            if (option.text === reasonText) {
+                                console.log(reasonText, i);
+                                console.log(reasonSelect.children[3]);
+                                reasonSelect.children[0].removeAttribute("selected");
+                                reasonSelect.children[i].setAttribute("selected", '');
+                                option.selected = option.text;
+
+                            }
+                            i = i + 1;
+                        });
+                        console.log(reasonSelect.children);
+                    }
+                }
+
+                // Устанавливаем уровень ошибки (iderrorlevel)
+                const levelSelect = document.getElementById('id_iderrorlevel');
+                if (levelSelect) {
+                    const levelText = tokenElement.dataset.errorLevel;
+                    if (levelText) {
+                        let chosen = '';
+                        let i = 0;
+                        Array.from(levelSelect.options).forEach(option => {
+                            if (option.text === levelText) {
+
+                                levelSelect.children[0].removeAttribute("selected");
+                                levelSelect.children[i].setAttribute("selected", '');
+                                option.selected = option.text;
+                            }
+                            i = i + 1;
+                        });
+                    }
+                }
+
+                // Заполняем комментарий и исправление (если есть)
+                const commentField = document.getElementById('id_comment');
+                if (commentField) {
+                    commentField.value =
+                        tokenElement.dataset.errorComment !== "Не указано"
+                            ? tokenElement.dataset.errorComment
+                            : "";
+                }
+
+                const correctField = document.getElementById('id_correct');
+                if (correctField) {
+                    correctField.value =
+                        tokenElement.dataset.errorCorrect !== "Не указано"
+                            ? tokenElement.dataset.errorCorrect
+                            : "";
+                }
+
+                document.getElementById('delete-annotation').onclick = function () { confirmDelete(iderror); };
+            }
+
+            // Функция для сохранения отредактированной аннотации
+            function saveAnnotation(errorId) {
+                console.log('saveAnnotation', errorId);
+                //location.reload();
+                document.getElementById('save-annotation').onclick = function () { };
+
+                const form = document.getElementById('annotation-form');
+
+                // Этот кусок скрипта на валидацию формы,
+                // чтоб незаполненные обязательные поля подсвечивались,
+                // т. к. тип кнопки Сохранить не submit, a button
+                // ПРОВЕРЯЕМ ВАЛИДНОСТЬ (атрибуты required)
+                const tagSelect = document.getElementById('id_iderrortag');
+                const selectedTagName = document.getElementById('selected-tag-name');
+                // ДО ПРОВЕРКИ вытаскиваем ID из кастомного элемента
+                const tagId = selectedTagName.getAttribute('tag_id');
+                // Если тег выбран, записываем его в скрытый селектор
+                if (tagId && tagSelect) {
+                    tagSelect.value = tagId;
+                }
+                if (!form.checkValidity()) {
+                    form.reportValidity(); // Показывает встроенные подсказки браузера
+                    return; // форма не отправится
+                }
+
+                const formData = new FormData(form);
+
+                // Добавляем action и error_id (если редактируем существующую аннотацию)
+                if (errorId) {
+                    formData.append('action', 'edit');
+                    formData.append('error_id', errorId);
+                } else {
+                    formData.append('action', 'add');
+                }
+                formData.append('id_iderrortag', document.getElementById('selected-tag-name').getAttribute('tag_id'));
+
+                for (const value of formData.values()) {
+                    console.log(value);
+                }
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload(); // Или обновляем интерфейс без перезагрузки
+                        } else {
+                            alert("Ошибка: " + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("AJAX error:", error);
+                    });
+            }
+
+            function confirmDelete(iderror) {
+                document.getElementById('deleteModal').style.display = 'flex';
+                document.getElementById('confirmDelete').onclick = function () {
+                    deleteAnnotation(iderror);
+                }
+            }
+
+            // Функция для удаления аннотации
+            function deleteAnnotation(errorId) {
+                console.log('deleteAnnotation', errorId)
+                document.getElementById('delete-annotation').onclick = function () { };
+                if (!errorId) {
+                    alert("Невозможно удалить: аннотация не найдена.");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('error_id', errorId);
+
+                //formData.append('id_iderrortag', 'delete');
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert("Ошибка: " + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("AJAX error:", error);
+                    });
+            }
+
+            // Слушаем клик по токенам
+            document.querySelectorAll('.error-tag').forEach(function (errorTagElement) {
+                errorTagElement.addEventListener('mouseover', function (e) {
+                    e.stopPropagation(); // Чтобы не всплывало до .token
+                    showPopup(this);
+                });
+                errorTagElement.addEventListener('click', function (e) {
+
+                    document.getElementById('annotation-modal').style.display = 'flex';
+                    EditAnnotationForm(this);
+                });
+                errorTagElement.addEventListener('mouseleave', function (e) {
+                    const popup = document.getElementById('error-popup');
+                    popup.classList.remove('show'); // Убираем класс для анимации исчезновения
+                    setTimeout(() => {
+                        popup.style.display = 'none'; // Скрываем окно после анимации
+                    }, 300); // Задержка, соответствующая длительности перехода
+                });
+            });
+
+            function ClickOnWord(word) {
+                var menu = document.getElementById('select-menu');
+                if (word.classList.contains('chosen_token')) {
+                    word.classList.remove('chosen_token');
+                    var index = chosen.indexOf(word);
+                    if (index > -1) {
+                        chosen.splice(index, 1);
+                    }
+                    if (chosen.length == 0) {
+                        menu.classList.add('hide');
+                    }
+                }
+                else {
+                    if (menu.classList.contains('hide')) {
+                        menu.classList.remove('hide');
+                        button_deselect = document.getElementById('button-remove-highlight');
+                        button_deselect.addEventListener('click', () => {
+                            document.querySelectorAll('.chosen_token').forEach(icon => {
+                                icon.classList.remove('chosen_token');
+                            });
+                            var menu = document.getElementById('select-menu');
+                            menu.classList.add('hide');
+                            chosen.splice(0, chosen.length);
+                        });
+                    }
+                    word.classList.add('chosen_token');
+                    let token = word.parentElement;
+                    chosen.push(word);
+                    if (token.hasAttribute('id_token')) {
+                        chosen_ids.push(token.getAttribute('id_token'));
+                    };
+                }
+            }
+
+            function ChangePositions(tokens_container, el) {
+                var allChildren = tokens_container.getElementsByClassName("token")
+
+                let position = 0;
+                if (el) {
+                    position = el.getAttribute("data-position");
+                }
+
+                for (var i = position; i < allChildren.length; i++) {
+                    var child = allChildren[i];
+                    if (child.hasAttribute("data-position")) {
+                        child.setAttribute('data-position', position);
+                        position++;
+                    }
+                }
+            }
+
+            // функция для добавления токена пропущенного слова и токена рядом с ним
+            function ClickOnEmpty(icon) {
+                const newToken = document.createElement('span');
+                newToken.className = 'token';
+
+                var innerSpan = document.createElement('span');
+                innerSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>';
+                innerSpan.className = 'word';
+                innerSpan.classList.add('empty-token');
+                innerSpan.addEventListener('click', () => {
+                    ClickOnWord(innerSpan);
+                });
+
+                let token = icon.parentElement;
+                let word = icon.previousElementSibling;
+
+                newToken.setAttribute('sentence_id', token.getAttribute('id_sentence'));
+                newToken.setAttribute('data-position', 0);
+
+                newToken.appendChild(innerSpan);
+
+                const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                const iconPath = document.createElementNS(
+                    'http://www.w3.org/2000/svg',
+                    'path'
+                );
+
+                iconSvg.setAttribute('fill', 'none');
+                iconSvg.setAttribute('height', '20');
+                iconSvg.setAttribute('width', '20');
+                iconSvg.setAttribute('viewBox', '0 0 54 54');
+                iconSvg.setAttribute('stroke', 'black');
+                iconSvg.classList.add('clickable-icon');
+                iconSvg.classList.add('empty-token');
+                iconPath.setAttribute(
+                    'd',
+                    'M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5'
+                );
+                iconPath.setAttribute('stroke-linecap', 'round');
+                iconPath.setAttribute('stroke', '#768088');
+                iconPath.setAttribute('stroke-width', '4');
+
+                iconSvg.addEventListener('click', () => {
+                    ClickOnEmpty(iconSvg);
+                });
+
+                iconSvg.appendChild(iconPath);
+
+                const parent = icon.parentNode;
+                const allChildren = Array.from(parent.childNodes);
+                const index = allChildren.indexOf(icon);
+
+                // Вставить новый токен после SVG и еще SVG после него
+                if (index > -1 && index < allChildren.length - 1) {
+                    parent.insertBefore(newToken, allChildren[index + 1]);
+                    parent.insertBefore(iconSvg, allChildren[index + 1]);
+                } else {
+                    parent.appendChild(newToken);
+                    parent.appendChild(newIcon);
+                }
+
+                let position = word.getAttribute('data-position')
+                if (position === null) {
+                    ChangePositions(token, null);
+                    position = 0;
+                }
+                else {
+                    position++;
+                    ChangePositions(token, word);
+                }
+            }
+
+            // добавление каждому пустому токену функции по клику
+            document.querySelectorAll('.clickable-icon').forEach(icon => {
+                icon.addEventListener('click', () => {
+                    ClickOnEmpty(icon);
+                });
+            });
+
+            // Удаление пустых токенов
+            document.getElementById('button-delete-tokens').addEventListener('click', () => {
+                chosen.forEach(word => {
+                    word.classList.remove('chosen_token');
+                    if (word.classList.contains('empty-token')) {
+                        let token = word.parentElement;
+                        var nextSibling = token.nextSibling;
+                        while (nextSibling && nextSibling.nodeType != 1) {
+                            nextSibling = nextSibling.nextSibling
+                        }
+                        if (nextSibling.classList.contains('empty-token')) {
+                            nextSibling.remove();
+                        }
+                        let tokens_container = token.parentElement;
+                        //console.log(tokens_container);
+
+                        token.remove();
+                        ChangePositions(tokens_container, null);
+                    }
+                });
+
+                chosen.splice(0, chosen.length);
+
+                var menu = document.getElementById('select-menu');
+                menu.classList.add('hide');
+            });
+
+            document.querySelectorAll('.word').forEach(word => {
+                word.addEventListener('click', () => {
+                    ClickOnWord(word);
+                });
+            });
+
+        });
+
+        // Скрипт для меню
+        document.addEventListener('DOMContentLoaded', function () {
+            const rateBtn = document.querySelector('.rate-btn');
+            const modal = document.getElementById('modal');
+            const closeModal = document.querySelector('.close-modal');
+            const menuBlocks = document.querySelectorAll('.menu-block');
+            const backButton = document.querySelector('.button-grey');
+
+
+            menuBlocks.forEach(block => {
+                block.addEventListener('click', function (e) {
+                    e.stopPropagation();
+
+                    const contentId = this.getAttribute('data-target');
+                    const content = document.getElementById(contentId);
+                    if (!content) return;
+
+                    const isAlreadyOpen = content.style.display === 'block';
+
+                    // Скрываем все другие контенты
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        if (c !== content) {
+                            c.style.display = 'none';
+                        }
+                    });
+
+                    if (isAlreadyOpen) {
+                        content.style.display = 'none';
+                    }
+                    else {
+                        // Позиционируем текущий контент
+                        const rect = this.getBoundingClientRect();
+                        content.style.display = 'block';
+                        content.style.position = 'fixed';
+                        content.style.left = `${rect.left}px`;
+                        content.style.top = `${rect.bottom}px`;
+                        content.style.zIndex = '1001'; // Выше чем у меню
+                    }
+
+                });
+            });
+
+            // Обновление позиции при прокрутке
+            window.addEventListener('scroll', function () {
+                document.querySelectorAll('.menu-content').forEach(content => {
+                    if (content.style.display === 'block') {
+                        const targetId = content.id.replace('-content', '');
+                        const menuItem = document.querySelector(`[data-target="${content.id}"]`);
+                        if (menuItem) {
+                            const rect = menuItem.getBoundingClientRect();
+                            content.style.left = `${rect.left}px`;
+                            content.style.top = `${rect.bottom}px`;
+                        }
+                    }
+                });
+            });
+
+            document.querySelectorAll('.menu-content').forEach(content => {
+                content.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                });
+            });
+
+            document.addEventListener('click', function (e) {
+                // Проверяем, был ли клик вне всех .menu-content и .menu-block
+                const isClickInsideContent = Array.from(document.querySelectorAll('.menu-content, .menu-block')).some(
+                    element => element.contains(e.target)
+                );
+
+                if (!isClickInsideContent) {
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        c.style.display = 'none';
+                    });
+                }
+            });
+
+            // Закрытие при клике вне и по кнопке назад
+            document.addEventListener('click', function () {
+                document.querySelectorAll('.menu-content').forEach(c => {
+                    c.style.display = 'none';
+                });
+            });
+
+            // Обработчики для модального окна
+            if (backButton) {
+                backButton.addEventListener('click', function (e) {
+                    e.preventDefault(); // Предотвращает отправку формы
+                    modal.style.display = 'none';
+                    document.getElementById('overlay').style.display = "none";
+                });
+            }
+
+            rateBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                document.querySelectorAll('.menu-content').forEach(c => {
+                    c.style.display = 'none';
+                });
+                modal.style.display = 'flex';
+            });
+
+            closeModal.addEventListener('click', function () {
+                modal.style.display = 'none';
+            });
+
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Закрытие при ресайзе окна (перепозиционирование)
+            window.addEventListener('resize', function () {
+                document.querySelectorAll('.menu-content').forEach(content => {
+                    content.style.display = 'none';
+                });
+            });
+
+        });
+
+        // Открытие модального окна при клике на кнопку "Добавить аннотацию"
+        document.getElementById('button-add-annotation').addEventListener('click', function () {
+            const height = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight
+            );
+
+            document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight / 2) + "px";
+            open_overlay(height)
+
+            // Показать модальное окно
+            document.getElementById('annotation-modal').style.display = 'flex';
+            document.getElementById('save-annotation').onclick = function () { addErrorAnnotation(); };
+            document.getElementById('delete-annotation').style.display = "none";
+        });
+
+        // Закрытие модального окна
+        document.getElementById('close-modal').addEventListener('click', function () {
+            document.getElementById('annotation-modal').style.display = 'none';
+            document.getElementById('annotation-modal').style.top = '50%';
+            document.getElementById('annotation-modal').style.left = '50%';
+            document.getElementById('overlay').style.display = "none";
+            document.getElementById('delete-annotation').onclick = function () { };
+            //
+            document.getElementById('selected-tag-name').textContent = "Не указано";
+            document.getElementById('selected-tag-name').removeAttribute('tag_id')
+
+            // Устанавливаем причину ошибки (idreason)
+            const reasonSelect = document.getElementById('id_idreason');
+            reasonSelect.children[0].setAttribute("selected", '');
+
+
+            // Устанавливаем уровень ошибки (iderrorlevel)
+            const levelSelect = document.getElementById('id_iderrorlevel');
+            levelSelect.children[0].setAttribute("selected", '');
+
+
+            // Заполняем комментарий и исправление (если есть)
+            const commentField = document.getElementById('id_comment');
+            commentField.value = "";
+
+            const correctField = document.getElementById('id_correct');
+            correctField.value = "";
+            document.getElementById('save-annotation').onclick = function () { };
+        });
+
+        // Закрытие модального окна, если кликнут вне окна
+        window.addEventListener('click', function (event) {
+            if (event.target === document.getElementById('annotation-modal')) {
+                document.getElementById('annotation-modal').style.display = 'none';
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const select = document.getElementById('id_iderrortag');
+            //const tagsList = document.getElementById('tags-list');
+            const selectedTagDisplay = document.getElementById('selected-tag-name');
+
+            function updateSelectedTagDisplay() {
+                const selectedOption = select.options[select.selectedIndex];
+                selectedTagDisplay.textContent = selectedOption ? selectedOption.text : 'Не выбран';
+            }
+        });
+
+        /*
+                    ДОБАВЛЕНИЕ
+        */
+
+        function addErrorAnnotation() {
+            console.log('addErrorAnnotation');
+
+            // Этот кусок скрипта на валидацию формы,
+            // чтоб незаполненные обязательные поля подсвечивались,
+            // т. к. тип кнопки Сохранить не submit, a button
+            const form = document.getElementById('annotation-form');
+            // ПРОВЕРЯЕМ ВАЛИДНОСТЬ (атрибуты required)
+            if (!form.checkValidity()) {
+                form.reportValidity(); // Показывает встроенные подсказки браузера
+                return; // форма не отправится
+            }
+
+            document.getElementById('save-annotation').onclick = function () { };
+            //location.reload();
+            const chosen_ids = [];
+            const sentence_ids = [];
+            const positions = [];
+            const sentencesMap = {};
+
+            // Собираем ID выбранных токенов и информацию о новых пустых токенах
+            chosen.forEach(word => {
+                let token = word.parentElement;
+
+                // Если это новый пустой токен
+                if (word.classList.contains('empty-token')) {
+                    let sentence_id = token.getAttribute('sentence_id');
+                    let position = token.getAttribute('data-position');
+
+                    if (!sentencesMap[sentence_id]) {
+                        sentencesMap[sentence_id] = {
+                            id_sentence: sentence_id,
+                            empty_token_pos: [position]
+                        };
+                    } else {
+                        sentencesMap[sentence_id].empty_token_pos.push(position);
+                    }
+                }
+                // Если это обычный токен
+                else if (token.hasAttribute('id_token')) {
+                    chosen_ids.push(token.getAttribute('id_token'));
+                }
+            });
+
+            const sentences = Object.values(sentencesMap);
+
+            // Прокидываем данные в скрытые поля
+            document.getElementById('chosen-ids').value = JSON.stringify(chosen_ids);
+            document.getElementById('sentences').value = JSON.stringify(sentences);
+
+            // Устанавливаем флаг формы
+            // const form = document.getElementById('annotation-form');
+            const formInput = document.createElement('input');
+            formInput.type = 'hidden';
+            formInput.name = 'annotation-form';
+            formInput.value = 'true';
+            form.appendChild(formInput);
+
+            form.submit();
+        }
+
+        function deleteErrorAnnotation() {
+            const chosen_ids = [];
+            const tokenElements = document.querySelectorAll('.chosen');
+
+            // Собираем ID выбранных токенов
+            tokenElements.forEach(word => {
+                let token = word.parentElement;
+                if (token.hasAttribute('id_token')) {
+                    chosen_ids.push(token.getAttribute('id_token'));
+                }
+            });
+
+            if (chosen_ids.length === 0) {
+                alert('Не выбраны токены для удаления аннотации');
+                return;
+            }
+
+            // Прокидываем данные в скрытые поля
+            document.getElementById('chosen-ids').value = JSON.stringify(chosen_ids);
+            document.getElementById('sentences').value = JSON.stringify([]);
+
+            // Устанавливаем флаг удаления
+            const form = document.getElementById('annotation-form');
+            const deleteInput = document.createElement('input');
+            deleteInput.type = 'hidden';
+            deleteInput.name = 'delete-annotation';
+            deleteInput.value = 'true';
+            form.appendChild(deleteInput);
+
+            form.submit();
+        }
+
+        //перемещение окна аннотации
+        const windowElement = document.getElementById("annotation-modal");
+        const headerElement = windowElement.getElementsByClassName("modal-head")[0];
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+        const height = document.body.offsetHeight;
+
+        headerElement.onmousedown = function (e) { dragMouseDown(e, height) };
+
+        function dragMouseDown(e, height) {
+            e = e || window.event;
+            e.preventDefault();
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement;
+
+            const rect = headerElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            border_bottom = window.innerHeight - windowElement.offsetHeight
+            border_right = window.innerWidth - windowElement.offsetWidth
+
+            document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) };
+        }
+
+        function elementDrag(e, x, y, border_bottom) {
+            e = e || window.event;
+            e.preventDefault();
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+
+            if (pos4 >= y + 10 && border_bottom - pos4 >= 10 - y) {
+                windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
+            }
+            if (pos3 >= x + 10 && border_right - pos3 >= 25 - x) {
+                windowElement.style.left = (windowElement.offsetLeft - pos1) + "px";
+            }
+        }
+
+        function closeDragElement() {
+            document.onmouseup = null;
+            document.onmousemove = null;
+        }
+
+    </script>
+    {% endblock %}

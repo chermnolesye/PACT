@@ -553,6 +553,8 @@ def grade_text(request, idexercise=2):
     in_time = False
     if exercise.exercisestatus and exercise.completiondate:
         in_time = exercise.completiondate <= exercise.deadline
+    else:
+        in_time = datetime.date.today() <= exercise.deadline
 
     exercise_grading = get_object_or_404(ExerciseGrading, idexercise=idexercise)
     
@@ -675,6 +677,114 @@ def grade_text(request, idexercise=2):
         "errorcheckflag": text.errorcheckflag,
     }
     return render(request, "grade_text.html", context)
+
+# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+def student_grade_text(request, idexercise=2):
+    exercise = get_object_or_404(Exercise, idexercise=idexercise)
+    
+    in_time = False
+    if exercise.exercisestatus and exercise.completiondate:
+        in_time = exercise.completiondate <= exercise.deadline
+    else:
+        in_time = datetime.date.today() <= exercise.deadline
+    exercise_grading = get_object_or_404(ExerciseGrading, idexercise=idexercise)
+    
+    text_id = exercise_grading.idtext
+    if text_id:
+        text = get_object_or_404(Text, idtext=text_id.idtext)
+    else:
+        text = Text.objects.first()
+
+    sentences = text.sentence_set.all()
+    sentence_data = []
+    selected_markup = request.GET.get("markup", "tagtext")
+
+    for sentence in sentences:
+        tokens = Token.objects.filter(idsentence=sentence).select_related("idpostag").order_by('tokenordernumber')
+        tokens_data = []
+        for token in tokens:
+            pos_tag = token.idpostag.tagtext if token.idpostag else None
+            pos_tag_russian = token.idpostag.tagtextrussian if token.idpostag else None
+            pos_tag_abbrev = token.idpostag.tagtextabbrev if token.idpostag else None
+            pos_tag_color = token.idpostag.tagcolor if token.idpostag else None
+
+            exercise_error_tokens = token.exerciseerrortoken_set.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+            
+            exercise_errors_list = []
+
+            for eet in exercise_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    exercise_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+            
+            tokens_data.append({
+                "token_id": token.idtoken,
+                "token": token.tokentext,
+                "pos_tag": pos_tag,
+                "pos_tag_russian": pos_tag_russian,
+                "pos_tag_abbrev": pos_tag_abbrev,
+                "pos_tag_color": pos_tag_color,
+                "token_order_number": token.tokenordernumber,
+                "exercise_errors": exercise_errors_list,
+            })
+
+        sentence_data.append({
+            "id_sentence": sentence.idsentence,
+            "sentence": sentence,
+            "tokens": tokens_data,
+        })
+    
+    if request.method == "POST" and "annotation-form" in request.POST:
+        print("Мы в функции добавления")
+        annotation_form = AddErrorAnnotationForm(request.POST, user=request.user)
+    else:
+        annotation_form = AddErrorAnnotationForm()
+
+    # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
+    if request.method == "POST" and "mark-form" in request.POST:
+         mark_form = AddMarkForm(request.POST, instance=exercise)
+         if mark_form.is_valid():
+             mark_form.save()
+             
+             #return redirect(request.path + f"?idexercise={exercise.idexercise}")
+             url = reverse('grade_text')
+             params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+             return redirect(url + params)
+    else:
+         mark_form = AddMarkForm(instance=exercise)
+
+    student = text.idstudent
+    user = student.iduser
+    group = student.idgroup
+    text_type = text.idtexttype
+
+    context = {
+        "mark_form": mark_form,
+        "text": text,
+        "annotation_form": annotation_form,
+        "sentence_data": sentence_data,
+        "exercise": exercise,
+        "exercise_grading":exercise_grading,
+        "in_time":in_time,
+        "selected_markup": selected_markup,
+        "poscheckflag": text.poscheckflag,
+        "errorcheckflag": text.errorcheckflag,
+    }
+    return render(request, "student_grade_text.html", context)
 
 # Поменять на тест с правами студента
 # @user_passes_test(has_teacher_rights, login_url='/auth/login/')

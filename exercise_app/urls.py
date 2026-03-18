@@ -32,5 +32,7 @@ urlpatterns = [
 
     path('grade_text/', views.grade_text, name='grade_text'),
     path('grade_text/<int:idexercise>/', views.grade_text, name='grade_text'),
+    path('student_grade_text/', views.grade_text, name='student_grade_text'),
+    path('student_grade_text/<int:idexercise>/', views.student_grade_text, name='student_grade_text'),
    
 ]
