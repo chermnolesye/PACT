@@ -459,3 +459,20 @@ class TeacherCommentForm(forms.ModelForm):
         labels = {
             'teachercomment': 'Комментарий'
         }
+
+class StudentReviewForm(forms.ModelForm):
+    class Meta:
+        model = ExerciseFragmentReview
+        fields = ['review', 'startposition', 'endposition']
+        widgets = {
+            'review': forms.Textarea(attrs={
+                'class': 'form-control review-textarea',
+                'rows': 4,
+                'placeholder': 'Введите рецензию'
+            }),
+            'startposition': forms.HiddenInput(),
+            'endposition': forms.HiddenInput(),
+        }
+        labels = {
+            'review': 'Рецензия к фрагменту'
+        }

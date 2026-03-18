@@ -1,96 +1,1492 @@
-{% extends "base.html" %}
+{% extends "student_base.html" %}
 
 {% load static %}
 
-{% block title %}Рецензирование{% endblock %}
+{% block title %}Проверка рецензирования{% endblock %}
 
 {% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/exercise_app.css' %}" />
     <link rel="stylesheet" href="{% static 'css/review.css' %}" />
 {% endblock %}
 
-{% block content %}   
+{% block content %}
 
 <div class="main-container">
 
     <div class="review-menu">
+        <button type="button" class="review-menu-button"
+            onclick="window.location.href = '{% url 'student_exercises' %}'">
+            К упражнениям
+        </button>
 
-        <!-- Тут будет if-else по дате - цвет срока, кнопка в зависимости от сдачи и проверки -->
-         <div class="review-menu-block">
-            Дата...
+         <div class="review-menu-block grey-block">
+            Выделено рецензий: <span class="bold">{{ total_reviews }}</span>
          </div>
 
-         <div class="review-menu-block">
-            Дата...
-         </div>
+         {% if exercise.exercisestatus %}
+            {% if in_time %}
+            <div class="review-menu-block green-block dropdown-container">
+                Дата сдачи: {{ exercise.completiondate }}
+                <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
 
-         <div class="review-menu-button">
-            .
-         </div>
+                <div class="review-menu-block-dropdown">
+                    <div><span class="no-highlight">Дата создания:</span> {{ exercise.creationdate }}</div>
+                    <div><span class="no-highlight">Срок сдачи:</span> {{ exercise.deadline }}</div>
+                </div>
+            </div>
+            {% else %}
+            <div class="review-menu-block red-block dropdown-container">
+                Дата сдачи: {{ exercise.completiondate }}
+                <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
+                <div class="review-menu-block-dropdown">
+                    <div>Дата создания: {{ exercise.creationdate }}</div>
+                    <div>Срок сдачи: {{ exercise.deadline }}</div>
+                </div>
+            </div>
+            {% endif %}
 
+        {% else %}
+            {% if expired %}
+            <div class="review-menu-block red-block">
+                Срок сдачи: {{ exercise.deadline }}
+            </div>
+            {% else %}
+            <div class="review-menu-block green-block">
+                Срок сдачи: {{ exercise.deadline }}
+            </div>
+            {% endif %}
+        {% endif %}
+
+         {% if exercise.exercisestatus %}
+            {% if exercise.exercisemark %}
+                <div class="review-menu-block dropdown-container">
+                    Оценка
+                    <button class="dropdown-btn" onclick="toggleDropdown(this)">▼</button>
+                    <div class="review-menu-block-dropdown">
+                        <div>Оценка: {{ exercise.exercisemark }}</div>
+                        <div>Комментарий: {{ exercise.exercisemarkcomment }}</div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="review-menu-block grey-block">
+                    Не оценено
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="review-menu-button rate-btn">
+                Завершить и отправить на проверку
+            </div>
+         {% endif %}
     </div>
 
-    <div class="review-body">
-        <div class="review-text-container">
+    <div class="task-container">
+        <h3>Задание к тексту:</h3>
+        <p class="separator">
+            {{ exercisereview.idexercisetexttask.tasktitle }}
+        </p>
+        <p>
+            {{ exercisereview.idexercisetexttask.tasktext }}
+        </p>
+    </div>
+
+    <div class="review-body" id="reviewBody">        
+        <div class="review-text-container-e" id="reviewTextContainer">
             <div class="text-header underline">
-                <h2>Tagesablauf</h2>
-
-                <p class="author">Автор</p>
+                <h2>{{ text_metadata.exercisetextname }}</h2>
+                <p class="author">{{ text_metadata.author }}</p>
+                <p class="author"> {{ text_metadata.idexercisetexttype.exercisetexttypename }} </p>
             </div>
-
-            <div class="review-text">
-                <p>
-                <span class="selection">steht am Samstag um 8.00 Uhr auf.</span> Sie duscht sich und putzt ihre Zähne. Zum Frühstück isst sie ein Butterbrot und trinkt Kaffee. Dann geht Anna einkaufen. Sie kauft Tomaten, Nudeln, Bananen, Milch und Orangensaft. Um 10.00 Uhr geht Anna mit ihrem Hund im Park spazieren.
-
-                Mittags kocht Anna Nudeln mit Tomatensoße. Zum Mittagessen trinkt sie Orangensaft.
-
-                Nachmittags trifft sich Anna mit ihren Freundinnen Maria und Monika. Sie gehen in der Stadt spazieren und trinken Tee in einem Café. Dann geht Anna nach Hause und liest ein Buch.
-
-                Am Abend isst sie ein Käsebrot und trinkt ein Glas Milch. Sie sieht sich im Fernsehen einen Film an. Um 22.00 Uhr ist Anna müde. Sie geht ins Bett und schläft sofort ein.
-                </p>
-            </div>
+            <!-- НЕЛЬЗЯ СТАВИТЬ ПРОБЕЛЫ В ЭТОТ DIV, ИНАЧЕ ПОЗИЦИИ В ТЕКСТЕ БУДУТ ВЫДЕЛЯТЬСЯ НЕКОРРЕКТО!!!! -->
+            <div class="review-text"  id="reviewText"  data-clean-text="{{ original_text_json }}">{{ text|safe }}</div>
         </div>
 
-        <div class="review-container">
-            <h2 class="underline">Аннотация</h2>
-            <!-- Если еще нет review то сделать форму, если уже есть - другую форму -->
-             <form id="create-form">
-                <div class="student-review">
+        <div class="review-container" id="reviewContainer">
+            <div class="review-container-header">
+                <h3 class="underline">Рецензия</h3>
+                <button class="close-review" id="closeReview">&#10006;</button>                
+            </div>
 
+            <!-- <div class="student-review separator" id="review"></div> -->
+
+            <div class="review-form-container" id="reviewFormContainer" style="display: none;">
+                <form id="reviewForm" method="post">
+                    {% csrf_token %}
+                    {{ review_form.review }}
+                    {{ review_form.startposition }}
+                    {{ review_form.endposition }}
+                    <div class="review-buttons">
+                        <button type="submit" class="button" id="saveReviewBtn">Сохранить</button>
+                        <button type="button" class="button" id="cancelReviewBtn">Отмена</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="review-view-container" id="reviewViewContainer">
+                <div class="review-content" id="reviewContent"></div>
+                <div class="student-review separator" id="review"></div>
+                <div class="teacher-comment" id="teacherCommentSection">
+                    <h3>Комментарий преподавателя:</h3>
+                    <p id="teacherCommentText" class="text-muted"></p>
                 </div>
-                <div class="review-buttons">
-                    <button>Сохранить</button>
-
-                    <button>Отмена</button>                    
-                </div>
-            </form>
-
-            <form id="update-form">
-                <div class="student-review">
-
-                </div>
-                <div class="review-buttons">
-                    <button>Изменить</button>
-
-                    <button>Удалить</button>                    
-                </div>
-            </form>
-
-            <!-- Тут будет опционально комментарий препода -->
+            </div>
         </div>
     </div> 
 
-    <div class="comment">
-        
-    </div>
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Отправить на проверку</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
 
-    <div class="add-annotation-tooltip">
-        <div class="triangle"></div>
-        <div class="content">
-            Добавить аннотацию
+            <form method="post" id="student-mark-form">
+                {% csrf_token %}
+                <!-- <div class="form-fields"> -->
+                    <p class="review-message">Вы уверены, что хотите завершить выполнение упражнения и отправить его на проверку? 
+                        После этого Вы не сможете вернуться к выполнению упражнения.</p>
+                <!-- </div> -->
+
+                <div class="grade-buttons">
+                    <button type="submit"class="button">Да</button>
+                    <button type="button" class="button grey-button" id="backModalBtn">Нет</button>
+                </div>
+            </form>
         </div>
     </div>
 
+     <div class="review-add-btn" id="reviewAddBtn" style="display: none;">
+        <button>Добавить рецензию</button>
+    </div>
+
 </div>
+
+<script>
+    function toggleDropdown(button) {
+        // родительский контейнер и выпадающее меню
+        const container = button.closest('.dropdown-container');
+        const dropdown = container.querySelector('.review-menu-block-dropdown');
+        const isActive = dropdown.classList.contains('show');        
+        // Закрываем все другие выпадающие меню
+        document.querySelectorAll('.review-menu-block-dropdown.show').forEach(item => {
+            if (item !== dropdown) {
+                item.classList.remove('show');
+                item.previousElementSibling?.classList?.remove('active');
+            }
+        });
+        dropdown.classList.toggle('show');
+        button.classList.toggle('active');
+        if (!isActive) {
+            setTimeout(() => {
+                document.addEventListener('click', closeDropdownOnClickOutside);
+            }, 0);
+        }
+    }
+
+    function closeDropdownOnClickOutside(event) {
+        const dropdowns = document.querySelectorAll('.review-menu-block-dropdown.show');
+        let shouldClose = true;
+        dropdowns.forEach(dropdown => {
+            const container = dropdown.closest('.dropdown-container');
+            if (container && container.contains(event.target)) {
+                shouldClose = false;
+            }
+        });
+        if (shouldClose) {
+            dropdowns.forEach(dropdown => {
+                dropdown.classList.remove('show');
+                const btn = dropdown.closest('.dropdown-container')?.querySelector('.dropdown-btn');
+                if (btn) btn.classList.remove('active');
+            });
+            document.removeEventListener('click', closeDropdownOnClickOutside);
+        }
+    }
+</script>
+
+<script>
+    // Скрипт для модального окна
+    document.addEventListener('DOMContentLoaded', function() {
+        const rateBtn = document.querySelector('.rate-btn');
+        const modal = document.getElementById('modal');
+        const closeModal = document.querySelector('.close-modal');
+        const backButton = document.getElementById('backModalBtn');
+
+        if (backButton) {
+            backButton.addEventListener('click', function(e) {
+                e.preventDefault(); // Предотвращает отправку формы
+                modal.style.display = 'none';
+            });
+        }
+
+        rateBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.querySelectorAll('.menu-content').forEach(c => {
+                    c.style.display = 'none';
+            });
+            modal.style.display = 'flex';
+        });
+
+        closeModal.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+            modal.style.display = 'none';
+            }
+        });
+    });
+</script>
+
+<script>
+// СКРИПТ ДЛЯ РАБОТЫ С РЕЦЕНЗИЯМИ СТУДЕНТА
+document.addEventListener('DOMContentLoaded', function() {
+    const exerciseStatus = {{ exercise.exercisestatus|yesno:"true,false" }};
+    
+    console.log('Скрипт рецензий студента загружен. Статус:', exerciseStatus ? 'Редактирование' : 'Только чтение');
+
+    const selections = document.querySelectorAll('.selection');
+    const reviewContainer = document.getElementById('reviewContainer');
+    const closeReview = document.getElementById('closeReview');
+    // const reviewText = document.getElementById('review');
+    const reviewFormContainer = document.getElementById('reviewFormContainer');
+    const reviewViewContainer = document.getElementById('reviewViewContainer');
+    const reviewForm = document.getElementById('reviewForm');
+    const reviewInput = document.getElementById('id_review');
+    const startPositionInput = document.getElementById('id_startposition');
+    const endPositionInput = document.getElementById('id_endposition');
+    const saveReviewBtn = document.getElementById('saveReviewBtn');
+    const cancelReviewBtn = document.getElementById('cancelReviewBtn');
+    const reviewContent = document.getElementById('reviewContent');
+    const teacherCommentText = document.getElementById('teacherCommentText');
+    
+    let currentFragmentId = null;
+    let currentReview = '';
+    const fragmentsData = {};
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    console.log('Найдено selections:', selections.length);
+    selections.forEach(span => {
+        const fragmentId = span.getAttribute('data-fragment-id');
+        fragmentsData[fragmentId] = {
+            id: fragmentId,
+            review: span.getAttribute('data-review') || '',
+            teachercomment: span.getAttribute('data-teacher-comment') || '',
+            start: span.getAttribute('data-start') || 0,
+            end: span.getAttribute('data-end') || 0,
+            updateUrl: span.getAttribute('data-update-student-url'),
+            deleteUrl: span.getAttribute('data-delete-student-url'),
+            submitted: span.getAttribute('data-submitted') === 'true'
+        };
+        console.log('Фрагмент загружен:', fragmentsData[fragmentId]);
+    });
+        
+    // ===== ФУНКЦИИ ОТОБРАЖЕНИЯ =====
+    
+    function displayFragmentReview(fragmentId) {
+        console.log('displayFragmentReview', fragmentId);
+        
+        const fragment = fragmentsData[fragmentId];
+        if (!fragment) {
+            console.error('Фрагмент не найден:', fragmentId);
+            return;
+        }
+        
+        currentFragmentId = fragmentId;
+        currentReview = fragment.review;
+
+        reviewContent.textContent = fragment.review;
+        
+        if (exerciseStatus) {
+            console.log('Режим просмотра (упражнение сдано)');
+
+            // reviewViewContainer.style.display = 'block';
+            // reviewFormContainer.style.display = 'none';
+
+            // const actionButtons = document.getElementById('reviewActionButtons');
+            // if (actionButtons) {
+            //     actionButtons.style.display = 'none';
+            // }
+            const teacherSection = document.getElementById('teacherCommentSection');
+            if (teacherSection) {
+                teacherSection.style.display = 'block';
+            }
+            
+            if (fragment.teachercomment && fragment.teachercomment.trim()) {
+                teacherCommentText.textContent = fragment.teachercomment;
+                teacherCommentText.classList.remove('text-muted');
+            } else {
+                teacherCommentText.textContent = 'Нет комментария преподавателя';
+                teacherCommentText.classList.add('text-muted');
+            }
+            
+            // Показываем только просмотр, без формы и без кнопок
+            reviewViewContainer.style.display = 'block';
+            reviewFormContainer.style.display = 'none';
+            
+            // Прячем кнопки действий, если они есть
+            const actionButtons = document.getElementById('reviewActionButtons');
+            if (actionButtons) {
+                actionButtons.style.display = 'none';
+            }
+            
+        } else {
+            console.log('Режим редактирования (упражнение не сдано)');
+
+            const teacherSection = document.getElementById('teacherCommentSection');
+            if (teacherSection) {
+                teacherSection.style.display = 'none';
+            }
+
+            reviewViewContainer.style.display = 'block';
+            reviewFormContainer.style.display = 'none';
+
+            const actionButtons = document.getElementById('reviewActionButtons');
+            if (actionButtons) {
+                actionButtons.style.display = 'flex';
+                actionButtons.dataset.fragmentId = fragmentId;
+            }
+        }
+
+        
+        // if (exerciseStatus || fragment.submitted) {
+        //     // Режим только чтения
+        //     reviewViewContainer.style.display = 'block';
+        //     reviewFormContainer.style.display = 'none';
+            
+        //     reviewContent.textContent = fragment.review;
+            
+        //     if (fragment.teachercomment && fragment.teachercomment.trim()) {
+        //         teacherCommentText.textContent = fragment.teachercomment;
+        //         teacherCommentText.classList.remove('text-muted');
+        //     } else {
+        //         teacherCommentText.textContent = 'Нет комментария преподавателя';
+        //         teacherCommentText.classList.add('text-muted');
+        //     }
+            
+        //     // Скрываем кнопки редактирования
+        //     const actionButtons = document.getElementById('reviewActionButtons');
+        //     if (actionButtons) {
+        //         actionButtons.style.display = 'none';
+        //     }
+        // } else {
+        //     // Режим редактирования
+        //     reviewViewContainer.style.display = 'none';
+        //     reviewFormContainer.style.display = 'block';
+            
+        //     reviewInput.value = fragment.review;
+        //     startPositionInput.value = fragment.start;
+        //     endPositionInput.value = fragment.end;
+            
+        //     // Обновляем текст кнопки
+        //     saveReviewBtn.textContent = 'Обновить';
+        // }
+        
+        openReviewPanel();
+    }
+    
+    // ===== ФУНКЦИИ УПРАВЛЕНИЯ ПАНЕЛЬЮ =====
+    
+    function openReviewPanel() {
+        reviewContainer.classList.add('active');
+        const reviewTextContainer = document.getElementById('reviewTextContainer');
+        if (reviewTextContainer) {
+            reviewTextContainer.classList.add('with-sidebar');
+        }
+    }
+    
+    function closeReviewPanel() {
+        reviewContainer.classList.remove('active');
+        const reviewTextContainer = document.getElementById('reviewTextContainer');
+        if (reviewTextContainer) {
+            reviewTextContainer.classList.remove('with-sidebar');
+        }
+        
+        // Сбрасываем все
+        document.querySelectorAll('.selection').forEach(s => {
+            s.classList.remove('active');
+        });
+
+        // ВЫДЕЛЕНИЕ ТЕСТ Удаляем временное выделение при отмене
+        removeTempSelection();
+        
+        reviewViewContainer.style.display = 'block';
+        reviewFormContainer.style.display = 'none';
+        reviewInput.value = '';
+        startPositionInput.value = '';
+        endPositionInput.value = '';
+
+        const teacherSection = document.getElementById('teacherCommentSection');
+        if (teacherSection) {
+            teacherSection.style.display = 'none';
+        }
+        
+        currentFragmentId = null;
+        currentReview = '';
+    }
+    
+    // ===== ФУНКЦИИ ДЛЯ РАБОТЫ С ФОРМОЙ =====
+    
+    function showAddReviewForm(selectionInfo) {
+        console.log('showAddReviewForm', selectionInfo);
+
+        const teacherSection = document.getElementById('teacherCommentSection');
+        if (teacherSection) {
+            teacherSection.style.display = 'none';
+        }
+
+
+        // ВЫДЕЛЕНИЕ ТЕСТ  Сохраняем выделение ВИЗУАЛЬНО
+        if (selectionInfo && selectionInfo.range) {
+            // Удаляем предыдущее временное выделение, если было
+            removeTempSelection();
+            
+            // Создаем временное выделение
+            const span = document.createElement('span');
+            span.className = 'temp-selection';
+            span.setAttribute('data-temp', 'true');
+            
+            try {
+                const range = selectionInfo.range;
+                range.surroundContents(span);
+                
+                // Сохраняем ссылку на временное выделение
+                window.tempSelectionSpan = span;
+            } catch (e) {
+                console.warn('Не удалось создать временное выделение:', e);
+            }
+        }
+
+
+        
+        reviewViewContainer.style.display = 'none';
+        reviewFormContainer.style.display = 'block';
+        
+        // Очищаем форму
+        reviewInput.value = '';
+        saveReviewBtn.textContent = 'Сохранить';
+        
+        // Устанавливаем позиции из выделения
+        // if (selectionInfo) {
+        //     startPositionInput.value = selectionInfo.startOffset || 0;
+        //     endPositionInput.value = selectionInfo.endOffset || 0;
+        // }
+        if (startPositionInput) {
+            startPositionInput.value = selectionInfo.startOffset || 0;
+            console.log('startposition:', startPositionInput.value);
+        }
+        if (endPositionInput) {
+            endPositionInput.value = selectionInfo.endOffset || 0;
+            console.log('endposition:', endPositionInput.value);
+        }
+        
+        currentFragmentId = null;
+        // isEditMode = false;
+        
+        reviewInput.focus();
+        openReviewPanel();
+    }
+    
+    function hideReviewForm() {
+        reviewFormContainer.style.display = 'none';
+        reviewViewContainer.style.display = 'block';
+        reviewInput.value = '';
+
+        // ВЫДЕЛЕНИЕ ТЕСТ Удаляем временное выделение при отмене
+        removeTempSelection();
+    }
+
+    // ВЫДЕЛЕНИЕ ТЕСТ Функция удаления временного выделения
+    function removeTempSelection() {
+        if (window.tempSelectionSpan) {
+            const parent = window.tempSelectionSpan.parentNode;
+            if (parent) {
+                // Заменяем span на его текстовое содержимое
+                const textNode = document.createTextNode(window.tempSelectionSpan.textContent);
+                parent.replaceChild(textNode, window.tempSelectionSpan);
+            }
+            window.tempSelectionSpan = null;
+        }
+    }
+    
+    // ===== ФУНКЦИИ СОХРАНЕНИЯ/УДАЛЕНИЯ =====
+    
+    function saveReview() {
+        const review = reviewInput.value.trim();
+        
+        if (!review) {
+            alert('Введите текст рецензии');
+            return;
+        }
+
+        const startPos = parseInt(startPositionInput.value) || 0;
+        const endPos = parseInt(endPositionInput.value) || 0;
+        
+        console.log('Сохранение с позициями:', {startPos, endPos});
+        
+        let url, method, body;
+        
+        if (currentFragmentId) {
+            // Режим редактирования
+            const fragment = fragmentsData[currentFragmentId];
+            url = fragment.updateUrl;
+            method = 'POST';
+            body = JSON.stringify({
+                review: review
+            });
+        } else {
+            // Режим создания
+            url = `/exercise/save-review/{{ exercise.idexercise }}/`;
+            method = 'POST';
+            body = JSON.stringify({
+                review: review,
+                startposition: startPos,
+                endposition: endPos
+            });
+        }
+        
+        console.log('Сохранение рецензии:', { url, method, body });
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: body
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Ответ сервера:', data);
+            
+            if (data.success) {
+                // ВЫДЕЛЕНИЕ ТЕСТ
+                removeTempSelection();
+                if (currentFragmentId) {
+                    // Обновляем локальные данные
+                    fragmentsData[currentFragmentId].review = review;
+                    
+                    // Обновляем атрибут в HTML
+                    const span = document.querySelector(`.selection[data-fragment-id="${currentFragmentId}"]`);
+                    if (span) {
+                        span.setAttribute('data-review', review);
+                    }
+                    
+                    // Показываем обновленную рецензию
+                    displayFragmentReview(currentFragmentId);
+                } else {
+                    // Перезагружаем страницу для новой рецензии
+                    location.reload();
+                }
+                
+                hideReviewForm();
+            } else {
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при сохранении');
+        });
+    }
+    
+    function deleteReview() {
+        if (!currentFragmentId) return;
+        
+        if (!confirm('Удалить эту рецензию?')) return;
+        
+        const fragment = fragmentsData[currentFragmentId];
+        
+        fetch(fragment.deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при удалении');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при удалении');
+        });
+    }
+    
+    // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
+
+    // ===== ОБРАБОТЧИК КНОПКИ ДОБАВЛЕНИЯ РЕЦЕНЗИИ =====
+    const addButton = document.getElementById('reviewAddBtn');
+    if (addButton) {
+        console.log('Кнопка добавления найдена в первом скрипте');
+        
+        addButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            
+            console.log('Клик по кнопке добавления');
+            console.log('Текущее выделение:', window.currentSelection);
+            
+            // Получаем выделение из глобальной переменной
+            const selection = window.currentSelection;
+            
+            if (!selection) {
+                alert('Сначала выделите текст');
+                return;
+            }
+
+            console.log('selection.startOffset:', selection.startOffset);
+            console.log('selection.endOffset:', selection.endOffset);
+            console.log('selection.text:', selection.text);
+            
+            // Проверяем, что выделение не пустое
+            if (!selection.text || selection.text.length === 0) {
+                alert('Выделите текст для добавления рецензии');
+                return;
+            }
+            
+            // Устанавливаем позиции
+            if (startPositionInput) {
+                startPositionInput.value = selection.startOffset || 0;
+                console.log('Установлен start:', selection.startOffset);
+            }
+            if (endPositionInput) {
+                endPositionInput.value = selection.endOffset || 0;
+                console.log('Установлен end:', selection.endOffset);
+            }
+
+            showAddReviewForm(selection);
+            
+            // Показываем форму
+            // if (reviewViewContainer) reviewViewContainer.style.display = 'none';
+            // if (reviewFormContainer) {
+            //     reviewFormContainer.style.display = 'block';
+            //     console.log('Форма отображена');
+            // }
+            // if (saveReviewBtn) saveReviewBtn.textContent = 'Сохранить';
+            // if (reviewInput) {
+            //     reviewInput.value = '';
+            //     reviewInput.focus();
+            // }
+            
+            // currentFragmentId = null;
+            
+            // // Открываем панель
+            // openReviewPanel();
+            
+            // Скрываем кнопку
+            addButton.style.display = 'none';
+        });
+    } else {
+        console.error('Кнопка #reviewAddBtn не найдена в первом скрипте!');
+    }
+    
+    // Клик по выделенному фрагменту
+    selections.forEach(span => {
+        span.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const fragmentId = this.getAttribute('data-fragment-id');
+            console.log('Клик по фрагменту:', fragmentId);
+            
+            // Убираем активный класс у всех
+            document.querySelectorAll('.selection').forEach(s => {
+                s.classList.remove('active');
+            });
+            
+            // Добавляем активный класс текущему
+            this.classList.add('active');
+            
+            // Отображаем рецензию
+            displayFragmentReview(fragmentId);
+        });
+    });
+    
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveReview();
+        });
+    }
+    
+    // Кнопка отмены
+    if (cancelReviewBtn) {
+        cancelReviewBtn.addEventListener('click', function() {
+            if (currentFragmentId) {
+                // Возвращаемся к просмотру
+                displayFragmentReview(currentFragmentId);
+            } else {
+                closeReviewPanel();
+            }
+        });
+    }
+    
+    // Закрытие панели
+    if (closeReview) {
+        closeReview.addEventListener('click', closeReviewPanel);
+    }
+    
+    // Закрытие по клику вне панели
+    document.addEventListener('click', function(e) {
+        if (reviewContainer.classList.contains('active') && 
+            !reviewContainer.contains(e.target) && 
+            !e.target.classList.contains('selection') &&
+            !e.target.closest('.review-add-btn')) {
+            closeReviewPanel();
+        }
+    });
+    
+    // Закрытие по ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeReviewPanel();
+        }
+    });
+    
+    // Предотвращаем закрытие при клике внутри панели
+    if (reviewContainer) {
+        reviewContainer.addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
+    }
+    
+    if (!exerciseStatus && !document.getElementById('reviewActionButtons')) {
+        const actionButtons = document.createElement('div');
+        actionButtons.id = 'reviewActionButtons';
+        actionButtons.className = 'review-buttons';
+        actionButtons.style.marginTop = '15px';
+        actionButtons.style.display = 'none';
+        actionButtons.style.justifyContent = 'flex-start';
+        actionButtons.style.gap = '10px';
+        
+        actionButtons.innerHTML = `
+            <button type="button" class="button" id="editReviewBtn">Редактировать</button>
+            <button type="button" class="button grey-button" id="deleteReviewBtn">Удалить</button>
+        `;
+        
+        reviewViewContainer.appendChild(actionButtons);
+        
+        document.getElementById('editReviewBtn').addEventListener('click', function() {
+            if (currentFragmentId) {
+                const fragment = fragmentsData[currentFragmentId];
+                reviewInput.value = fragment.review;
+                startPositionInput.value = fragment.start;
+                endPositionInput.value = fragment.end;
+                saveReviewBtn.textContent = 'Обновить';
+                
+                reviewViewContainer.style.display = 'none';
+                reviewFormContainer.style.display = 'block';
+            }
+        });
+        
+        document.getElementById('deleteReviewBtn').addEventListener('click', function() {
+            deleteReview();
+        });
+    }
+    
+    // Инициализация: если есть выбранный фрагмент в URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const fragmentIdFromUrl = urlParams.get('fragment');
+    if (fragmentIdFromUrl && fragmentsData[fragmentIdFromUrl]) {
+        const span = document.querySelector(`.selection[data-fragment-id="${fragmentIdFromUrl}"]`);
+        if (span) {
+            span.click();
+        }
+    }
+    
+    console.log('Скрипт рецензий студента инициализирован');
+});
+</script>
+
+
+<!-- СКРИПТ НА ВЫДЕЛЕНИЕ РЕЦЕНЗИЙ -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Статус упражнения из шаблона
+    const exerciseStatus = {{ exercise.exercisestatus|yesno:"true,false" }};
+    
+    console.log('Статус упражнения:', exerciseStatus ? 'Сдано' : 'Не сдано');
+    
+    if (exerciseStatus) {
+        console.log('Упражнение не сдано, рецензирование недоступно');
+        return;
+    }
+    
+    const reviewText = document.querySelector('.review-text');
+
+
+    // ОТЛАДКА реальное содержимое текста
+    console.log('=== ОТЛАДКА ПОЗИЦИЙ ===');
+
+    const fullText = reviewText.textContent || reviewText.innerText;
+    console.log('1. Полный текст (первые 100 символов):', JSON.stringify(fullText.substring(0, 100)));
+    
+    console.log('2. Коды первых 30 символов:');
+    for (let i = 0; i < Math.min(30, fullText.length); i++) {
+        console.log(`   символ ${i}: '${fullText[i]}' (код: ${fullText.charCodeAt(i)})`);
+    }
+
+    console.log('3. Текстовые узлы внутри .review-text:');
+    const walker = document.createTreeWalker(
+        reviewText,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: function(node) {
+                if (node.textContent.trim().length === 0) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }
+    );
+    
+    let nodeIndex = 0;
+    let totalLength = 0;
+    let currentNode;
+    
+    while (currentNode = walker.nextNode()) {
+        const text = currentNode.textContent;
+        console.log(`   Узел ${nodeIndex}:`);
+        console.log(`      длина: ${text.length}`);
+        console.log(`      начало: ${JSON.stringify(text.substring(0, 20))}`);
+        console.log(`      позиция: от ${totalLength} до ${totalLength + text.length}`);
+        
+        totalLength += text.length;
+        nodeIndex++;
+    }
+    
+    console.log(`4. Общая длина текста: ${totalLength}`);
+    console.log('========================');
+
+    // ===== ОБРАБОТЧИК КНОПКИ ДОБАВЛЕНИЯ РЕЦЕНЗИИ =====
+    const addButton = document.getElementById('reviewAddBtn');
+    
+    if (!reviewText) {
+        console.error('Элемент .review-text не найден');
+        return;
+    }
+    
+    if (!addButton) {
+        console.error('Кнопка #reviewAddBtn не найдена');
+        return;
+    }
+    
+    let currentSelection = null;
+
+    // чистый текст из data-атрибута
+    const cleanText = JSON.parse(document.querySelector('.review-text').dataset.cleanText);
+    console.log('Clean text from DB (original):', cleanText.substring(0, 100));
+
+    // Функция для получения визуального текста из HTML
+    // function getVisualText() {
+    //     const reviewText = document.querySelector('.review-text');
+    //     // textContent дает текст без HTML-тегов, но с учетом span-ов
+    //     return reviewText.textContent || reviewText.innerText;
+    // }
+    // Функция для получения визуального текста из HTML
+    function getVisualText() {
+        const reviewText = document.querySelector('.review-text');
+        // innerText вместо textContent для лучшей обработки переносов
+        return reviewText.innerText || reviewText.textContent;
+    }
+
+    const visualText = getVisualText();
+    console.log('Visual text from HTML (with spans):', visualText.substring(0, 100));
+
+    function createPositionMapping(cleanText, visualText) {
+        console.log('Creating mapping between:');
+        console.log('Clean:', JSON.stringify(cleanText.substring(0, 50)));
+        console.log('Visual:', JSON.stringify(visualText.substring(0, 50)));
+        
+        const mapping = [];
+        let cleanIndex = 0;
+        let visualIndex = 0;
+        
+        while (cleanIndex < cleanText.length && visualIndex < visualText.length) {
+            const cleanChar = cleanText[cleanIndex];
+            const visualChar = visualText[visualIndex];
+            
+            if (cleanChar === visualChar) {
+                mapping[visualIndex] = cleanIndex;
+                cleanIndex++;
+                visualIndex++;
+            } 
+            else if (/\s/.test(visualChar) && !/\s/.test(cleanChar)) {
+                // Лишний пробел из форматирования
+                mapping[visualIndex] = -1;
+                visualIndex++;
+            }
+            else if (/\s/.test(cleanChar) && !/\s/.test(visualChar)) {
+                // Пробел из текста, но в визуальном его нет
+                cleanIndex++;
+            }
+            else {
+                console.warn('Mismatch:', {
+                    cleanIndex, 
+                    visualIndex, 
+                    cleanChar: cleanChar + ' (' + cleanChar.charCodeAt(0) + ')',
+                    visualChar: visualChar + ' (' + visualChar.charCodeAt(0) + ')'
+                });
+                // Пытаемся синхронизироваться
+                mapping[visualIndex] = cleanIndex;
+                cleanIndex++;
+                visualIndex++;
+            }
+        }
+        // Добавляем последнюю позицию
+        if (cleanIndex === cleanText.length && visualIndex < visualText.length) {
+            // Чистый текст закончился, но визуальный еще есть (лишние пробелы в конце)
+            while (visualIndex < visualText.length) {
+                mapping[visualIndex] = cleanText.length - 1;
+                visualIndex++;
+            }
+        }
+        console.log('Mapping created, length:', mapping.length);
+        return mapping;
+    }
+
+    const positionMapping = createPositionMapping(cleanText, visualText);
+
+    // ОТЛАДКА ДЛЯ ПОСЛЕДНЕГО СИМВОЛА
+    const lastVisualChar = visualText[visualText.length - 1];
+    const lastCleanChar = cleanText[cleanText.length - 1];
+    console.log('Last visual char:', lastVisualChar, 'code:', lastVisualChar?.charCodeAt(0));
+    console.log('Last clean char:', lastCleanChar, 'code:', lastCleanChar?.charCodeAt(0));
+    console.log('Visual text length:', visualText.length);
+    console.log('Clean text length:', cleanText.length);
+    console.log('Mapping length:', positionMapping.length);
+    const lastValidPos = positionMapping[visualText.length - 1];
+    console.log('Last mapping position:', lastValidPos);
+    if (lastValidPos !== cleanText.length - 1) {
+        console.warn('Mapping mismatch at the end!');
+    }
+
+    // Функция для конвертации визуальной позиции в позицию в чистом тексте
+    function visualToCleanPosition(visualPos) {
+        console.log('visualToCleanPosition:', visualPos, 'mapping length:', positionMapping.length);
+        
+        // Если visualPos выходит за пределы маппинга
+        if (visualPos >= positionMapping.length) {
+            console.log('visualPos beyond mapping, returning last valid clean position');
+            // Возвращаем последнюю валидную позицию в чистом тексте
+            // это для того, чтоб можно было выделить последний символ текста, иначе он сбрасывается
+            for (let i = positionMapping.length - 1; i >= 0; i--) {
+                if (positionMapping[i] !== -1) {
+                    return positionMapping[i];
+                }
+            }
+            return cleanText.length;
+        }
+        
+        if (visualPos < 0) {
+            return 0;
+        }
+        
+        const cleanPos = positionMapping[visualPos];
+        console.log('cleanPos from mapping:', cleanPos);
+        
+        if (cleanPos === -1) {
+            console.log('cleanPos is -1, finding previous valid');
+            for (let i = visualPos - 1; i >= 0; i--) {
+                if (positionMapping[i] !== -1) {
+                    return positionMapping[i];
+                }
+            }
+            return 0;
+        }
+        
+        return cleanPos;
+    }
+
+    function getAbsoluteOffset(node, offset) {
+        try {
+            console.log('getAbsoluteOffset:', {node, offset, nodeType: node.nodeType});
+            
+            const range = document.createRange();
+            range.setStart(reviewText, 0);
+            range.setEnd(node, offset);
+            
+            const visualText = range.toString();
+            const visualPos = visualText.length;
+            
+            console.log('visualPos:', visualPos);
+            
+            // Конвертируем в позицию в чистом тексте
+            let cleanPos = visualToCleanPosition(visualPos);
+            
+            // Если это конец текста, используем длину чистого текста
+            if (visualPos === visualTextLength) {
+                console.log('End of text reached, using clean text length');
+                cleanPos = cleanText.length;
+            }
+            
+            return cleanPos;
+        } catch (e) {
+            console.error('Error in getAbsoluteOffset:', e);
+            return 0;
+        }
+    }
+
+    // для длины визуального текста, чтоб корректно считать позиции
+    const visualTextLength = visualText.length;
+    
+    // Функция для расчета позиции кнопки
+    function calculateButtonPosition(rect) {
+        const buttonHeight = 40;
+        const spacing = 10;
+        const viewportHeight = window.innerHeight;
+        
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        
+        if (spaceBelow >= buttonHeight + spacing) {
+            // Ставим снизу
+            return rect.bottom + spacing;
+        } else if (spaceAbove >= buttonHeight + spacing) {
+            // Ставим сверху
+            return rect.top - buttonHeight - spacing;
+        } else {
+            // Ставим по центру, если нет места
+            return rect.top - buttonHeight / 2;
+        }
+    }
+    
+    function showButton(selectionInfo) {
+        const rect = selectionInfo.range.getBoundingClientRect();
+        const scrollY = window.scrollY;
+        const buttonTop = calculateButtonPosition(rect);
+        
+        addButton.style.display = 'block';
+        addButton.style.top = (buttonTop + scrollY) + 'px';
+        addButton.style.left = (rect.left + rect.width / 2) + 'px';
+        addButton.style.transform = 'translateX(-50%)';
+        
+        window.currentSelection = selectionInfo;
+    }
+    
+    function hideButton() {
+        addButton.style.display = 'none';
+        window.currentSelection = null;
+    }
+    
+    function validateSelection(selection) {
+        if (!selection.rangeCount) return false;
+        
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return false;
+        
+        let container = range.commonAncestorContainer;
+        while (container && container !== document.body) {
+            if (container.classList && container.classList.contains('review-text')) {
+                return true;
+            }
+            container = container.parentNode;
+        }
+        
+        return false;
+    }
+
+    // Переменная для отслеживания начала выделения
+    let isSelecting = false;
+
+    // Отслеживаем начало выделения
+    reviewText.addEventListener('mousedown', function(e) {
+        isSelecting = true;
+    });
+
+    // Обработчик выделения текста на весь документ(иначе кнопка не появляется иногда)
+    document.addEventListener('mouseup', function(e) {
+        // Если выделение началось не внутри review-text, игнорируем
+        if (!isSelecting) return;
+        
+        // Небольшая задержка, чтобы выделение успело завершиться
+        setTimeout(() => {
+            const selection = window.getSelection();
+            
+            if (!validateSelection(selection)) {
+                hideButton();
+                isSelecting = false;
+                return;
+            }
+            
+            const selectedText = selection.toString().trim();
+            if (!selectedText) {
+                hideButton();
+                isSelecting = false;
+                return;
+            }
+            
+            const range = selection.getRangeAt(0);
+            
+            const startOffset = getAbsoluteOffset(range.startContainer, range.startOffset);
+            const endOffset = getAbsoluteOffset(range.endContainer, range.endOffset);
+            
+            if (startOffset >= endOffset) {
+                hideButton();
+                isSelecting = false;
+                return;
+            }
+            
+            const selectionInfo = {
+                text: selectedText,
+                startOffset: startOffset,
+                endOffset: endOffset,
+                range: range.cloneRange(),
+                length: endOffset - startOffset
+            };
+            
+            console.log('Выделение:', selectionInfo);
+            
+            showButton(selectionInfo);
+            isSelecting = false;
+            
+        }, 50);
+    });
+
+    // Сбрасываем флаг, если клик был вне review-text
+    document.addEventListener('mousedown', function(e) {
+        if (!reviewText.contains(e.target)) {
+            isSelecting = false;
+        }
+    });
+
+    
+    // Обработчик выделения текста
+    // reviewText.addEventListener('mouseup', function(e) {
+    //     // Небольшая задержка, чтобы выделение успело завершиться
+    //     setTimeout(() => {
+    //         const selection = window.getSelection();
+            
+    //         if (!validateSelection(selection)) {
+    //             hideButton();
+    //             return;
+    //         }
+            
+    //         const selectedText = selection.toString().trim();
+    //         if (!selectedText) {
+    //             hideButton();
+    //             return;
+    //         }
+            
+    //         const range = selection.getRangeAt(0);
+            
+    //         const startOffset = getAbsoluteOffset(range.startContainer, range.startOffset);
+    //         const endOffset = getAbsoluteOffset(range.endContainer, range.endOffset);
+            
+    //         if (startOffset >= endOffset) {
+    //             hideButton();
+    //             return;
+    //         }
+            
+    //         const selectionInfo = {
+    //             text: selectedText,
+    //             startOffset: startOffset,
+    //             endOffset: endOffset,
+    //             range: range.cloneRange(),
+    //             length: endOffset - startOffset
+    //         };
+            
+    //         console.log('Выделение:', selectionInfo);
+            
+    //         showButton(selectionInfo);
+            
+    //     }, 50);
+    // });
+    
+    // Скрываем кнопку при клике вне
+    document.addEventListener('mousedown', function(e) {
+        if (addButton.style.display === 'block' && 
+            !addButton.contains(e.target) && 
+            !reviewText.contains(e.target)) {
+            hideButton();
+        }
+    });
+    
+    // Скрываем при скролле
+    // window.addEventListener('scroll', function() {
+    //     if (addButton.style.display === 'block') {
+    //         hideButton();
+    //     }
+    // });
+
+    // Вместо того чтоб скрывать кнопку она будет перерисовываться
+    window.addEventListener('scroll', function() {
+        if (addButton.style.display === 'block' && window.currentSelection) {
+            // Обновляем позицию кнопки при скролле
+            const selection = window.currentSelection;
+            if (selection && selection.range) {
+                try {
+                    const rect = selection.range.getBoundingClientRect();
+                    const scrollY = window.scrollY;
+                    const buttonTop = calculateButtonPosition(rect);
+                    
+                    addButton.style.top = (buttonTop + scrollY) + 'px';
+                    addButton.style.left = (rect.left + rect.width / 2) + 'px';
+                } catch (e) {
+                    // Если range стал невалидным, скрываем кнопку
+                    hideButton();
+                }
+            }
+        }
+    });
+
+    window.addEventListener('resize', function() {
+        if (addButton.style.display === 'block' && window.currentSelection) {
+            const selection = window.currentSelection;
+            if (selection && selection.range) {
+                try {
+                    const rect = selection.range.getBoundingClientRect();
+                    const scrollY = window.scrollY;
+                    const buttonTop = calculateButtonPosition(rect);
+                    
+                    addButton.style.top = (buttonTop + scrollY) + 'px';
+                    addButton.style.left = (rect.left + rect.width / 2) + 'px';
+                } catch (e) {
+                    hideButton();
+                }
+            }
+        }
+    });
+    
+    // Скрываем при клику по escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && addButton.style.display === 'block') {
+            hideButton();
+        }
+    });
+});
+</script>
+
+
+<!-- СКРИПТ НА ВЫДЕЛЕНИЕ РЕЦЕНЗИЙ -->
+<!-- <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Статус упражнения из шаблона
+    const exerciseStatus = {{ exercise.exercisestatus|yesno:"true,false" }};
+    
+    console.log('Статус упражнения:', exerciseStatus ? 'Сдано' : 'Не сдано');
+    
+    if (exerciseStatus) {
+        console.log('Упражнение не сдано, рецензирование недоступно');
+        return;
+    }
+    
+    const reviewText = document.querySelector('.review-text');
+    const addButton = document.getElementById('reviewAddBtn');
+    
+    if (!reviewText) {
+        console.error('Элемент .review-text не найден');
+        return;
+    }
+    
+    if (!addButton) {
+        console.error('Кнопка #reviewAddBtn не найдена');
+        return;
+    }
+    
+    let currentSelection = null;
+    let isSelecting = false;
+    
+    // ===== УПРОЩЕННАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ ПОЗИЦИИ =====
+    // Просто считаем символы от начала до нужной позиции
+    function getAbsoluteOffset(node, offset) {
+        try {
+            const range = document.createRange();
+            range.setStart(reviewText, 0);
+            range.setEnd(node, offset);
+            
+            // toString() дает чистый текст без HTML-тегов!
+            const cleanText = range.toString();
+            console.log('getAbsoluteOffset result:', cleanText.length);
+            
+            return cleanText.length;
+        } catch (e) {
+            console.error('Error in getAbsoluteOffset:', e);
+            return 0;
+        }
+    }
+    
+    // Функция для расчета позиции кнопки
+    function calculateButtonPosition(rect) {
+        const buttonHeight = 40;
+        const spacing = 10;
+        const viewportHeight = window.innerHeight;
+        
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        
+        if (spaceBelow >= buttonHeight + spacing) {
+            return rect.bottom + spacing;
+        } else if (spaceAbove >= buttonHeight + spacing) {
+            return rect.top - buttonHeight - spacing;
+        } else {
+            return rect.top - buttonHeight / 2;
+        }
+    }
+    
+    // Показать кнопку
+    function showButton(selectionInfo) {
+        try {
+            const rect = selectionInfo.range.getBoundingClientRect();
+            const scrollY = window.scrollY;
+            const buttonTop = calculateButtonPosition(rect);
+            
+            addButton.style.display = 'block';
+            addButton.style.top = (buttonTop + scrollY) + 'px';
+            addButton.style.left = (rect.left + rect.width / 2) + 'px';
+            addButton.style.transform = 'translateX(-50%)';
+            
+            window.currentSelection = selectionInfo;
+            console.log('Кнопка показана');
+        } catch (e) {
+            console.error('Error in showButton:', e);
+        }
+    }
+    
+    // Скрыть кнопку
+    function hideButton() {
+        addButton.style.display = 'none';
+        window.currentSelection = null;
+        console.log('Кнопка скрыта');
+    }
+    
+    // Проверка выделения
+    function validateSelection(selection) {
+        if (!selection.rangeCount) return false;
+        
+        const range = selection.getRangeAt(0);
+        if (range.collapsed) return false;
+        
+        let container = range.commonAncestorContainer;
+        while (container && container !== document.body) {
+            if (container.classList && container.classList.contains('review-text')) {
+                return true;
+            }
+            container = container.parentNode;
+        }
+        
+        return false;
+    }
+    
+    // Отслеживаем начало выделения
+    reviewText.addEventListener('mousedown', function(e) {
+        isSelecting = true;
+    });
+    
+    // Обработчик выделения текста
+    document.addEventListener('mouseup', function(e) {
+        if (!isSelecting) return;
+        
+        setTimeout(() => {
+            const selection = window.getSelection();
+            
+            if (!validateSelection(selection)) {
+                hideButton();
+                isSelecting = false;
+                return;
+            }
+            
+            const selectedText = selection.toString().trim();
+            if (!selectedText) {
+                hideButton();
+                isSelecting = false;
+                return;
+            }
+            
+            const range = selection.getRangeAt(0);
+            
+            // Используем упрощенную функцию
+            const startOffset = getAbsoluteOffset(range.startContainer, range.startOffset);
+            const endOffset = getAbsoluteOffset(range.endContainer, range.endOffset);
+            
+            if (startOffset >= endOffset) {
+                hideButton();
+                isSelecting = false;
+                return;
+            }
+            
+            const selectionInfo = {
+                text: selectedText,
+                startOffset: startOffset,
+                endOffset: endOffset,
+                range: range.cloneRange(),
+                length: endOffset - startOffset
+            };
+            
+            console.log('Выделение:', selectionInfo);
+            
+            showButton(selectionInfo);
+            isSelecting = false;
+            
+        }, 50);
+    });
+    
+    // Сбрасываем флаг при клике вне review-text
+    document.addEventListener('mousedown', function(e) {
+        if (!reviewText.contains(e.target)) {
+            isSelecting = false;
+        }
+    });
+    
+    // Обновляем позицию кнопки при скролле
+    window.addEventListener('scroll', function() {
+        if (addButton.style.display === 'block' && window.currentSelection) {
+            try {
+                const rect = window.currentSelection.range.getBoundingClientRect();
+                const scrollY = window.scrollY;
+                const buttonTop = calculateButtonPosition(rect);
+                
+                addButton.style.top = (buttonTop + scrollY) + 'px';
+                addButton.style.left = (rect.left + rect.width / 2) + 'px';
+            } catch (e) {
+                hideButton();
+            }
+        }
+    });
+    
+    window.addEventListener('resize', function() {
+        if (addButton.style.display === 'block' && window.currentSelection) {
+            try {
+                const rect = window.currentSelection.range.getBoundingClientRect();
+                const scrollY = window.scrollY;
+                const buttonTop = calculateButtonPosition(rect);
+                
+                addButton.style.top = (buttonTop + scrollY) + 'px';
+                addButton.style.left = (rect.left + rect.width / 2) + 'px';
+            } catch (e) {
+                hideButton();
+            }
+        }
+    });
+    
+    // Скрываем кнопку при клике вне
+    document.addEventListener('mousedown', function(e) {
+        if (addButton.style.display === 'block' && 
+            !addButton.contains(e.target) && 
+            !reviewText.contains(e.target)) {
+            hideButton();
+        }
+    });
+    
+    // Скрываем при Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && addButton.style.display === 'block') {
+            hideButton();
+        }
+    });
+
+    console.log('Второй скрипт инициализирован');
+});
+</script> -->
 
 {% endblock %}
