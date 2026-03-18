@@ -313,8 +313,8 @@
                       data-pos-color="{{ token.pos_tag_color }}"
                       data-position="{{ token.token_order_number }}">
 
-                    {% if token.errors %}
-                    {% for error in token.errors %}
+                    {% if token.exercise_errors %}
+                    {% for error in token.exercise_errors %}
                     <span class="error-tag"
                           style="background-color: {{ error.error_color }}; display: none;"
                           data-error-id="{{ error.error_id }}"

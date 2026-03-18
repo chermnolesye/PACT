@@ -751,8 +751,120 @@ def student_grade_text(request, idexercise=2):
     if request.method == "POST" and "annotation-form" in request.POST:
         print("Мы в функции добавления")
         annotation_form = AddErrorAnnotationForm(request.POST, user=request.user)
+
+        if annotation_form.is_valid():
+            try:
+                chosen_ids = json.loads(request.POST.get('chosen_ids', '[]'))
+                sentences_data = json.loads(request.POST.get('sentences', '[]'))
+
+                print("Chosen IDs:", chosen_ids)
+                print("Sentences data:", sentences_data)
+                print("Form data:", request.POST)
+
+                with transaction.atomic():
+                    new_error = annotation_form.save(commit=False)
+                    new_error.correct = annotation_form.cleaned_data.get('correct', '')
+                    new_error.changedate = timezone.now()
+                    new_error.save()
+
+                    #Если есть новые пустые токены — создаём их
+                    for sentence_info in sentences_data:
+                        sentence_id = sentence_info['id_sentence']
+                        empty_token_positions = sentence_info['empty_token_pos']
+
+                        try:
+                            sentence = Sentence.objects.get(idsentence=sentence_id)
+                            for position in sorted([int(p) for p in empty_token_positions]):
+                                print("Сдвигаем токены начиная с позиции:", position)
+                                Token.objects.filter(
+                                    idsentence=sentence,
+                                    tokenordernumber__gte=position
+                                ).update(tokenordernumber=F('tokenordernumber') + 1)
+                                # Создаём новый токен
+                                new_token = Token.objects.create(
+                                    idsentence=sentence,
+                                    tokentext='-EMPTY-',  
+                                    tokenordernumber=position
+                                )
+                                print("Создан токен с порядковым номером:", new_token.tokenordernumber)
+
+                                # Добавляем его id в список выделенных 
+                                chosen_ids.append(str(new_token.idtoken))
+                        except Sentence.DoesNotExist:
+                            continue
+
+                    #Привязываем ошибку ко всем выделенным 
+                    for token_id in chosen_ids:
+                        try:
+                            token = Token.objects.get(idtoken=token_id)
+                            ExerciseErrorToken.objects.create(idtoken=token, idexerciseerror=new_error,idexercisegrading=exercise_grading)
+                        except Token.DoesNotExist:
+                            continue
+                
+                url = reverse('student_grade_text')
+                params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+                return redirect(url + params)
+
+            except Exception as e:
+                print(f"Error saving annotation: {str(e)}")
+        else:
+            print("Form errors:", annotation_form.errors)
     else:
         annotation_form = AddErrorAnnotationForm()
+
+    if request.method == "POST" and request.POST.get('action') == 'edit':
+            print("Мы в функции edit")
+            print(request.POST)
+
+            error_id = request.POST.get('error_id')
+            if not error_id:
+                return JsonResponse({'success': False, 'error': 'Не передан ID аннотации для редактирования'})
+
+            try:
+                error = ExerciseError.objects.get(idexerciseerror=error_id)
+            except ExerciseError.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Аннотация не найдена'})
+
+            error.iderrortag_id = request.POST.get('id_iderrortag') or error.iderrortag_id
+            error.idreason_id= request.POST.get('idreason') or error.idreason_id
+            error.iderrorlevel_id = request.POST.get('iderrorlevel') or error.iderrorlevel_id
+            error.comment = request.POST.get('comment', '')
+            error.correct = request.POST.get('correct', '')
+            error.save()
+
+            return JsonResponse({'success': True})
+    
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        print("Мы в функции delete")
+        error_id = request.POST.get('error_id')
+        
+        if not error_id:
+            return JsonResponse({'success': False, 'error': 'ID ошибки не передан'})
+
+        try:
+            error = ExerciseError.objects.get(idexerciseerror=error_id)
+        except ExerciseError.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Ошибка не найдена'})
+
+        token_ids = list(ExerciseErrorToken.objects.filter(idexerciseerror=error).values_list('idtoken', flat=True))
+        tokens_to_check = Token.objects.filter(idtoken__in=token_ids, tokentext='-EMPTY-')
+
+        ExerciseErrorToken.objects.filter(idexerciseerror=error).delete()
+        error.delete()
+
+        for token in tokens_to_check:
+            if not ExerciseErrorToken.objects.filter(idtoken=token).exists():
+                sentence_id = token.idsentence
+                order_number = token.tokenordernumber
+
+                token.delete()
+
+                Token.objects.filter(
+                    idsentence=sentence_id,
+                    tokenordernumber__gt=order_number
+                ).update(tokenordernumber=F('tokenordernumber') - 1)
+
+        return JsonResponse({'success': True})
 
     # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
     if request.method == "POST" and "mark-form" in request.POST:
