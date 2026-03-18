@@ -107,7 +107,7 @@
             </div>
 
             <button type="submit" class="button">Найти</button>
-            <a href="{% url 'teacher_exercises' %}">Сбросить</a>
+            <a href="{% url 'student_exercises' %}">Сбросить</a>
         </form>
     </div>
 
@@ -169,13 +169,6 @@
                 {% else %}
                 <a href="{% url 'review_student' exercise.exercise_data.idexercise %}">{{ exercise.exercise_name }}</a>
                 {% endif %}
-                {% else %}
-                {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-                <a href="{% url 'grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_name }}</a>
-                {% else %}
-                <a href="{% url 'review_student' exercise.exercise_data.idexercise %}">{{ exercise.exercise_name }}</a>
-                {% endif %}
-                {% endif %}
             </span>
             <span class="group">{{ exercise.exercise_data.idstudent.idgroup }}</span>
             {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
@@ -230,64 +223,6 @@
             
         </div>
         {% endfor %}
-    </div>
-</div>
-
-<div id="deleteModal" class="modal modal-overlay">
-    <div class="modal-content">
-        <div class="modal-head">
-            <h3>Подтверждение удаления</h3>
-        </div>
-        <div class="modal-inner">
-            <p style="margin-bottom:15px">Вы уверены, что хотите удалить упражнение?</p>
-            <label class="no-highlight">
-                ФИО студента, выполняющего упражнение:
-            </label>
-            <p id="FIOofExerciseDel"></p>
-            <div class="modal-actions">
-                <button id="confirmDelete" class="btn button btn-danger">Удалить</button>
-                <button id="cancelDelete" class="btn button btn-secondary">Отмена</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="editExerciseModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-head">
-            <p>Редактировать метаданные упражнения</p>
-            <button class="close-modal">
-                <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-                </svg>
-            </button>
-        </div>
-        <form method="post" id="editExerciseForm" style="padding-top:20px;">
-            {% csrf_token %}
-            {{ edit_form.exercise_id }}
-            <label class="no-highlight">
-                ФИО студента, выполняющего упражнение:
-            </label>
-            <p id="FIOofExerciseEdit"></p>
-            <div class="vertical-level" style="margin-top:10px;">
-                <label for="{{ edit_form.creationdate.id_for_label }}" class="no-highlight">
-                    {{ edit_form.creationdate.label }}
-                </label>
-                {{ edit_form.creationdate }}
-            </div>
-
-            <div class="vertical-level" style="margin-top:10px;">
-                <label for="{{ edit_form.deadline.id_for_label }}" class="no-highlight">
-                    {{ edit_form.deadline.label }}
-                </label>
-                {{ edit_form.deadline }}
-            </div>
-
-            <div class="horizontal-level" style="margin-top:20px;">
-                <button type="submit" name="edit_text" id="confirmEditText" class="button">Сохранить</button>
-                <button type="button" id="cancelEdit" class="button grey-button">Отмена</button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -459,83 +394,6 @@
 </script>
 
 <script>
-    let exerciseToDelete = null;
-
-    function confirmDelete(el) {
-        // exerciseToDelete = exerciseId;
-        parent = el.parentElement;
-        name = parent.getElementsByClassName("full_name")[0].innerHTML;
-        document.getElementById('FIOofExerciseDel').innerHTML = name;
-
-        exerciseToDelete = parent.id;
-        document.getElementById('deleteModal').style.display = 'flex';
-    }
-
-    function openEditModal(el) {
-        parent = el.parentElement;
-        exerciseToEdit = parent.id;
-
-        name = parent.getElementsByClassName("full_name")[0].innerHTML;
-        document.getElementById('FIOofExerciseEdit').innerHTML = name;
-
-        document.getElementById('editExerciseModal').style.display = 'flex';
-        fetch("{% url 'load_exercise_data' %}?exerciseId=" + exerciseToEdit)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('id_creationdate').innerHTML = data.creationdate;
-                document.getElementById('id_deadline').innerHTML = data.deadline;
-                document.getElementById('id_creationdate').value = data.creationdate;
-                document.getElementById('id_deadline').value = data.deadline;
-                document.getElementById('id_exercise_id').value = exerciseToEdit;
-        });
-    }
-
-    // AJAX удаление
-    function deleteExercise() {
-        if (exerciseToDelete) {
-            fetch(`/exercise/teacher_exercises/delete/${exerciseToDelete}/`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': getCSRFToken(),
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById(exerciseToDelete).remove();
-                    // alert('Упражнение успешно удалено');
-                }
-                //  else {
-                //     alert('Ошибка при удалении');
-                // }
-                closeModal();
-                location.reload();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                console.log('Ошибка при удалении', 'error');
-                closeModal();
-            });
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('deleteModal').style.display = 'none';
-        exerciseToDelete = null;
-    }
-
-    function closeModalEdit(modal) {
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-    function openModal(modal) {
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-    }
 
     function getCSRFToken() {
         return document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -554,16 +412,7 @@
     document.addEventListener('DOMContentLoaded', function () {
 
         const filters = document.getElementById("filters")
-        console.log(filters.querySelector("#id_student_name"))
-        if (filters.querySelector("#id_student_name").value!="") {
-            var filter = document.getElementById("remove_fio_filter_btn")
-            filter.style.display = "flex";
-            filter.children[0].innerHTML = "ФИО: " + filters.querySelector("#id_student_name").value;
-            filter.addEventListener("click", function () {
-                filters.querySelector("#id_student_name").value = ""
-                document.querySelector(".filter-form").submit()
-            })
-        }
+        
         if (filters.querySelector("#id_idexercisetype").value != "") {
             var filter = document.getElementById("remove_type_filter_btn")
             filter.style.display = "flex";
@@ -643,43 +492,13 @@
             })
         }
 
-        const input = document.getElementById("id_student_name");
-        input.value = "";
-
         document.getElementById('toggle').addEventListener('click', toggle);
         const select_stat = document.getElementById('id_exercisestatus');
         select_stat.addEventListener("change", function () {
             document.getElementsByClassName("filter-form-singlefield")[0].submit();
         });
 
-        document.getElementById('confirmDelete').addEventListener('click', deleteExercise);
-        document.getElementById('cancelDelete').addEventListener('click', closeModal);
-        const editModal = document.getElementById('editExerciseModal');
-
-        const cancelEditBtn = document.getElementById('cancelEdit');
-        const closeEditBtn = editModal.querySelector('.close-modal');
-
-        if (cancelEditBtn) {
-            cancelEditBtn.addEventListener('click', function () {
-                closeModalEdit(editModal);
-            });
-        }
-
-        if (closeEditBtn) {
-            closeEditBtn.addEventListener('click', function () {
-                closeModalEdit(editModal);
-            });
-        }
         
-        [deleteModal, editModal].forEach(modal => {
-            if (modal) {
-                modal.addEventListener('click', function (e) {
-                    if (e.target === modal) {
-                        closeModal(modal);
-                    }
-                });
-            }
-        });
 
     });
 </script>

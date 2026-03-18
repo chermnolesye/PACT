@@ -79,7 +79,7 @@
     display: none;
 }
 
-.filter-block select, .filter-block p input {
+.filter-block select, .filter-block input {
     width: 100%;
     max-width: 100% !important;
     padding: 10px;
