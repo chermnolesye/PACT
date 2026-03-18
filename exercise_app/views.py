@@ -704,6 +704,8 @@ def grade_text(request, idexercise=2):
     in_time = False
     if exercise.exercisestatus and exercise.completiondate:
         in_time = exercise.completiondate <= exercise.deadline
+    else:
+        in_time = datetime.date.today() <= exercise.deadline
 
     exercise_grading = get_object_or_404(ExerciseGrading, idexercise=idexercise)
     
@@ -826,6 +828,235 @@ def grade_text(request, idexercise=2):
         "errorcheckflag": text.errorcheckflag,
     }
     return render(request, "grade_text.html", context)
+
+# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+def student_grade_text(request, idexercise=2):
+    exercise = get_object_or_404(Exercise, idexercise=idexercise)
+    
+    in_time = False
+    if exercise.exercisestatus and exercise.completiondate:
+        in_time = exercise.completiondate <= exercise.deadline
+    else:
+        in_time = datetime.date.today() <= exercise.deadline
+    exercise_grading = get_object_or_404(ExerciseGrading, idexercise=idexercise)
+    
+    text_id = exercise_grading.idtext
+    if text_id:
+        text = get_object_or_404(Text, idtext=text_id.idtext)
+    else:
+        text = Text.objects.first()
+
+    sentences = text.sentence_set.all()
+    sentence_data = []
+    selected_markup = request.GET.get("markup", "tagtext")
+
+    for sentence in sentences:
+        tokens = Token.objects.filter(idsentence=sentence).select_related("idpostag").order_by('tokenordernumber')
+        tokens_data = []
+        for token in tokens:
+            pos_tag = token.idpostag.tagtext if token.idpostag else None
+            pos_tag_russian = token.idpostag.tagtextrussian if token.idpostag else None
+            pos_tag_abbrev = token.idpostag.tagtextabbrev if token.idpostag else None
+            pos_tag_color = token.idpostag.tagcolor if token.idpostag else None
+
+            exercise_error_tokens = token.exerciseerrortoken_set.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+            
+            exercise_errors_list = []
+
+            for eet in exercise_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    exercise_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+            
+            tokens_data.append({
+                "token_id": token.idtoken,
+                "token": token.tokentext,
+                "pos_tag": pos_tag,
+                "pos_tag_russian": pos_tag_russian,
+                "pos_tag_abbrev": pos_tag_abbrev,
+                "pos_tag_color": pos_tag_color,
+                "token_order_number": token.tokenordernumber,
+                "exercise_errors": exercise_errors_list,
+            })
+
+        sentence_data.append({
+            "id_sentence": sentence.idsentence,
+            "sentence": sentence,
+            "tokens": tokens_data,
+        })
+    
+    if request.method == "POST" and "annotation-form" in request.POST:
+        print("Мы в функции добавления")
+        annotation_form = AddErrorAnnotationForm(request.POST, user=request.user)
+
+        if annotation_form.is_valid():
+            try:
+                chosen_ids = json.loads(request.POST.get('chosen_ids', '[]'))
+                sentences_data = json.loads(request.POST.get('sentences', '[]'))
+
+                print("Chosen IDs:", chosen_ids)
+                print("Sentences data:", sentences_data)
+                print("Form data:", request.POST)
+
+                with transaction.atomic():
+                    new_error = annotation_form.save(commit=False)
+                    new_error.correct = annotation_form.cleaned_data.get('correct', '')
+                    new_error.changedate = timezone.now()
+                    new_error.save()
+
+                    #Если есть новые пустые токены — создаём их
+                    for sentence_info in sentences_data:
+                        sentence_id = sentence_info['id_sentence']
+                        empty_token_positions = sentence_info['empty_token_pos']
+
+                        try:
+                            sentence = Sentence.objects.get(idsentence=sentence_id)
+                            for position in sorted([int(p) for p in empty_token_positions]):
+                                print("Сдвигаем токены начиная с позиции:", position)
+                                Token.objects.filter(
+                                    idsentence=sentence,
+                                    tokenordernumber__gte=position
+                                ).update(tokenordernumber=F('tokenordernumber') + 1)
+                                # Создаём новый токен
+                                new_token = Token.objects.create(
+                                    idsentence=sentence,
+                                    tokentext='-EMPTY-',  
+                                    tokenordernumber=position
+                                )
+                                print("Создан токен с порядковым номером:", new_token.tokenordernumber)
+
+                                # Добавляем его id в список выделенных 
+                                chosen_ids.append(str(new_token.idtoken))
+                        except Sentence.DoesNotExist:
+                            continue
+
+                    #Привязываем ошибку ко всем выделенным 
+                    for token_id in chosen_ids:
+                        try:
+                            token = Token.objects.get(idtoken=token_id)
+                            ExerciseErrorToken.objects.create(idtoken=token, idexerciseerror=new_error,idexercisegrading=exercise_grading)
+                        except Token.DoesNotExist:
+                            continue
+                
+                url = reverse('student_grade_text')
+                params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+                return redirect(url + params)
+
+            except Exception as e:
+                print(f"Error saving annotation: {str(e)}")
+        else:
+            print("Form errors:", annotation_form.errors)
+    else:
+        annotation_form = AddErrorAnnotationForm()
+
+    if request.method == "POST" and request.POST.get('action') == 'edit':
+            print("Мы в функции edit")
+            print(request.POST)
+
+            error_id = request.POST.get('error_id')
+            if not error_id:
+                return JsonResponse({'success': False, 'error': 'Не передан ID аннотации для редактирования'})
+
+            try:
+                error = ExerciseError.objects.get(idexerciseerror=error_id)
+            except ExerciseError.DoesNotExist:
+                return JsonResponse({'success': False, 'error': 'Аннотация не найдена'})
+
+            error.iderrortag_id = request.POST.get('id_iderrortag') or error.iderrortag_id
+            error.idreason_id= request.POST.get('idreason') or error.idreason_id
+            error.iderrorlevel_id = request.POST.get('iderrorlevel') or error.iderrorlevel_id
+            error.comment = request.POST.get('comment', '')
+            error.correct = request.POST.get('correct', '')
+            error.save()
+
+            return JsonResponse({'success': True})
+    
+    if request.method == 'POST' and request.POST.get('action') == 'delete':
+        print("Мы в функции delete")
+        error_id = request.POST.get('error_id')
+        
+        if not error_id:
+            return JsonResponse({'success': False, 'error': 'ID ошибки не передан'})
+
+        try:
+            error = ExerciseError.objects.get(idexerciseerror=error_id)
+        except ExerciseError.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Ошибка не найдена'})
+
+        token_ids = list(ExerciseErrorToken.objects.filter(idexerciseerror=error).values_list('idtoken', flat=True))
+        tokens_to_check = Token.objects.filter(idtoken__in=token_ids, tokentext='-EMPTY-')
+
+        ExerciseErrorToken.objects.filter(idexerciseerror=error).delete()
+        error.delete()
+
+        for token in tokens_to_check:
+            if not ExerciseErrorToken.objects.filter(idtoken=token).exists():
+                sentence_id = token.idsentence
+                order_number = token.tokenordernumber
+
+                token.delete()
+
+                Token.objects.filter(
+                    idsentence=sentence_id,
+                    tokenordernumber__gt=order_number
+                ).update(tokenordernumber=F('tokenordernumber') - 1)
+
+        return JsonResponse({'success': True})
+    
+    if request.method == 'POST' and request.POST.get('action') == 'submit':
+        print("Мы в функции submit")
+        exercise.completiondate = timezone.now()
+        exercise.exercisestatus = 1
+        exercise.save()
+        return JsonResponse({'success': True})
+
+    # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
+    if request.method == "POST" and "mark-form" in request.POST:
+         mark_form = AddMarkForm(request.POST, instance=exercise)
+         if mark_form.is_valid():
+             mark_form.save()
+             
+             #return redirect(request.path + f"?idexercise={exercise.idexercise}")
+             url = reverse('grade_text')
+             params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+             return redirect(url + params)
+    else:
+         mark_form = AddMarkForm(instance=exercise)
+
+    student = text.idstudent
+    user = student.iduser
+    group = student.idgroup
+    text_type = text.idtexttype
+    unmarked_text = (text.text).replace("-EMPTY-","")
+
+    context = {
+        "mark_form": mark_form,
+        "text": text,
+        "annotation_form": annotation_form,
+        "sentence_data": sentence_data,
+        "exercise": exercise,
+        "exercise_grading":exercise_grading,
+        "in_time":in_time,
+        "selected_markup": selected_markup,
+        "poscheckflag": text.poscheckflag,
+        "errorcheckflag": text.errorcheckflag,
+        "unmarked_text": unmarked_text,
+    }
+    return render(request, "student_grade_text.html", context)
 
 # Поменять на тест с правами студента
 # @user_passes_test(has_teacher_rights, login_url='/auth/login/')

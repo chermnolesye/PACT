@@ -1,5 +1,5 @@
 from django import forms
-from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, Reason, 
+from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, ExerciseError, Reason, 
                              Student, User, Group, Exercise, ExerciseGrading, ExerciseReview, 
                              Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask,
                              ExerciseFragmentReview
@@ -389,7 +389,7 @@ class AddErrorAnnotationForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Error
+        model = ExerciseError
         fields = ['iderrortag', 'idreason', 'iderrorlevel', 'comment', 'correct']
 
     def __init__(self, *args, **kwargs):
