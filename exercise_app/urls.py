@@ -15,6 +15,10 @@ urlpatterns = [
 
     # url кабинета студента
     path('student_exercises/', views.student_exercises, name='student_exercises'),
+    path('review_student/<int:idexercise>/', views.review_student, name='review_student'),
+    path('save-review/<int:exercise_id>/', views.save_student_review, name='save_student_review'),
+    path('update-review/<int:fragment_id>/', views.update_student_review, name='update_student_review'),
+    path('delete-review/<int:fragment_id>/', views.delete_student_review, name='delete_student_review'),
 
     path('add_review_text/', views.add_review_text, name='add_review_text'),
     path('teacher_exercises/', views.teacher_exercises, name='teacher_exercises'),

@@ -27,14 +27,6 @@
             Выделено рецензий: <span class="bold">{{ total_reviews }}</span>
          </div>
 
-         <!-- <div class="review-menu-block grey-block">
-            Дата создания: {{ exercise.creationdate }}
-         </div>
-
-         <div class="review-menu-block grey-block">
-            Срок сдачи: {{ exercise.deadline }}
-         </div> -->
-
          {% if exercise.exercisestatus %}
             {% if in_time %}
             <div class="review-menu-block green-block dropdown-container">
@@ -81,9 +73,7 @@
                 <p class="author"> {{ text_metadata.idexercisetexttype.exercisetexttypename }} </p>
             </div>
 
-            <div class="review-text">
-                {{ text|safe }}
-            </div>
+            <div class="review-text">{{ text|safe }}</div>
         </div>
 
         <div class="review-container" id="reviewContainer">

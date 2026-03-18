@@ -45,7 +45,8 @@ from .forms import (
     ExerciseTextTaskForm,
     Group,
     AddMarkForm,
-    TeacherCommentForm
+    TeacherCommentForm,
+    StudentReviewForm
 )
 
 '''
@@ -395,21 +396,27 @@ def wrap_fragments_with_spans(text, reviews):
         end = fragment.endposition + offset
         update_url = reverse('update_teacher_comment', args=[0])
         delete_url = reverse('delete_teacher_comment', args=[0])
+        update_student_url = reverse('update_student_review', args=[fragment.idexercisetextreview])
+        delete_student_url = reverse('delete_student_review', args=[fragment.idexercisetextreview])
         escaped_comment = escape(fragment.teachercomment or "")
         span_tag = (
             f'<span class="selection" '
             f'data-fragment-id="{fragment.idexercisetextreview}" '
             f'data-review="{fragment.review}" '
+            f'data-start="{fragment.startposition}"'
+            f'data-end="{fragment.endposition}"'
+            f'data-update-student-url="{update_student_url}"'
+            f'data-delete-student-url="{delete_student_url}"'
             # f'data-teacher-comment="{fragment.teachercomment or ""}" '
             f'data-teacher-comment="{escaped_comment}" '
             f'data-delete-url="{delete_url}" '
             f'data-update-url="{update_url}">'
         )
-        print(f"offset before: {offset}")
+        # print(f"offset before: {offset}")
         result = result[:start] + span_tag + result[start:end] + '</span>' + result[end:]
         offset += len(span_tag) + len('</span>')
         # offset += end
-        print(f"offset after: {offset}, len span = {len(span_tag)}")
+        # print(f"offset after: {offset}, len span = {len(span_tag)}")
     return result
 
 def update_teacher_comment(request, fragment_id):
@@ -449,6 +456,150 @@ def delete_teacher_comment(request, fragment_id):
             'has_comment': False
         })
     return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def review_student(request, idexercise=1):
+    exercise = get_object_or_404(Exercise, idexercise=idexercise)
+    exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
+    exercisetext = exercisereview.idexercisetext
+    text = get_object_or_404(ExerciseText, idexercisetext=exercisetext.idexercisetext)
+
+    reviews = ExerciseFragmentReview.objects.filter(
+        idexercisereview=exercisereview
+    ).order_by('startposition')
+    total_reviews = reviews.count()
+
+    processed_text = wrap_fragments_with_spans(text.exercisetext, reviews)
+
+    in_time = False
+    if exercise.exercisestatus and exercise.completiondate:
+        in_time = exercise.completiondate <= exercise.deadline
+    from datetime import date
+    expired = date.today() > exercise.deadline
+
+    review_form = StudentReviewForm()
+    # я хз это надо если проверено уже да?
+    fragment_forms = {}
+    for review in reviews:
+        fragment_forms[review.idexercisetextreview] = TeacherCommentForm(
+            instance=review,
+            prefix=f'comment_{review.idexercisetextreview}'
+        )
+    
+    context = {
+        'exercise': exercise,
+        'exercisereview': exercisereview,
+        'text_metadata': text,
+        'text': processed_text,
+        'original_text_json': json.dumps(text.exercisetext),
+        'reviews': reviews,
+        'total_reviews': total_reviews,
+        'in_time': in_time,
+        'expired': expired,
+        'review_form': review_form,
+        'fragment_forms': fragment_forms,
+        'fragments_json': json.dumps([
+            {
+                'id': r.idexercisetextreview,
+                'review': r.review,
+                'teachercomment': r.teachercomment or '',
+                'has_comment': bool(r.teachercomment)
+            }
+            for r in reviews
+        ])
+    }
+
+    # Завершение упражнения
+    if request.method == 'POST':
+        exercise.exercisestatus = True
+        exercise.completiondate = timezone.now().date()
+        exercise.save()
+        
+        return render(request, "review_student.html", context)
+    return render(request, "review_student.html", context)
+
+
+
+def save_student_review(request, exercise_id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            try:
+                exercise_review = ExerciseReview.objects.get(idexercise_id=exercise_id)
+            except ExerciseReview.DoesNotExist:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'ExerciseReview с id {exercise_id} не найден'
+                })
+            review = ExerciseFragmentReview.objects.create(
+                idexercisereview=exercise_review,
+                review=data['review'],
+                startposition=data['startposition'],
+                endposition=data['endposition'],
+                # selected_text=data['selected_text']
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'fragment_id': review.idexercisetextreview
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def update_student_review(request, fragment_id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            
+            review = ExerciseFragmentReview.objects.get(pk=fragment_id)
+            review.review = data['review']
+            review.save()
+            
+            return JsonResponse({
+                'success': True,
+                'fragment_id': review.idexercisetextreview
+            })
+            
+        except ExerciseFragmentReview.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Рецензия не найдена'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+def delete_student_review(request, fragment_id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            review = ExerciseFragmentReview.objects.get(pk=fragment_id)
+            review.delete()
+            
+            return JsonResponse({
+                'success': True
+            })
+            
+        except ExerciseFragmentReview.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Рецензия не найдена'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def review_text_list(request):
@@ -729,4 +880,3 @@ def student_exercises(request):
 
 def grading_student(request):
     return render(request, "grading_student.html")
-
