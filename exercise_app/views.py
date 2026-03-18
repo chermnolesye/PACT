@@ -865,6 +865,13 @@ def student_grade_text(request, idexercise=2):
                 ).update(tokenordernumber=F('tokenordernumber') - 1)
 
         return JsonResponse({'success': True})
+    
+    if request.method == 'POST' and request.POST.get('action') == 'submit':
+        print("Мы в функции submit")
+        exercise.completiondate = timezone.now()
+        exercise.exercisestatus = 1
+        exercise.save()
+        return JsonResponse({'success': True})
 
     # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
     if request.method == "POST" and "mark-form" in request.POST:
@@ -883,6 +890,7 @@ def student_grade_text(request, idexercise=2):
     user = student.iduser
     group = student.idgroup
     text_type = text.idtexttype
+    unmarked_text = (text.text).replace("-EMPTY-","")
 
     context = {
         "mark_form": mark_form,
@@ -895,6 +903,7 @@ def student_grade_text(request, idexercise=2):
         "selected_markup": selected_markup,
         "poscheckflag": text.poscheckflag,
         "errorcheckflag": text.errorcheckflag,
+        "unmarked_text": unmarked_text,
     }
     return render(request, "student_grade_text.html", context)
 

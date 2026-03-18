@@ -51,6 +51,18 @@
             </span>
         </div>
         {% endif %}
+        <div class="menu-block" id="gray_border" data-target="mark-content" style="border-radius: 0 10px 10px 0;">
+            {% if exercise.exercisemark %}
+            <span>
+                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
+            </span>
+            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+            </svg>
+            {% else %}
+            Оценка:&nbsp;-
+            {% endif %}
+        </div>
         {% else %}
         {% if in_time %}
         <div class="menu-block" id="gray_border" data-target="date-content">
@@ -71,20 +83,8 @@
             </span>
         </div>
         {% endif %}
-        {% endif %}
-        {% if exercise.exercisemark %}
-        <div class="menu-block" id="gray_border" data-target="mark-content">
-            <span>
-                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
-            </span>
-            <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
-            </svg>
-        </div>
-        {% else %}
-        <div class="menu-block-watch" id="gray_border">Оценка:&nbsp;-</div>
-        {% endif %}
         <button class="rate-btn">Завершить</button>
+        {% endif %}
     </div>
 
     <div id="header-container"></div>
@@ -136,6 +136,14 @@
                     <span class="slider"></span>
                 </label>
             </div>
+
+            <div class="option-group">
+                <p>Исходный вид</p>
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -148,12 +156,14 @@
             <p>Дата сдачи:</p>
             <p class="p-dark"> {{ exercise.deadline }} </p>
         </div>
-        {% if exercise.exercisestatus %}
         <div class="menu-content-data">
             <p>Дата завершения:</p>
+            {% if exercise.exercisestatus %}
             <p class="p-dark"> {{ exercise.completiondate }} </p>
+            {% else %}
+            <p class="p-dark"> - </p>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 
     <div class="menu-content" id="mark-content">
@@ -171,51 +181,7 @@
         <h1 class="text-title">Название текста: {{ text.header }}</h1>
     </div>
 
-    <div class="modal-overlay" id="modal">
-        <div class="modal-content">
-            <div class="modal-head">
-                <p>Оценить текст</p>
-                <button class="close-modal">
-                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-                    </svg>
-                </button>
-            </div>
 
-            <form method="post" id="grade-form">
-                {% csrf_token %}
-                <div class="grade-form-selects" style="width:100%;">
-                    <div class="grade-group" style="width:90%;">
-                        <p class="mistakes">Количество верно найденных ошибок: 4</p>
-                        <p class="mistakes">Количество неверно найденных ошибок: 0</p>
-                        <p class="mistakes" style="margin-bottom:10px;">Количество пропущенных ошибок: 0</p>
-                        <label for="id_textgrade">Оценка:</label>
-                        <select name="textgrade" class="form-control" id="id_textgrade">
-                            <option value="1">1</option>
-                            <option value="2">2-</option>
-                            <option value="3">2</option>
-                            <option value="4">2+</option>
-                            <option value="5">3-</option>
-                            <option value="6">3</option>
-                            <option value="7">3+</option>
-                            <option value="8">4-</option>
-                            <option value="9">4</option>
-                            <option value="10">4+</option>
-                            <option value="11">5-</option>
-                            <option value="12" selected="">5</option>
-                        </select>
-                        <label for="id_firstname">Комментарий:</label>
-                        <input type="text" name="comment" maxlength="100" required="" id="id_comment">
-                    </div>
-                </div>
-
-                <div class="grade-buttons">
-                    <button type="submit" name="grade-form" class="button" onclick="addAnnotation()">Сохранить</button>
-                    <button type="submit" class="button grey-button">Назад</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div id="overlay"></div>
 
@@ -296,6 +262,21 @@
         </div>
     </div>
 
+    <div id="submitModal" class="modal modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3>Подтверждение завершения</h3>
+            </div>
+            <div class="modal-inner">
+                <p style="margin:15px">Вы уверены, что хотите завершить выполнение упражнения?</p>
+                <div class="modal-actions" style="justify-content:center; display:flex;">
+                    <button id="confirmSubmit" class="btn button btn-danger" onclick="submitExercise()">Завершить</button>
+                    <button id="cancelSubmit" class="btn button btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="watch-text">
         {% for sentence in sentence_data %}
         <div class="sentence">
@@ -358,6 +339,8 @@
         {% endfor %}
     </div>
 
+    <div class="unmarked_text" style="display:none;">{{unmarked_text}}</div>
+
     <script>
         const chosen = [];
         const chosen_ids = [];
@@ -367,10 +350,36 @@
             document.getElementById('overlay').style.display = "block";
         }
 
+        function submitExercise() {
+            const formData = new FormData();
+            formData.append('action', 'submit');
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '{% url 'student_exercises' %}';
+                    } else {
+                        alert("Ошибка: " + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error("AJAX error:", error);
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             const languageRadios = document.querySelectorAll('input[name="language"]');
             const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
             const errorsCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
+            const originalViewCheckbox = document.querySelector('.option-group:nth-child(4) input[type="checkbox"]');
             const tokens = document.querySelectorAll('.token');
 
             // Функция обновления отображения
@@ -378,6 +387,16 @@
                 const language = document.querySelector('input[name="language"]:checked').value;
                 const isCompact = compactViewCheckbox.checked;
                 const showErrors = errorsCheckbox.checked;
+                const isOriginal = originalViewCheckbox.checked;
+
+                if (isOriginal) {
+                    document.getElementsByClassName("watch-text")[0].style.display = "none";
+                    document.getElementsByClassName("unmarked_text")[0].style.display = "flex";
+                }
+                else {
+                    document.getElementsByClassName("watch-text")[0].style.display = "block";
+                    document.getElementsByClassName("unmarked_text")[0].style.display = "none";
+                }
 
                 tokens.forEach(token => {
                     token.querySelectorAll('.abbr, .error-tag, .word').forEach(el => {
@@ -410,7 +429,7 @@
                 radio.addEventListener('change', updateDisplay);
             });
 
-            [compactViewCheckbox, errorsCheckbox].forEach(checkbox => {
+            [compactViewCheckbox, errorsCheckbox, originalViewCheckbox].forEach(checkbox => {
                 checkbox.addEventListener('change', updateDisplay);
             });
 
@@ -422,6 +441,10 @@
 
             document.getElementById('cancelDelete').addEventListener('click', () => {
                 document.getElementById('deleteModal').style.display = 'none';
+            });
+
+            document.getElementById('cancelSubmit').addEventListener('click', () => {
+                document.getElementById('submitModal').style.display = 'none';
             });
 
             document.querySelectorAll('.sentence-number').forEach(number => {
@@ -1095,7 +1118,7 @@
                 document.querySelectorAll('.menu-content').forEach(c => {
                     c.style.display = 'none';
                 });
-                modal.style.display = 'flex';
+                document.getElementById('submitModal').style.display = 'flex';
             });
 
             closeModal.addEventListener('click', function () {
