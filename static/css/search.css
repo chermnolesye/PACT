@@ -304,6 +304,7 @@
     display: flex;
     max-width: 90%;
     gap: 20px;
+    align-items: flex-start;
 }
 
     .column_wrap #text_list {
