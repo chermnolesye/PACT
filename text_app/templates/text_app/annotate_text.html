@@ -133,6 +133,14 @@
             <p>Дата создания:</p>
             <p class="p-dark"> {{ create_date|default:"Нет данных" }} </p>
         </div>
+        <div class="menu-content-data">
+            <button type="button" id="run-pos-tagger" class="button" data-text-id="{{ text.idtext }}">
+                Обновить частеречную разметку
+            </button>            
+        </div>
+        <div class="menu-content-data">
+            <div id="pos-tagger-result" class="pos-tagger-result" style="display: none; margin-top: 15px;"></div>
+        </div>
     </div>
     <div class="menu-content" id="author-content">
 
@@ -503,15 +511,7 @@
         const chosen = [];
         const chosen_ids = [];
 
-        function open_overlay() {
-            const height = Math.max(
-                document.body.scrollHeight,
-                document.body.offsetHeight,
-                document.documentElement.clientHeight,
-                document.documentElement.scrollHeight,
-                document.documentElement.offsetHeight
-            );
-
+        function open_overlay(height) {
             document.getElementById('overlay').style.height = height + "px";
             document.getElementById('overlay').style.display = "block";
         }
@@ -819,8 +819,16 @@
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
                 document.getElementById('delete-annotation').style.display = "block";
 
-                open_overlay()
-                //windowElement.style.top = "100px";
+                const height = Math.max(
+                    document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight
+                );
+
+                open_overlay(height)
+                document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight/2) + "px";
                 //document.getElementById('annotation-form').style.left = (viewportWidth - elementWidth) / 2 + 'px';
                 //document.getElementById('annotation-form').style.top = (viewportHeight - elementHeight) / 2 + 'px';
                 // document.getElementById('selected-tag-name').innerHTML = tokenElement.dataset.errorTag;
@@ -950,7 +958,7 @@
             function saveAnnotation(errorId) {
                 console.log('saveAnnotation', errorId);
                 //location.reload();
-                document.getElementById('save-annotation').onclick = function () { };
+                // document.getElementById('save-annotation').onclick = function () { };
 
                 const form = document.getElementById('annotation-form');
 
@@ -1363,7 +1371,17 @@
 
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
-            open_overlay()
+
+            const height = Math.max(
+                document.body.scrollHeight,
+                document.body.offsetHeight,
+                document.documentElement.clientHeight,
+                document.documentElement.scrollHeight,
+                document.documentElement.offsetHeight
+            );
+
+            document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight / 2) + "px";
+            open_overlay(height)
             /*
                 const tags = [
                     { name: 'Tag1' },
@@ -1395,7 +1413,6 @@
         // Закрытие модального окна
         document.getElementById('close-modal').addEventListener('click', function () {
             document.getElementById('annotation-modal').style.display = 'none';
-            document.getElementById('annotation-modal').style.top = '50%';
             document.getElementById('annotation-modal').style.left = '50%';
             document.getElementById('overlay').style.display = "none";
             document.getElementById('delete-annotation').onclick = function () { };
@@ -1623,40 +1640,177 @@
             console.log(data);
         }
 
-
+        //перемещение окна аннотации
         const windowElement = document.getElementById("annotation-modal");
-        // Select the header element, which is the drag handle
         const headerElement = windowElement.getElementsByClassName("modal-head")[0];
-
-        // Variables to store initial positions and offsets
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-        // Add mousedown event listener to the header
-        headerElement.onmousedown = dragMouseDown;
+        const height = document.body.offsetHeight;
 
-        function dragMouseDown(e) {
+        headerElement.onmousedown = function (e) { dragMouseDown(e, height) };
+
+        function dragMouseDown(e, height) {
             e = e || window.event;
             e.preventDefault();
             pos3 = e.clientX;
             pos4 = e.clientY;
             document.onmouseup = closeDragElement;
-            document.onmousemove = elementDrag;
+
+            const rect = headerElement.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            border_bottom = window.innerHeight - windowElement.offsetHeight
+            border_right = window.innerWidth - windowElement.offsetWidth
+
+            document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) }; 
         }
 
-        function elementDrag(e) {
+        function elementDrag(e, x, y, border_bottom) {
             e = e || window.event;
             e.preventDefault();
             pos1 = pos3 - e.clientX;
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-            windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
-            windowElement.style.left = (windowElement.offsetLeft - pos1) + "px";
+
+            if (pos4 >= y + 10 && border_bottom - pos4 >= 10 - y) {
+                windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
+            }
+            if (pos3 >= x + 10 && border_right - pos3 >= 25 - x) {
+                windowElement.style.left = (windowElement.offsetLeft - pos1) + "px";
+            }
         }
 
         function closeDragElement() {
             document.onmouseup = null;
             document.onmousemove = null;
+        }
+
+
+        // Отправка AJAX-запроса для запуска POS-теггера
+        const runPosTaggerBtn = document.getElementById('run-pos-tagger');
+    
+        if (runPosTaggerBtn) {
+            runPosTaggerBtn.addEventListener('click', function() {
+                const textId = this.getAttribute('data-text-id');
+                runPosTagger(textId);
+            });
+        }
+
+        function runPosTagger(textId) {
+            const btn = document.getElementById('run-pos-tagger');
+            const resultDiv = document.getElementById('pos-tagger-result');
+
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">Отправка запроса...</div>';
+
+            btn.disabled = true;
+            btn.textContent = 'Выполняется...';
+            
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            
+            if (!csrftoken) {
+                resultDiv.innerHTML = '<div class="error-message">CSRF токен не найден</div>';
+                btn.disabled = false;
+                btn.textContent = 'Обновить частеречную разметку';
+                return;
+            }
+            
+            console.log('Отправка запроса для text_id:', textId);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'action': 'run_pos_tagger',
+                    'text_id': textId
+                })
+            })
+
+            .then(data => {
+                console.log('ДАННЫЕ ОТВЕТА:', data);
+                
+                // Проверяем успешность выполнения функции POS-теггера
+                if (data.result && data.result.success === true) {
+                    console.log('POS-теггер выполнен успешно');
+                    resultDiv.innerHTML = '<div class="success-message">Частеречныя разметка обновлена. Страница будет перезагружена...</div>';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    console.log('POS-теггер вернул ошибку');
+                    
+                    // Берем сообщение из result
+                    const errorMessage = data.result?.message || data.message || 'Неизвестная ошибка';
+                    const errorsList = data.result?.errors ? data.result.errors.join('<br>') : '';
+                    
+                    resultDiv.innerHTML = `
+                        <div class="error-message">
+                            <strong>Ошибка:</strong> ${errorMessage}<br>
+                            ${errorsList ? `<small>${errorsList}</small>` : ''}
+                            <br><br>
+                            <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
+                        </div>
+                    `;
+                    
+                    btn.disabled = false;
+                    btn.textContent = 'Обновить частеречную разметку';
+                }
+            })
+
+            // .then(response => {
+                
+
+            //     console.log('Статус ответа:', response.status);
+            //     console.log('Headers:', response.headers);
+                
+            //     // Проверяем content-type
+            //     const contentType = response.headers.get('content-type');
+            //     console.log('Content-Type:', contentType);
+                
+            //     if (!response.ok) {
+            //         throw new Error(`HTTP ошибка: ${response.status}`);
+            //     }
+
+
+            //     console.log('Статус ответа:', response.status);
+            //     if (!response.ok) {
+            //         throw new Error(`HTTP ошибка: ${response.status}`);
+            //     }
+            //     return response.json();
+            // })
+            // .then(data => {        
+            //     if (data.success === true) {
+            //         resultDiv.innerHTML = '<div class="success-message">POS-разметка выполнена успешно. Страница будет перезагружена...</div>';
+            //         setTimeout(() => {
+            //             // location.reload();
+            //         }, 2000);
+            //     } else {
+            //         const errorMessage = data.message || data.error || 'Неизвестная ошибка';
+            //         const errorsList = data.errors ? data.errors.join('<br>') : '';
+                    
+            //         resultDiv.innerHTML = `
+            //             <div class="error-message">
+            //                 <strong>✗ Ошибка:</strong> ${errorMessage}<br>
+            //                 ${errorsList ? `<small>${errorsList}</small>` : ''}
+            //                 <br><br>
+            //                 <em>Обновлено токенов: ${data.updated_tokens || 0}, пропущено: ${data.skipped_tokens || 0}</em>
+            //             </div>
+            //         `;
+                    
+            //         btn.disabled = false;
+            //         btn.textContent = 'Обновить частеречную разметку';
+            //     }
+            // })
+            // .catch(error => {
+            //     console.error('Ошибка:', error);
+            //     resultDiv.innerHTML = `<div class="error-message">Ошибка при отправке запроса: ${error.message}</div>`;
+            //     btn.disabled = false;
+            //     btn.textContent = 'Обновить частеречную разметку';
+            // });
         }
 
     </script>

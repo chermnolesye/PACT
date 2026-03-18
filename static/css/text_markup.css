@@ -627,6 +627,7 @@ label[for="id_iderrortag"] {
     padding: 10px 10px 0 10px;
     justify-content: center;
     overflow-y: auto;
+    width: 100%;
 }
 
 .annotation-modal-content label {
@@ -700,7 +701,7 @@ label[for="id_iderrortag"] {
     width:unset;
     height:unset;
     top: 50%;
-    left: 50%;
+    left: 50%; 
     transform:translate(-50%, -50%);
 }
 

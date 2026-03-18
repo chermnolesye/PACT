@@ -351,6 +351,16 @@ def annotate_text(request, text_id=2379):
             print("Form errors:", annotation_form.errors)
     else:
         annotation_form = AddErrorAnnotationForm()
+
+    # Обработка POST-запроса для запуска POS-теггера
+    if request.method == 'POST' and request.POST.get('action') == 'run_pos_tagger':
+        try:
+            result = annotate_text_pos(text_id)
+            print(f"POS-теггер успешно запущен для текста {text_id}. Результат: {result}")
+            return JsonResponse({'success': True, 'result': result})
+        except Exception as e:
+            print(f"Error running POS tagger: {str(e)}")
+            return JsonResponse({'success': False, 'error': str(e)})
         
     # Контекст
     unmarked_text = (text.text).replace("-EMPTY-","")
