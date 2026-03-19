@@ -887,3 +887,29 @@ def search_texts(request):
         "fio": get_teacher_fio(request),
     }
     return render(request, "search_texts.html", context)
+
+
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import sys
+import os
+
+@require_POST
+@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+def check_ai(request):
+    text_id = request.POST.get('text_id')
+    if not text_id:
+        return JsonResponse({'error': 'Не передан text_id'}, status=400)
+    
+    try:
+        from core_app.models import Text
+        text_obj = get_object_or_404(Text, idtext=text_id)
+        full_text = text_obj.text
+        
+        sys.path.insert(0, '/app')
+        from ai_detector import get_ai_detector
+        detector = get_ai_detector()
+        result = detector.analyze_text(full_text)
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

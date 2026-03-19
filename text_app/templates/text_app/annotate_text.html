@@ -53,6 +53,7 @@
                 </span>
             </div>
             <button class="rate-btn">Оценить</button>
+            <button class="ai-check-btn" id="ai-check-btn" onclick="checkAI()">Проверить на ИИ</button>
         </div>
 
         <div id="header-container"></div>
@@ -279,6 +280,24 @@
                 <p class="p-dark"> {{ self_assesment }} </p>
             </div>
         </div>
+
+        <!-- Модальное окно для оценки ИИ -->
+        <div id="ai-result-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content" style="max-width:400px;">
+                <div class="modal-head">
+                    <p>Результат проверки на ИИ</p>
+                    <button onclick="document.getElementById('ai-result-modal').style.display='none'" class="close-modal">
+                        <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div style="padding:20px;" id="ai-result-content">
+                    <p>Загрузка...</p>
+                </div>
+            </div>
+        </div>
+
 
 
         <!-- Модальное окно для оценки текста -->
@@ -1518,6 +1537,52 @@
                 errorcheckflag: document.getElementById('id_errorcheckflag').value
             };
             console.log(data);
+        }
+
+
+        // Отправляет текст на сервер и отображает результат проверки на ИИ в модальном окне
+        function checkAI() {
+            const textId = "{{ text.idtext }}";
+            const modal = document.getElementById('ai-result-modal');
+            const content = document.getElementById('ai-result-content');
+            
+            modal.style.display = 'flex';
+            content.innerHTML = '<p>Анализируем текст...</p>';
+            
+            const formData = new FormData();
+            formData.append('text_id', textId);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            fetch('/text/check_ai/', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    content.innerHTML = `<p>Ошибка: ${data.error}</p>`;
+                    return;
+                }
+                const isAI = data.is_ai;
+                const confidence = isAI 
+                    ? (data.confidence * 100).toFixed(1)
+                    : (100 - data.confidence * 100).toFixed(1);
+                const label = isAI ? 'Текст написан ИИ' : 'Текст написан человеком';
+
+                content.innerHTML = `
+                    <p style="font-size:22px; text-align:center; margin-bottom:16px;">${label}</p>
+                    <p style="text-align:center; font-size:18px; margin-bottom:20px;">
+                        Точность: <strong>${confidence}%</strong>
+                    </p>
+                    <p style="font-size:11px; color:#888; text-align:center; border-top:1px solid #eee; padding-top:12px; line-height:1.5;">
+                        Результат носит ориентировочный характер и не является окончательным заключением. 
+                        Система анализирует статистические признаки текста и может допускать ошибки.
+                    </p>
+                `;
+            })
+            .catch(e => {
+                content.innerHTML = `<p>Ошибка запроса: ${e}</p>`;
+            });
         }
         </script>
 {% endblock %}
