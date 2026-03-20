@@ -1,11 +1,12 @@
 from django import forms
-from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, Reason, 
+from core_app.models import (AcademicYear, Error, ErrorTag, ErrorLevel, ExerciseError, Reason, 
                              Student, User, Group, Exercise, ExerciseGrading, ExerciseReview, 
                              Text, ExerciseText, ExerciseType, ExerciseTextType, ExerciseTextTask,
                              ExerciseFragmentReview
                             )
 import datetime
 from django.forms import formset_factory
+from django.core.exceptions import ValidationError
 
 class AddExerciseTextForm(forms.Form):
     # loaddate = forms.DateField(
@@ -159,17 +160,18 @@ class AddExerciseForm(forms.Form):
         queryset=ExerciseType.objects.filter(
             exerciseabbr__in=['grading', 'review']
         ),
+        to_field_name='exercisecode',
         label='Тип упражнения',
         widget=forms.RadioSelect
     )
     
     year = forms.ModelChoiceField(
-        queryset=AcademicYear.objects.all(),
+        queryset=AcademicYear.objects.all().order_by('-idayear'),
         label='Учебный год',
         required=True
     ) 
     group = forms.ModelChoiceField(
-        queryset=Group.objects.none(),
+        queryset=Group.objects.none().order_by('-idayear', 'groupname'),
         label='Группа',
         required=True
     )   
@@ -214,7 +216,11 @@ class AddExerciseForm(forms.Form):
     )
     
     def __init__(self, *args, **kwargs):
+        preselected_student = kwargs.pop('preselected_student', None)
         super().__init__(*args, **kwargs)
+
+        self.fields['idstudent'].label_from_instance = lambda obj: obj.get_full_name()
+
         if self.data:
             # Для студентов
             if 'year' in self.data:
@@ -248,11 +254,31 @@ class AddExerciseForm(forms.Form):
                         self.fields['grading_text'].queryset = Text.objects.filter(idtext=text_id)
                 except (ValueError, TypeError):
                     self.fields['grading_text'].queryset = Text.objects.none()
-                
+
+        elif preselected_student:
+            student_group = preselected_student.idgroup
+            student_year = student_group.idayear if student_group else None
+
+            if student_year:
+                self.fields['group'].queryset = Group.objects.filter(idayear=student_year)
+                self.initial['year'] = student_year
+
+            if student_group:
+                self.fields['idstudent'].queryset = Student.objects.filter(idgroup=student_group)
+                self.initial['group'] = student_group
+
+            self.initial['idstudent'] = preselected_student
+                    
         
     def clean(self):
         cleaned_data = super().clean()
         exercise_type = cleaned_data.get('idexercisetype')
+        start_date = cleaned_data.get("creationdate")
+        end_date = cleaned_data.get("deadline")
+
+        if start_date and end_date and end_date < start_date:
+            # Ошибка привяжется к конкретному полю end_date
+            self.add_error('deadline', "Дата окончания не может быть раньше даты начала.")        
         
         if exercise_type:
             exercise_abbr = exercise_type.exerciseabbr
@@ -268,8 +294,8 @@ class AddExerciseForm(forms.Form):
                 else:
                     if not grading_text.textgrade:
                         self.add_error('grading_text', 'Выбранный текст не имеет оценки')
-                    if selected_student and grading_text.idstudent == selected_student:
-                        self.add_error('grading_text', 'Нельзя выбрать текст того же студента, для которого создается упражнение')
+                    #if selected_student and grading_text.idstudent == selected_student:
+                    #    self.add_error('grading_text', 'Нельзя выбрать текст того же студента, для которого создается упражнение')
             
             elif exercise_abbr == 'review':
                 review_text_id = cleaned_data.get('review_text_id')
@@ -363,7 +389,7 @@ class AddErrorAnnotationForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Error
+        model = ExerciseError
         fields = ['iderrortag', 'idreason', 'iderrorlevel', 'comment', 'correct']
 
     def __init__(self, *args, **kwargs):
@@ -432,4 +458,21 @@ class TeacherCommentForm(forms.ModelForm):
         }
         labels = {
             'teachercomment': 'Комментарий'
+        }
+
+class StudentReviewForm(forms.ModelForm):
+    class Meta:
+        model = ExerciseFragmentReview
+        fields = ['review', 'startposition', 'endposition']
+        widgets = {
+            'review': forms.Textarea(attrs={
+                'class': 'form-control review-textarea',
+                'rows': 4,
+                'placeholder': 'Введите рецензию'
+            }),
+            'startposition': forms.HiddenInput(),
+            'endposition': forms.HiddenInput(),
+        }
+        labels = {
+            'review': 'Рецензия к фрагменту'
         }

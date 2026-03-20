@@ -43,6 +43,12 @@
                     {{ form.deadline }}
                 </div>
 
+                {% if form.deadline.errors %}
+                    <div class="error-message" style="color: red;">
+                        {{ form.deadline.errors }}
+                    </div>
+                {% endif %}
+
                 <div class="grouping-wrapper">
                     <label>Тип упражнения:</label>
                     <div class="grouping-options">
@@ -130,7 +136,7 @@
 
                             <div class="card-header">
                                 <label id="text-grading-label" style="width:100%; margin-top:10px; display:none;">
-                                    Показаны только тексты с оценкой. Тексты выбранного студента исключены.
+                                    Показаны только тексты с оценкой.
                                 </label>
                             </div>
                             <div class="card-body">
@@ -201,7 +207,7 @@
             <div class="chosen_params">
                 <p>Данные упражнения:</p>
                 <uL>
-                    <li id="exercise_type_id" style="display:none;"></li>
+                    <li id="exercise_type_code" style="display:none;"></li>
                     <li>ФИО: <span class="chosen_fio"></span></li>
                     <li>Группа: <span class="chosen_group"></span> (<span class="chosen_year"></span>)</li>
                     <li>Тип упражнения: <span class="exercise_type"></span></li>
@@ -260,6 +266,26 @@
         const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
         const gradingFields = document.getElementById('grading-fields');
         const reviewFields = document.getElementById('review-fields');
+
+        function fillChosenFieldsFromCurrentValues() {
+            const chosenYearEl = document.querySelector(".chosen_year");
+            const chosenGroupEl = document.querySelector(".chosen_group");
+            const chosenFioEl = document.querySelector(".chosen_fio");
+
+            if (yearSelect && yearSelect.selectedIndex > -1 && yearSelect.value) {
+                chosenYearEl.innerHTML = yearSelect.options[yearSelect.selectedIndex].text;
+            }
+
+            if (groupSelect && groupSelect.selectedIndex > -1 && groupSelect.value) {
+                chosenGroupEl.innerHTML = groupSelect.options[groupSelect.selectedIndex].text;
+            }
+
+            if (studentSelect && studentSelect.selectedIndex > -1 && studentSelect.value) {
+                chosenFioEl.innerHTML = studentSelect.options[studentSelect.selectedIndex].text;
+            }
+        }
+
+        fillChosenFieldsFromCurrentValues();
 
         // Скрытые поля для review
         const reviewTextIdInput = document.getElementById('id_review_text_id');
@@ -346,9 +372,9 @@
         exerciseTypeRadios.forEach(radio => {
             radio.addEventListener('change', function () {
                 const exercise_type = document.querySelector(".exercise_type")
-                const exercise_type_id = document.getElementById("exercise_type_id")
+                const exercise_type_code = document.getElementById("exercise_type_code")
                 exercise_type.innerHTML = this.parentElement.querySelector("label").innerHTML
-                exercise_type_id.innerHTML = this.value
+                exercise_type_code.innerHTML = this.value
             });
         });
 
@@ -782,27 +808,29 @@
         });
 
         document.getElementById("btn_next").addEventListener("click", function () {
-            if (window.innerWidth < 750) {
-                document.getElementById("arrows").style.display = "flex"
-                document.getElementById("arrows").style.gap = "10px"
-                document.getElementById("arrow_add").setAttribute('transform', 'rotate(90, 50, 50)');
-                document.getElementById("arrow_remove").setAttribute('transform', 'rotate(90, 50, 50)');
-            }
-            else {
-                document.getElementById("arrows").style.display = "block"
-                document.getElementById("arrows").style.gap = "0px"
-            }
+            
             const chosen_year_el = document.querySelector(".chosen_year")
             const chosen_group_el = document.querySelector(".chosen_group")
             const chosen_fio_el = document.querySelector(".chosen_fio")
             const chosen_date_s = document.querySelector(".chosen_date_s")
             const chosen_date_f = document.querySelector(".chosen_date_f")
-            const exercise_type_id = document.getElementById("exercise_type_id")
+            const exercise_type_code = document.getElementById("exercise_type_code")
             if (!chosen_year_el.innerHTML || !chosen_group_el.innerHTML || !chosen_fio_el.innerHTML
-                || !chosen_date_s.innerHTML || !chosen_date_f.innerHTML || !exercise_type_id.innerHTML) {
+                || !chosen_date_s.innerHTML || !chosen_date_f.innerHTML || !exercise_type_code.innerHTML) {
                 document.getElementById("errMsg").style.display = "block";
             }
             else {
+                if (window.innerWidth < 750) {
+                    document.getElementById("arrows").style.display = "flex"
+                    document.getElementById("arrows").style.gap = "10px"
+                    document.getElementById("arrow_add").setAttribute('transform', 'rotate(90, 50, 50)');
+                    document.getElementById("arrow_remove").setAttribute('transform', 'rotate(90, 50, 50)');
+                }
+                else {
+                    document.getElementById("arrows").style.display = "block"
+                    document.getElementById("arrows").style.gap = "0px"
+                }
+
                 const gradingFields = document.getElementById('grading-fields');
                 const reviewFields = document.getElementById('review-fields');
                 const exerciseTypeRadios = document.querySelectorAll('input[name="idexercisetype"]');
@@ -816,14 +844,14 @@
                 document.getElementById('chosen_group').style.display = 'block';
                 document.querySelector('.wrapChosen').style.width = '90%';
 
-                if (exercise_type_id.innerHTML === '1') {  // код для grading
+                if (exercise_type_code.innerHTML === '1') {  // код для grading
                     gradingFields.style.display = 'block';
                     document.querySelector('.selected-info-g').style.display = 'block';
-                    loadGradingTexts();
-                } else if (exercise_type_id.innerHTML === '2') {  // код для review
+                    document.getElementById("errMsgFilters").style.display = 'block';
+                    //loadGradingTexts();
+                } else if (exercise_type_code.innerHTML === '2') {  // код для review
                     document.querySelector('.selected-info-r').style.display = 'block';
                     reviewFields.style.display = 'block';
-
                     loadTexts();
                 }
                 document.getElementById("exerciseForm").style.maxWidth = "750px"
