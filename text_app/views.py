@@ -229,7 +229,6 @@ def annotate_text(request, text_id=2379):
             url = reverse('annotate_text')
             params = f"?text_id={text.idtext}&markup={selected_markup}"
             return redirect(url + params)
-
     else:
         grade_form = AddTextAnnotationForm(instance=text)
 
