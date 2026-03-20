@@ -2,58 +2,12 @@
 
 {% load static %}
 
-{% block title %}Аннотирование{% endblock %}
+{% block title %}Аннотирование {% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
     {% endblock %}
 
-{% block content %}   
-    <div class="text-app-container">
-        <div class="menu-container">
-            <!-- Блоки меню -->
-            <div class="menu-block" data-target="view-content">
-                <span>
-                    Вид
-                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-            </div>
-            <div class="menu-block" data-target="text-content">
-                <span>
-                    Текст
-                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-            </div>
-            <div class="menu-block" data-target="author-content">
-                <span>
-                    Автор
-                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-            </div>
-            <div class="menu-block" data-target="grade-content">
-                <span>
-                    Оценка
-                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-            </div>
-            <div class="menu-block" data-target="metadata-content">
-                <span>
-                    Метаданные
-                    <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#0d6efd" stroke-width="3" stroke-linecap="round" />
-                    </svg>
-                </span>
-            </div>
-            <button class="rate-btn">Оценить</button>
-            <button class="ai-check-btn" id="ai-check-btn" onclick="checkAI()">Проверить на ИИ</button>
 {% block content %}
 <div class="text-app-container">
     <div class="menu-container">
@@ -98,6 +52,8 @@
                 </svg>
             </span>
         </div>
+
+        <button class="ai-check-btn menu-block" id="ai-check-btn" onclick="checkAI()">Проверить на ИИ</button>
         <button class="rate-btn">Оценить</button>
     </div>
 
@@ -182,7 +138,7 @@
         <div class="menu-content-data">
             <button type="button" id="run-pos-tagger" class="button" data-text-id="{{ text.idtext }}">
                 Обновить частеречную разметку
-            </button>            
+            </button>
         </div>
         <div class="menu-content-data">
             <div id="pos-tagger-result" class="pos-tagger-result" style="display: none; margin-top: 15px;"></div>
@@ -250,9 +206,9 @@
                 <div class="menu-content-data">
                     <p>Статус:</p>
                     {% if aisuspectedflag %}
-                        <p class="p-red">Есть подозрение на ИИ</p>
+                    <p class="p-red">Есть подозрение на ИИ</p>
                     {% else %}
-                        <p class="p-green">Нет подозрений</p>
+                    <p class="p-green">Нет подозрений</p>
                     {% endif %}
                 </div>
             </div>
@@ -365,22 +321,22 @@
                 </button>
             </div>
 
-        <!-- Модальное окно для оценки ИИ -->
-        <div id="ai-result-modal" class="modal-overlay" style="display:none;">
-            <div class="modal-content" style="max-width:400px;">
-                <div class="modal-head">
-                    <p>Результат проверки на ИИ</p>
-                    <button onclick="document.getElementById('ai-result-modal').style.display='none'" class="close-modal">
-                        <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                        </svg>
-                    </button>
-                </div>
-                <div style="padding:20px;" id="ai-result-content">
-                    <p>Загрузка...</p>
+            <!-- Модальное окно для оценки ИИ -->
+            <div id="ai-result-modal" class="modal-overlay" style="display:none;">
+                <div class="modal-content" style="max-width:400px;">
+                    <div class="modal-head">
+                        <p>Результат проверки на ИИ</p>
+                        <button onclick="document.getElementById('ai-result-modal').style.display='none'" class="close-modal">
+                            <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div style="padding:20px;" id="ai-result-content">
+                        <p>Загрузка...</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
 
             <form method="post" id="grade-form">
@@ -1026,12 +982,12 @@
 
                 const form = document.getElementById('annotation-form');
 
-                // Этот кусок скрипта на валидацию формы, 
+                // Этот кусок скрипта на валидацию формы,
                 // чтоб незаполненные обязательные поля подсвечивались,
                 // т. к. тип кнопки Сохранить не submit, a button
                 // ПРОВЕРЯЕМ ВАЛИДНОСТЬ (атрибуты required)
                  const tagSelect = document.getElementById('id_iderrortag');
-                const selectedTagName = document.getElementById('selected-tag-name');                
+                const selectedTagName = document.getElementById('selected-tag-name');
                 // ДО ПРОВЕРКИ вытаскиваем ID из кастомного элемента
                 const tagId = selectedTagName.getAttribute('tag_id');
                 // Если тег выбран, записываем его в скрытый селектор
@@ -1601,7 +1557,7 @@
         function addErrorAnnotation() {
             console.log('addErrorAnnotation');
 
-            // Этот кусок скрипта на валидацию формы, 
+            // Этот кусок скрипта на валидацию формы,
             // чтоб незаполненные обязательные поля подсвечивались,
             // т. к. тип кнопки Сохранить не submit, a button
             const form = document.getElementById('annotation-form');
@@ -1710,14 +1666,14 @@
             const textId = "{{ text.idtext }}";
             const modal = document.getElementById('ai-result-modal');
             const content = document.getElementById('ai-result-content');
-            
+
             modal.style.display = 'flex';
             content.innerHTML = '<p>Анализируем текст...</p>';
-            
+
             const formData = new FormData();
             formData.append('text_id', textId);
             formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-            
+
             fetch('/text/check_ai/', {
                 method: 'POST',
                 body: formData,
@@ -1729,7 +1685,7 @@
                     return;
                 }
                 const isAI = data.is_ai;
-                const confidence = isAI 
+                const confidence = isAI
                     ? (data.confidence * 100).toFixed(1)
                     : (100 - data.confidence * 100).toFixed(1);
                 const label = isAI ? 'Текст написан ИИ' : 'Текст написан человеком';
@@ -1740,7 +1696,7 @@
                         Точность: <strong>${confidence}%</strong>
                     </p>
                     <p style="font-size:11px; color:#888; text-align:center; border-top:1px solid #eee; padding-top:12px; line-height:1.5;">
-                        Результат носит ориентировочный характер и не является окончательным заключением. 
+                        Результат носит ориентировочный характер и не является окончательным заключением.
                         Система анализирует статистические признаки текста и может допускать ошибки.
                     </p>
                 `;
@@ -1749,8 +1705,6 @@
                 content.innerHTML = `<p>Ошибка запроса: ${e}</p>`;
             });
         }
-        </script>
-{% endblock %}
         //перемещение окна аннотации
         const windowElement = document.getElementById("annotation-modal");
         const headerElement = windowElement.getElementsByClassName("modal-head")[0];
@@ -1773,7 +1727,7 @@
             border_bottom = window.innerHeight - windowElement.offsetHeight
             border_right = window.innerWidth - windowElement.offsetWidth
 
-            document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) }; 
+            document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) };
         }
 
         function elementDrag(e, x, y, border_bottom) {
@@ -1800,7 +1754,7 @@
 
         // Отправка AJAX-запроса для запуска POS-теггера
         const runPosTaggerBtn = document.getElementById('run-pos-tagger');
-    
+
         if (runPosTaggerBtn) {
             runPosTaggerBtn.addEventListener('click', function() {
                 const textId = this.getAttribute('data-text-id');
@@ -1817,18 +1771,18 @@
 
             btn.disabled = true;
             btn.textContent = 'Выполняется...';
-            
+
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-            
+
             if (!csrftoken) {
                 resultDiv.innerHTML = '<div class="error-message">CSRF токен не найден</div>';
                 btn.disabled = false;
                 btn.textContent = 'Обновить частеречную разметку';
                 return;
             }
-            
+
             console.log('Отправка запроса для text_id:', textId);
-            
+
             fetch(window.location.href, {
                 method: 'POST',
                 headers: {
@@ -1843,7 +1797,7 @@
 
             .then(data => {
                 console.log('ДАННЫЕ ОТВЕТА:', data);
-                
+
                 // Проверяем успешность выполнения функции POS-теггера
                 if (data.result && data.result.success === true) {
                     console.log('POS-теггер выполнен успешно');
@@ -1853,11 +1807,11 @@
                     }, 2000);
                 } else {
                     console.log('POS-теггер вернул ошибку');
-                    
+
                     // Берем сообщение из result
                     const errorMessage = data.result?.message || data.message || 'Неизвестная ошибка';
                     const errorsList = data.result?.errors ? data.result.errors.join('<br>') : '';
-                    
+
                     resultDiv.innerHTML = `
                         <div class="error-message">
                             <strong>Ошибка:</strong> ${errorMessage}<br>
@@ -1866,22 +1820,22 @@
                             <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
                         </div>
                     `;
-                    
+
                     btn.disabled = false;
                     btn.textContent = 'Обновить частеречную разметку';
                 }
             })
 
             // .then(response => {
-                
+
 
             //     console.log('Статус ответа:', response.status);
             //     console.log('Headers:', response.headers);
-                
+
             //     // Проверяем content-type
             //     const contentType = response.headers.get('content-type');
             //     console.log('Content-Type:', contentType);
-                
+
             //     if (!response.ok) {
             //         throw new Error(`HTTP ошибка: ${response.status}`);
             //     }
@@ -1893,7 +1847,7 @@
             //     }
             //     return response.json();
             // })
-            // .then(data => {        
+            // .then(data => {
             //     if (data.success === true) {
             //         resultDiv.innerHTML = '<div class="success-message">POS-разметка выполнена успешно. Страница будет перезагружена...</div>';
             //         setTimeout(() => {
@@ -1902,7 +1856,7 @@
             //     } else {
             //         const errorMessage = data.message || data.error || 'Неизвестная ошибка';
             //         const errorsList = data.errors ? data.errors.join('<br>') : '';
-                    
+
             //         resultDiv.innerHTML = `
             //             <div class="error-message">
             //                 <strong>✗ Ошибка:</strong> ${errorMessage}<br>
@@ -1911,7 +1865,7 @@
             //                 <em>Обновлено токенов: ${data.updated_tokens || 0}, пропущено: ${data.skipped_tokens || 0}</em>
             //             </div>
             //         `;
-                    
+
             //         btn.disabled = false;
             //         btn.textContent = 'Обновить частеречную разметку';
             //     }
