@@ -525,6 +525,7 @@ input:checked + .slider:before {
     background-color:rgb(255, 255, 255);
     text-align: center;
     box-shadow: 0 -0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    z-index: 100;
 }
 
 .button-menu-select {
@@ -627,6 +628,7 @@ label[for="id_iderrortag"] {
     padding: 10px 10px 0 10px;
     justify-content: center;
     overflow-y: auto;
+    width: 100%;
 }
 
 .annotation-modal-content label {
@@ -688,6 +690,43 @@ label[for="id_iderrortag"] {
 
 .mistakes {
     color: black;
+}
+
+.sentence-number{
+    cursor:default;
+}
+
+#annotation-modal {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0) !important;
+    width:unset;
+    height:unset;
+    top: 50%;
+    left: 50%; 
+    transform:translate(-50%, -50%);
+}
+
+#overlay {
+    display: none;
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.5);
+    top: 0px;
+    opacity: 0.5;
+    height: 600px;
+    overflow: hidden;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    z-index: 900;
+}
+
+.unmarked_text {
+    text-align: justify;
+    white-space: normal;
+    line-height: 1.5;
+    flex: 1;
+    padding: 10px;
+    white-space: pre-line;
 }
 
 @media (max-width: 660px) {

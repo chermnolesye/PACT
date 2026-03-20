@@ -54,6 +54,17 @@
     cursor: pointer;
 }
 
+.filter {
+    background-color: transparent;
+    border-left: 1px solid #ccc;
+    padding: 10px 15px;
+    border: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .grouping-wrapper {
     display: flex;
     align-items: flex-start;
@@ -115,6 +126,7 @@
     gap: 10px;
     padding: 15px;
     background-color: white;
+    align-items: center;
 }
 
     .header-card div, .exercise-card span, .exercise-card button {
@@ -127,6 +139,17 @@
         background: none;
         border: none;
     }
+
+.exercises-texts .exercise-card .text_name,
+.exercises-texts .exercise-card .author,
+.exercises-texts .exercise-card .text_type,
+.exercises-texts .exercise-card .out_date {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    line-height: normal;
+}
 
 .edit_delete_card {
     display: none;
@@ -238,7 +261,7 @@
     margin-right: 5px;
 }
 
-.exercise-card .full_name, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
+.exercise-card .full_name, .exercise-card .title, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
 .exercise-card .deadline, .exercise-card .completion_date, .exercise-card .mark {
     text-align: left;
 }
@@ -400,6 +423,17 @@
 .filters_tags {
     display: flex;
     flex-wrap: wrap;
+}
+
+.review-texts-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#review-texts-filters {
+    max-width: 600px;
+    display: none;
 }
 
 #selected-info-grading-body, #selected-grading-text-info {

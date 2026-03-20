@@ -127,7 +127,7 @@
             </div>
 
             <button type="submit" class="button">Найти</button>
-            <a href="{% url 'teacher_exercises' %}">Сбросить</a>
+            <a href="{% url 'student_exercises' %}">Сбросить</a>
         </form>
     </div>
 
@@ -141,6 +141,11 @@
             <div class="deadline">Дата сдачи</div>
             <div class="completion_date">Дата завершения</div>
             <div class="mark">Оценка</div> -->
+
+           <div class="full_name">
+                Название 
+                <button class="sort-btn" data-sort="full_name" data-type="text">&#8595;&#8593;</button>                
+            </div>
 
            <div class="full_name">
                 ФИО 
@@ -186,14 +191,17 @@
                 {% endif %}
              {% endif %}
              ">
-            <span class="full_name">
+            <span class="title">
                 {% if exercise.exercise_data.exercisestatus %}
-                    {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
-                    <a href="{% url 'grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
-                    {% else %}
-                    <a href="{% url 'review_teacher' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_data.idstudent.iduser.get_full_name }}</a>
-                    {% endif %}
-                {% else %}{{ exercise.exercise_data.idstudent.iduser.get_full_name }}{% endif %}
+                {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}
+                <a href="{% url 'grade_text' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_name }}</a>
+                {% else %}
+                <a href="{% url 'review_teacher' %}{{exercise.exercise_data.idexercise}}">{{ exercise.exercise_name }}</a>
+                {% endif %}
+                {% else %}{{ exercise.exercise_name }}{% endif %}
+            </span>
+            <span class="full_name">
+                {{ exercise.exercise_data.idstudent.iduser.get_full_name }}
             </span>
             <span class="group">{{ exercise.exercise_data.idstudent.idgroup }}</span>
             {% if exercise.exercise_data.idexercisetype.exerciseabbr == "grading" %}

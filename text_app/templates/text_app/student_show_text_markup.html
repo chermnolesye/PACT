@@ -1,18 +1,18 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Разметка текста</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+{% extends "student_base.html" %}
+
+{% load static %}
+
+{% block title %}Аннотирование{% endblock %}
+
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'css/text_markup.css' %}" />
-</head>
-<body>
+    {% endblock %}
+
+{% block content %}  
     <!--<div id="header-container"></div>-->
     <!-- Всплывающее окно с информацией об ошибке -->
     <div class="error-popup" id="error-popup">
-        <span class="close-btn" id="close-popup">&#x2715;</span>
+        <!-- <span class="close-btn" id="close-popup">&#x2715;</span> -->
         <h3>
             <span id="error-tag"></span>
             <span id="error-tag-abbrev"></span>
@@ -78,9 +78,9 @@
                         <p>Язык разметки</p>
                         <div class="radio-group">
                             <label class="radio-option">
-                                <input type="radio" name="language" value="deutsche" checked>
+                                <input type="radio" name="language" value="{{ pact_language_name }}" checked>
                                 <span class="radio-custom"></span>
-                                <span>Deutsche</span>
+                                <span>{{ pact_language_name }}</span>
                             </label>
                             <label class="radio-option">
                                 <input type="radio" name="language" value="russian">
@@ -183,6 +183,15 @@
                         <div class="menu-content-data">
                             <p>Проверяющий:</p>
                             <p class="p-dark">  {{usererrorcheck}} </p>
+                        </div>
+                        <p>Проверка на ИИ</p>
+                        <div class="menu-content-data">
+                            <p>Статус:</p>
+                            {% if aisuspectedflag %}
+                                <p class="p-red">Есть подозрение на ИИ</p>
+                            {% else %}
+                                <p class="p-green">Нет подозрений</p>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -435,7 +444,6 @@
     
             // Функция для отображения всплывающего окна с информацией об ошибке
             function showPopup(tokenElement) {
-
                 const errorTag = tokenElement.dataset.errorTag;
                 const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
                 const errorLevel = tokenElement.dataset.errorLevel;
@@ -482,19 +490,22 @@
 
 
             // Закрытие окна с анимацией
-            closePopupBtn.addEventListener('click', function() {
-                const popup = document.getElementById('error-popup');
-                popup.classList.remove('show'); // Убираем класс для анимации исчезновения
-                setTimeout(() => {
-                    popup.style.display = 'none'; // Скрываем окно после анимации
-                }, 300); // Задержка, соответствующая длительности перехода
-            });
-    
-            // Слушаем клик по токенам
-            document.querySelectorAll('.error-tag').forEach(function(errorTagElement) {
-                errorTagElement.addEventListener('click', function(e) {
+            document.querySelectorAll('.error-tag').forEach(function (errorTagElement) {
+                errorTagElement.addEventListener('mouseover', function (e) {
                     e.stopPropagation(); // Чтобы не всплывало до .token
-                    showPopup(this);     
+                    showPopup(this);
+                });
+                errorTagElement.addEventListener('click', function (e) {
+
+                    document.getElementById('annotation-modal').style.display = 'flex';
+                    EditAnnotationForm(this);
+                });
+                errorTagElement.addEventListener('mouseleave', function (e) {
+                    const popup = document.getElementById('error-popup');
+                    popup.classList.remove('show'); // Убираем класс для анимации исчезновения
+                    setTimeout(() => {
+                        popup.style.display = 'none'; // Скрываем окно после анимации
+                    }, 300); // Задержка, соответствующая длительности перехода
                 });
             });
         });
@@ -578,6 +589,4 @@
            
             });
     </script>
-
-</body>
-</html>
+{% endblock %}

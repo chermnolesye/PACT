@@ -8,15 +8,16 @@ from django.utils.translation import gettext_lazy as _
 
 class TeacherLoadTextForm(forms.ModelForm):
     group = forms.ModelChoiceField(
-        queryset=Group.objects.all(),
+        queryset=Group.objects.all().order_by('-idayear', 'groupname'),
         label="Группа"
     )
     student = forms.ModelChoiceField(
         queryset=Student.objects.none(),
         label="Студент"
     )
+    
     createdate = forms.DateField(
-        initial=date.today(),
+        initial=date.today().isoformat(),
         widget=forms.DateInput(
             attrs={'type': 'date', 'class': 'form-control'}
         ),
@@ -135,25 +136,28 @@ class AddErrorAnnotationForm(forms.ModelForm):
     iderrortag = forms.ModelChoiceField(
         queryset=ErrorTag.objects.all(),
         label="Выберите тег",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
 
     idreason = forms.ModelChoiceField(
         queryset=Reason.objects.all(),
         label="Причина ошибки",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
 
     iderrorlevel = forms.ModelChoiceField(
         queryset=ErrorLevel.objects.all(),
         label="Степень грубости",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=True
     )
 
     correct = forms.CharField(
         label="Исправление",
         widget=forms.TextInput(attrs={'class': 'form-control'}),
-        required=False
+        required=True
     )
 
     comment = forms.CharField(
@@ -181,3 +185,50 @@ class AddErrorAnnotationForm(forms.ModelForm):
             'selected_tag': selected_tag.tagtext if selected_tag else '',
             'creator': creator_name
         }
+
+# ___ формы для кабинета студента
+
+class StudentLoadTextForm(forms.ModelForm):
+    createdate = forms.DateField(
+        initial=(date.today()).isoformat(),
+        widget=forms.DateInput(
+            attrs={'type': 'date', 'class': 'form-control'},
+        ),
+        label="Дата создания"
+    )
+
+    selfrating = forms.TypedChoiceField(
+        choices=Text.TASK_RATES,
+        coerce=int,
+        label="Самооценка",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    selfassesment = forms.TypedChoiceField(
+        choices=Text.RATES,
+        coerce=int,
+        label="Оценка",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = Text
+        fields = [
+            'header',
+            'text',
+            'createdate',
+            'idtexttype',
+            'idemotion',
+            'idwriteplace',
+            'idwritetool',
+            'educationlevel',
+            'selfrating',      
+            'selfassesment',   
+        ]
+
+    def __init__(self, *args, **kwargs):
+        self.student = kwargs.pop('student', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.student and self.student.idgroup:
+            self.initial['educationlevel'] = self.student.idgroup.studycourse
+            self.fields['educationlevel'].widget.attrs['readonly'] = True

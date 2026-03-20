@@ -17,7 +17,7 @@
 }
 
 .selection:hover, .selection.active {
-    background-color: var(--e-purple);
+    background-color: var(--e-blue);
 }
 
 .add-annotation-tooltip {
@@ -150,13 +150,35 @@
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
+    /* right: 0; */
     padding: var(--primary-padding);
     background-color: white;
     border: 1px solid var(--grey-color);
     border-bottom-left-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
     z-index: 1000;
+
+    right: auto;
+    min-width: 100%;
+    width: max-content;
+    max-width: 300px;
+    overflow-y: auto;
+}
+
+#student-mark-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--primary-padding);
+}
+
+.review-message {
+    text-align: justify;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box; /* Чтобы padding не раздувал блок */
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
 }
 
 .review-menu-block-dropdown.show {
@@ -192,6 +214,16 @@
     padding: 15px;
     cursor: pointer;
     position: relative;
+}
+
+.review-text .temp-selection {
+    background-color: var(--e-blue);
+    border-bottom: 2px solid var(--e-blue2);
+    cursor: pointer;
+}
+
+.review-text .temp-selection:hover {
+    background-color: var(--e-blue2);
 }
 
 .review-menu-button:hover {
@@ -231,7 +263,7 @@
 
 .review-text {
     text-align: justify;
-    white-space: normal; 
+    /* white-space: normal;  */
     line-height: 1.5;
     flex: 1;
     padding: 10px;
@@ -287,7 +319,7 @@
     width: 60%;
 }
 
-#commentForm, #commentDisplay {
+#commentForm, #commentDisplay, #reviewFormContainer {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -309,7 +341,8 @@
     margin-bottom: var(--primary-padding);
 }
 
-#commentForm textarea {
+#commentForm textarea,
+#reviewFormContainer textarea {
     flex: 1;
     min-width: 0;
     width: 100%;
@@ -325,7 +358,7 @@
     background-color: white;
     color: #000;
     border-radius: 20px;
-    padding: 0px 10px;
+    padding: 10px;
     cursor: pointer;
     font-size: 14px;
 }
@@ -335,9 +368,10 @@
     color: white;
 }
 
-.student-review, .teacher-comment {
-    padding: var(--primary-padding);
+.student-review, .teacher-comment, .review-content {
+    /* padding: var(--primary-padding); */
     text-align: justify;
+    white-space: pre-line;
 }
 
 .separator {
@@ -352,6 +386,45 @@
 #create-comment-form, #edit-comment-form {
     padding: var(--primary-padding);
 }
+
+#reviewForm {
+    margin-top: 20px;
+}
+
+.review-add-btn {
+    position: absolute;
+    z-index: 1000;
+}
+
+.review-add-btn button {
+    background-color: white;
+    color: black;
+    border: 1px solid var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: var(--primary-padding);
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.review-add-btn button:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.review-add-btn button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Временные стили для выделения (для отладки) */
+.review-text ::selection {
+    background-color: rgba(255, 235, 59, 0.3);
+}
+
+
 
 .task-container {
     display: flex;
