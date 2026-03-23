@@ -468,6 +468,7 @@
                 <input type="hidden" id="chosen-ids" name="chosen_ids">
                 <input type="hidden" id="sentences" name="sentences">
                 <div class="annotation-modal-content">
+                    <p>Фрагмент с ошибкой: <span id="chosen_words" style="color:black;"></span></p>
                     <div style="width: 100%; overflow: hidden;">
                         <label id="tags-label" for="id_iderrortag" style="width: 550px; float: left; margin-top:15px;">Выберите тег:</label>
                         <!--<input type="text" id="tag-search" placeholder="Поиск тега" class="tag-search" style="width: 420px;">-->
@@ -838,6 +839,18 @@
                 let iderror = tokenElement?.dataset.errorId || null;
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
                 document.getElementById('delete-annotation').style.display = "block";
+
+                const thisErrorElements = document.querySelectorAll('.error-tag');
+                var error_str = "";
+
+                for (const tokenElement of thisErrorElements) {
+                    const attributeValue = tokenElement?.dataset.errorId;
+                    if (attributeValue == iderror) {
+                        error_str += tokenElement.parentElement.children[1].innerHTML + " ";
+                    }
+                }
+
+                document.getElementById('chosen_words').innerHTML = error_str
 
                 const height = Math.max(
                     document.body.scrollHeight,
@@ -1391,7 +1404,11 @@
 
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
-
+            var error_str = ""
+            chosen.forEach(word => {
+                error_str += word.innerHTML + " ";
+            });
+            document.getElementById('chosen_words').innerHTML = error_str
             const height = Math.max(
                 document.body.scrollHeight,
                 document.body.offsetHeight,
@@ -1710,11 +1727,9 @@
         const headerElement = windowElement.getElementsByClassName("modal-head")[0];
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-        const height = document.body.offsetHeight;
+        headerElement.onmousedown = function (e) { dragMouseDown(e) };
 
-        headerElement.onmousedown = function (e) { dragMouseDown(e, height) };
-
-        function dragMouseDown(e, height) {
+        function dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
             pos3 = e.clientX;
@@ -1730,14 +1745,13 @@
             document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) };
         }
 
-        function elementDrag(e, x, y, border_bottom) {
+        function elementDrag(e, x, y, border_bottom, border_right) {
             e = e || window.event;
             e.preventDefault();
             pos1 = pos3 - e.clientX;
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-
             if (pos4 >= y + 10 && border_bottom - pos4 >= 10 - y) {
                 windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
             }
