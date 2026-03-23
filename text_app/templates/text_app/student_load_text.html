@@ -66,36 +66,48 @@
             <button type="submit" class="button">Загрузить текст</button>
         </form>
 
+        <div id="progressModal" class="modal modal-overlay">
+            <div class="modal-content">
+                <div class="modal-head">
+                    <h3>Загрузка...</h3>
+                </div>
+                <div class="modal-inner">
+                    <p style="margin:15px">Пожалуйста, не закрывайте страницу до полной загрузки текста.</p>
+                    <div id="progressBar">
+                        <div id="bar">1%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const groupSelect = document.getElementById("id_group");
-            const studentSelect = document.getElementById("id_student");
-            const educationLevelInput = document.getElementById("id_educationlevel");
-    
-            educationLevelInput.disabled = true;
-    
-            groupSelect.addEventListener("change", function() {
-                const groupId = this.value;
-                fetch("{% url 'teacher_load_text' %}?group_id=" + groupId, {
-                    headers: {"X-Requested-With": "XMLHttpRequest"}
-                })
-                .then(response => response.json())
-                .then(data => {
-                    studentSelect.innerHTML = '<option value="">Выберите студента</option>';
-                    data.students.forEach(function(student) {
-                        const option = document.createElement("option");
-                        option.value = student.id; 
-                        option.textContent = student.name;
-                        studentSelect.appendChild(option);
-                    });
-    
-                    if (data.course) {
-                        educationLevelInput.value = data.course;  
+            function move(seconds) {
+                var elem = document.getElementById("bar");
+                var width = 1;
+                var id = setInterval(frame, 1000);
+                const duration = seconds * 1000;
+                const intervalTime = 10;
+                const steps = duration / intervalTime;
+                const increment = 100 / steps;
+
+                window.progressInterval = setInterval(frame, intervalTime);
+                function frame() {
+                    if (width >= 100) {
+                        clearInterval(window.progressInterval);
                     } else {
-                        educationLevelInput.value = "";  
+                        width += increment;
+                        if (width > 100) width = 100;
+                        elem.style.width = width + "%";
+                        elem.innerHTML = Math.round(width) + "%";
                     }
-                });
+                }
+            }
+
+            const form = document.getElementById('load-text');
+            form.addEventListener('submit', function (event) {
+                document.getElementById('progressModal').style.display = "flex";
+                move((document.getElementById("id_text").value.split(/\s+/)).length);
             });
         });
     </script>
