@@ -32,7 +32,7 @@
                         </div>
                     </div>
 
-                    <div> 
+                    <div>
                         <div class="vertical-level">
                             <label for="{{ form.group.id_for_label }}">Группа</label>
                             {{ form.group }}
@@ -71,7 +71,7 @@
                     <div class="vertical-level">
                         <label for="{{ form.idwritetool.id_for_label }}">Инструмент написания</label>
                         {{ form.idwritetool }}
-                    </div>        
+                    </div>
                     <div class="vertical-level">
                         <label for="{{ form.selfrating.id_for_label }}">Самооценивание</label>
                         {{ form.selfrating }}
@@ -86,6 +86,19 @@
             <button type="submit" class="button">Загрузить текст</button>
         </form>
 
+        <div id="progressModal" class="modal modal-overlay">
+            <div class="modal-content">
+                <div class="modal-head">
+                    <h3>Загрузка...</h3>
+                </div>
+                <div class="modal-inner">
+                    <p style="margin:15px">Пожалуйста, не закрывайте страницу до полной загрузки текста.</p>
+                    <div id="progressBar">
+                        <div id="bar">1%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -116,6 +129,34 @@
                         educationLevelInput.value = "";  
                     }
                 });
+            });
+
+            function move(seconds) {
+                var elem = document.getElementById("bar");
+                var width = 1;
+                var id = setInterval(frame, 1000);
+                const duration = seconds * 1000;
+                const intervalTime = 10;
+                const steps = duration / intervalTime;
+                const increment = 100 / steps; 
+
+                window.progressInterval = setInterval(frame, intervalTime);
+                function frame() {
+                    if (width >= 100) {
+                        clearInterval(window.progressInterval);
+                    } else {
+                        width += increment;
+                        if (width > 100) width = 100;
+                        elem.style.width = width + "%";
+                        elem.innerHTML = Math.round(width) + "%";
+                    }
+                }
+            }
+
+            const form = document.getElementById('load-text');
+            form.addEventListener('submit', function (event) {
+                document.getElementById('progressModal').style.display = "flex";
+                move((document.getElementById("id_text").value.split(/\s+/)).length);
             });
         });
     </script>

@@ -846,7 +846,7 @@
                 for (const tokenElement of thisErrorElements) {
                     const attributeValue = tokenElement?.dataset.errorId;
                     if (attributeValue == iderror) {
-                        error_str += tokenElement.parentElement.children[1].innerHTML + " ";
+                        error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
                     }
                 }
 
