@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Поиск по корпусу</title>
+</head>
+<body>
+    <h1>Поиск по корпусу</h1>
+
+    <!-- <button id="load-filters-btn">Загрузить фильтры</button> -->
+    <button id="add-group-btn">Добавить блок</button>
+    <button id="search-btn">Найти</button>
+
+    <div id="groups-container"></div>
+
+    <hr>
+    <h2>Результаты</h2>
+    <div id="results"></div>
+
+    <script>
+    const groupsContainer = document.getElementById("groups-container");
+    let filtersData = null;
+    let groupIndex = 0;
+
+    async function loadFilters() {
+        try {
+            const response = await fetch("/corpus/api/filters/");
+            filtersData = await response.json();
+
+            if (groupIndex === 0) {
+                addGroup();
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки фильтров:", error);
+            alert("Не удалось загрузить фильтры");
+        }
+    }
+
+    function makeSelect(options, valueKey, textKey, name) {
+        const select = document.createElement("select");
+        select.dataset.field = name;
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "---";
+        select.appendChild(emptyOption);
+
+        options.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item[valueKey];
+            option.textContent = item[textKey];
+            select.appendChild(option);
+        });
+
+        return select;
+    }
+
+    function addGroup() {
+        if (!filtersData) {
+            alert("Фильтры еще не загружены");
+            return;
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.style.border = "1px solid #999";
+        wrapper.style.padding = "10px";
+        wrapper.style.marginBottom = "10px";
+        wrapper.dataset.groupIndex = groupIndex;
+
+        if (groupIndex > 0) {
+            const operatorSelect = document.createElement("select");
+            operatorSelect.dataset.operator = "true";
+
+            const andOption = document.createElement("option");
+            andOption.value = "AND";
+            andOption.textContent = "И";
+
+            const orOption = document.createElement("option");
+            orOption.value = "OR";
+            orOption.textContent = "ИЛИ";
+
+            operatorSelect.appendChild(andOption);
+            operatorSelect.appendChild(orOption);
+
+            wrapper.appendChild(document.createTextNode("Связь с предыдущим блоком: "));
+            wrapper.appendChild(operatorSelect);
+            wrapper.appendChild(document.createElement("br"));
+            wrapper.appendChild(document.createElement("br"));
+        }
+
+        function addTextInput(labelText, fieldName) {
+            const label = document.createElement("label");
+            label.textContent = labelText + ": ";
+
+            const notCheckbox = document.createElement("input");
+            notCheckbox.type = "checkbox";
+            notCheckbox.dataset.notField = fieldName;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.dataset.field = fieldName;
+
+            wrapper.appendChild(document.createTextNode("НЕ "));
+            wrapper.appendChild(notCheckbox);
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            wrapper.appendChild(document.createElement("br"));
+        }
+
+        function addSelectInput(labelText, fieldName, options, valueKey, textKey) {
+            const label = document.createElement("label");
+            label.textContent = labelText + ": ";
+
+            const notCheckbox = document.createElement("input");
+            notCheckbox.type = "checkbox";
+            notCheckbox.dataset.notField = fieldName;
+
+            const select = makeSelect(options, valueKey, textKey, fieldName);
+
+            wrapper.appendChild(document.createTextNode("НЕ "));
+            wrapper.appendChild(notCheckbox);
+            wrapper.appendChild(label);
+            wrapper.appendChild(select);
+            wrapper.appendChild(document.createElement("br"));
+        }
+
+        addTextInput("Словоформа", "wordform");
+        addSelectInput("Часть речи", "pos_tag_id", filtersData.pos_tags, "idpostag", "tagtext");
+        addSelectInput("Тег ошибки", "error_tag_id", filtersData.error_tags, "iderrortag", "tagtextrussian");
+        addSelectInput("Степень грубости", "error_level_id", filtersData.error_levels, "iderrorlevel", "errorlevelname");
+        addSelectInput("Причина ошибки", "reason_id", filtersData.reasons, "idreason", "reasonname");
+        addTextInput("Название текста", "title");
+        addSelectInput("Тип текста", "text_type_id", filtersData.text_types, "idtexttype", "texttypename");
+        addSelectInput("Психо-эмоциональное состояние", "emotion_id", filtersData.emotions, "idemotion", "emotionname");
+
+        groupsContainer.appendChild(wrapper);
+        groupIndex += 1;
+    }
+
+    function collectPayload() {
+        const blocks = Array.from(groupsContainer.children);
+        const groups = [];
+        const operators = [];
+
+        blocks.forEach((block, index) => {
+            if (index > 0) {
+                const operatorSelect = block.querySelector("[data-operator='true']");
+                operators.push(operatorSelect ? operatorSelect.value : "AND");
+            }
+
+            const group = {};
+            const fields = [
+                "wordform",
+                "pos_tag_id",
+                "error_tag_id",
+                "error_level_id",
+                "reason_id",
+                "title",
+                "text_type_id",
+                "emotion_id"
+            ];
+
+            fields.forEach(fieldName => {
+                const fieldElement = block.querySelector(`[data-field='${fieldName}']`);
+                const notElement = block.querySelector(`[data-not-field='${fieldName}']`);
+
+                let value = null;
+                if (fieldElement) {
+                    value = fieldElement.value;
+                    if (value === "") {
+                        value = null;
+                    } else if (fieldName.endsWith("_id")) {
+                        value = Number(value);
+                    }
+                }
+
+                group[fieldName] = {
+                    value: value,
+                    not: notElement ? notElement.checked : false
+                };
+            });
+
+            groups.push(group);
+        });
+
+        return { groups, operators };
+    }
+
+    async function doSearch() {
+        const payload = collectPayload();
+
+        const response = await fetch("/corpus/api/search/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        const countP = document.createElement("p");
+        countP.textContent = "Найдено: " + data.count;
+        resultsDiv.appendChild(countP);
+
+        data.results.forEach(item => {
+            const div = document.createElement("div");
+            div.style.border = "1px solid #ccc";
+            div.style.marginBottom = "10px";
+            div.style.padding = "10px";
+
+            div.innerHTML = `
+                <a href="/corpus/text/${item.id}/"><strong>${item.header}</strong></a><br>
+                Дата: ${item.createdate || "Не указано"}<br>
+                Тип текста: ${item.text_type}<br>
+                Состояние: ${item.emotion}
+            `;
+
+            resultsDiv.appendChild(div);
+        });
+    }
+
+    document.getElementById("add-group-btn").addEventListener("click", addGroup);
+    document.getElementById("search-btn").addEventListener("click", doSearch);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        loadFilters();
+    });
+</script>
+</body>
+</html>
