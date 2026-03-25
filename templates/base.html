@@ -124,8 +124,9 @@
     <div class="main-template-container">
         {% block content %}{% endblock %}
     </div>
+
+    {% include 'includes/toastr.html' %}
+
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>
-<script>
-
-</script>

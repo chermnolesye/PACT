@@ -173,10 +173,13 @@
     justify-content: center;
 }
 
-.new_exercise_btn, .filter-btn {
-    height: 45px;
+.new_exercise_btn, .filter-btn, .new_text_btn {
+    /* height: 45px;
     padding: 5px;
-    margin-left: 0px;
+    margin-left: 0px; */
+    display: inline-flex;
+    align-items: center;
+    height: 45px; 
 }
 
 .new_text_btn {
@@ -186,12 +189,26 @@
     margin-left: 0px;
 }
 
-    .new_exercise_btn a, .new_text_btn a {
-        display: flex;
-        align-items: center;
-        color: white;
-    }
+.new_exercise_btn a, .new_text_btn a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    gap: 8px;
+    height: 100%;
+    padding: 8px;
+}
 
+.new_exercise_btn svg, .new_text_btn svg {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    display: block;
+}
+
+.new_exercise_btn span, .new_text_btn span {
+    white-space: nowrap;
+}
 
 .filter-btn {
     background: white;
@@ -257,9 +274,9 @@
         margin: 0 !important;
     }
 
-.new_exercise_btn svg, .new_text_btn svg {
+/* .new_exercise_btn svg, .new_text_btn svg {
     margin-right: 5px;
-}
+} */
 
 .exercise-card .full_name, .exercise-card .title, .exercise-card .group, .exercise-card .type, .exercise-card .out_date,
 .exercise-card .deadline, .exercise-card .completion_date, .exercise-card .mark {
