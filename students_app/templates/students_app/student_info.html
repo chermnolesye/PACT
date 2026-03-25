@@ -210,9 +210,10 @@
             {% endfor %}
         </div>
     </div>
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
-
         document.addEventListener('DOMContentLoaded', function() {
             const toggleButton = document.getElementById('toggle-edit-mode');
             const viewMode = document.getElementById('view-mode');
@@ -233,13 +234,6 @@
                     backIcon.style.display = 'flex';
                 }
             });
-
-            // editForm.querySelector('button[type="reset"]').addEventListener('click', function() {
-            //     viewMode.style.display = 'flex';
-            //     editForm.style.display = 'none';
-            //     editIcon.style.display = 'flex';
-            //     backIcon.style.display = 'none';
-            // });
         });
 
         document.addEventListener('DOMContentLoaded', function() {

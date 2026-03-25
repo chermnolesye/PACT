@@ -237,7 +237,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
@@ -767,7 +769,8 @@
             if (selectedRadio && selectedRadio.value === '1') {
                 if (!selectedGradingTextId) {
                     event.preventDefault();
-                    alert('Выберите текст для поиска ошибок');
+                    // alert('Выберите текст для поиска ошибок');
+                    showWarning('Выберите текст для поиска ошибок');
                     return;
                 }
             }
@@ -775,13 +778,15 @@
             if (selectedRadio && selectedRadio.value === '2') {
                 if (!selectedTextId) {
                     event.preventDefault();
-                    alert('Выберите текст для рецензирования');
+                    // alert('Выберите текст для рецензирования');
+                    showWarning('Выберите текст для рецензирования');
                     return;
                 }
 
                 if (!selectedTaskId) {
                     event.preventDefault();
-                    alert('Выберите задание для рецензирования');
+                    // alert('Выберите задание для рецензирования');
+                    showWarning('Выберите задание для рецензирования');
                     return;
                 }
             }

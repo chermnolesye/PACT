@@ -340,7 +340,10 @@
     </div>
 
     <div class="unmarked_text" style="display:none;">{{unmarked_text}}</div>
+{% endblock %}
 
+<!-- СКРИПТЫ СТРАНИЦЫ: ВСЕ JavaScript КОД ПОМЕЩАТЬ СЮДА, НЕ В BLOCK CONTENT! -->
+{% block extra_scripts %}
     <script>
         const chosen = [];
         const chosen_ids = [];
