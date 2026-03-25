@@ -410,18 +410,19 @@
             if (!gradingTextsList) return;
             const selectedStudentId = document.getElementById('id_idstudent')?.value;
             if (!selectedStudentId) {
-                gradingTextsList.innerHTML = `
-                <div id="alert-warning">
-                    <p id="errMsgFilters">
-                        <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
-                            <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
-                            <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
-                            <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
-                        </svg>
-                        Сначала выберите студента в форме выше!
-                    </p>
-                </div>
-            `;
+            //     gradingTextsList.innerHTML = `
+            //     <div id="alert-warning">
+            //         <p id="errMsgFilters">
+            //             <svg class="bi me-1" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" viewBox="0 0 24 24" style="margin-right: 5px; height: 1.1em;">
+            //                 <path stroke-linecap="round" stroke-width="1.5" d="M12 17v-6"></path>
+            //                 <circle cx="1" cy="1" r="0.5" fill="currentColor" transform="matrix(1 0 0 -1 11 9)"></circle>
+            //                 <path stroke-linecap="round" stroke-width="1.5" d="M7 3.34A10 10 0 1 1 3.34 7"></path>
+            //             </svg>
+            //             Сначала выберите студента в форме выше!
+            //         </p>
+            //     </div>
+            // `;
+                showWarning('Сначала выберите студента в форме выше');
                 return;
             }
 
@@ -454,7 +455,8 @@
                     document.getElementById("apply_grading_filters").style.background = "#0d6efd"
                     document.getElementById("apply_grading_filters").style.cursor = "pointer"
                     if (texts.length === 0) {
-                        gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
+                        // gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
+                        showInfo('Тексты не найдены');
                         return;
                     }
 
@@ -495,7 +497,9 @@
                 })
                 .catch(error => {
                     console.error('Ошибка загрузки текстов для оценивания:', error);
-                    gradingTextsList.innerHTML = '<div class="alert alert-danger">Ошибка загрузки текстов: ' + error.message + '</div>';
+                    let alert_error_msg = `Ошибка загрузки текстов:  ${error.message}`
+                    showError(alert_error_msg);
+                    // gradingTextsList.innerHTML = '<div class="alert alert-danger">Ошибка загрузки текстов: ' + error.message + '</div>';
                 });
         }
 
@@ -699,7 +703,9 @@
                 })
                 .catch(error => {
                     console.error('Ошибка загрузки текстов:', error);
-                    textsList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки текстов</div>';
+                    // textsList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки текстов</div>';
+                    textsList.innerHTML = ''; // очищаем
+                    showError(`Ошибка загрузки текстов: ${error.message}`);
                 });
         }
 
@@ -755,7 +761,9 @@
                 })
                 .catch(error => {
                     console.error('Ошибка загрузки заданий:', error);
-                    tasksList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки заданий</div>';
+                    // tasksList.innerHTML = '<div class="loading" style="color: #f44336;">Ошибка загрузки заданий</div>';
+                    tasksList.innerHTML = '';
+                    showError(`Ошибка загрузки заданий: ${error.message}`);
                 });
         }
 
@@ -822,7 +830,8 @@
             const exercise_type_code = document.getElementById("exercise_type_code")
             if (!chosen_year_el.innerHTML || !chosen_group_el.innerHTML || !chosen_fio_el.innerHTML
                 || !chosen_date_s.innerHTML || !chosen_date_f.innerHTML || !exercise_type_code.innerHTML) {
-                document.getElementById("errMsg").style.display = "block";
+                // document.getElementById("errMsg").style.display = "block";
+                showWarning('Заполните все поля перед переходом к выбору текста');
             }
             else {
                 if (window.innerWidth < 750) {
