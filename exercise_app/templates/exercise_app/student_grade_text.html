@@ -708,7 +708,6 @@
             async function fetchDataAsync(url, let_tags) {
                 const response = await fetch(url);
                 list_tags = await response.json();
-                console.log(list_tags);
                 createSelect(list_tags);
             }
 
@@ -763,7 +762,6 @@
                             РЕДАКТИРОВАНИЕ
             */
             function EditAnnotationForm(tokenElement) {
-                console.log("РЕДАКТИРОВАНИЕ ОТКРЫТО")
                 // let iderror = tokenElement.data.errorId;
                 let iderror = tokenElement?.dataset.errorId || null;
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
@@ -808,8 +806,6 @@
                         let i = 0;
                         Array.from(reasonSelect.options).forEach(option => {
                             if (option.text === reasonText) {
-                                console.log(reasonText, i);
-                                console.log(reasonSelect.children[3]);
                                 reasonSelect.children[0].removeAttribute("selected");
                                 reasonSelect.children[i].setAttribute("selected", '');
                                 option.selected = option.text;
@@ -817,7 +813,6 @@
                             }
                             i = i + 1;
                         });
-                        console.log(reasonSelect.children);
                     }
                 }
 
@@ -862,7 +857,6 @@
 
             // Функция для сохранения отредактированной аннотации
             function saveAnnotation(errorId) {
-                console.log('saveAnnotation', errorId);
                 //location.reload();
                 document.getElementById('save-annotation').onclick = function () { };
 
@@ -1134,8 +1128,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const rateBtn = document.querySelector('.rate-other-btn');
             const submitBtn = document.querySelector('.submit-btn');
-            const modal = document.getElementById('modal');
-            const closeModal = document.querySelector('.close-modal');
+            const closeModal = document.querySelectorAll('.close-modal');
             const menuBlocks = document.querySelectorAll('.menu-block');
             const backButton = document.querySelector('.button-grey');
 
@@ -1243,9 +1236,11 @@
                 });
             }
 
-            closeModal.addEventListener('click', function () {
-                modal.style.display = 'none';
-            });
+            closeModal.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    btn.parentElement.parentElement.parentElement.style.display = 'none';
+                });
+            })
 
             modal.addEventListener('click', function (e) {
                 if (e.target === modal) {
@@ -1341,7 +1336,6 @@
         */
 
         function addErrorAnnotation() {
-            console.log('addErrorAnnotation');
 
             // Этот кусок скрипта на валидацию формы,
             // чтоб незаполненные обязательные поля подсвечивались,
