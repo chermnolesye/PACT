@@ -1407,7 +1407,7 @@
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
             var error_str = ""
-            chosen.forEach(word => {
+            document.querySelectorAll('.chosen_token').forEach(word => {
                 error_str += word.innerHTML + " ";
             });
             document.getElementById('chosen_words').innerHTML = error_str

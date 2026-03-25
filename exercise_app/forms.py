@@ -357,6 +357,40 @@ class EditTextForm(forms.Form):
         required=True,
     )
 
+class StudentRateGradingTextForm(forms.ModelForm):
+    textgrade = forms.ChoiceField(
+        choices=ExerciseGrading.TASK_RATES,
+        label="Оценка",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    completeness = forms.ChoiceField(
+        choices=ExerciseGrading.TASK_RATES,
+        label="Полнота раскрытия",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    structure = forms.ChoiceField(
+        choices=ExerciseGrading.TASK_RATES,
+        label="Структура",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    coherence = forms.ChoiceField(
+        choices=ExerciseGrading.TASK_RATES,
+        label="Связность",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = ExerciseGrading
+        fields = [
+            'textgrade',
+            'completeness',
+            'structure',
+            'coherence',
+        ]
+
 class AddErrorAnnotationForm(forms.ModelForm):
     iderrortag = forms.ModelChoiceField(
         queryset=ErrorTag.objects.all(),

@@ -51,18 +51,29 @@
             </span>
         </div>
         {% endif %}
-        <div class="menu-block" id="gray_border" data-target="mark-content" style="border-radius: 0 10px 10px 0;">
-            {% if exercise.exercisemark %}
+        <div class="menu-block" id="gray_border" data-target="grade-content">
             <span>
-                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
+                Оценка исходного текста
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
+        {% if exercise.exercisemark %}
+        <div class="menu-block" id="gray_border" data-target="mark-content" style="border-radius: 0 10px 10px 0;">
+            <span>
+                Оценка за упражнение:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
             </span>
             <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
             </svg>
-            {% else %}
-            Оценка:&nbsp;-
-            {% endif %}
+
         </div>
+        {% else %}
+        <div class="menu-block-watch" id="gray_border" data-target="mark-content" style="border-radius: 0 10px 10px 0;">
+            Оценка за упражнение:&nbsp;-
+        </div>
+        {% endif %}
         {% else %}
         {% if in_time %}
         <div class="menu-block" id="gray_border" data-target="date-content">
@@ -82,8 +93,17 @@
                 </svg>
             </span>
         </div>
+        <div class="menu-block" id="gray_border" data-target="grade-content">
+            <span>
+                Оценка исходного текста
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
         {% endif %}
-        <button class="rate-btn">Завершить</button>
+        <button class="rate-other-btn">Оценить исходный текст</button>
+        <button class="submit-btn">Завершить</button>
         {% endif %}
     </div>
 
@@ -166,6 +186,30 @@
         </div>
     </div>
 
+    <div class="menu-content" id="grade-content">
+        <div class="menu-content-grade">
+            <div class="menu-content-grade-col ">
+                <p>Оценка исходного текста</p>
+                <div class="menu-content-data">
+                    <p>Оценка:</p>
+                    <p class="p-dark"> {{ textgrade }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Полнота:</p>
+                    <p class="p-dark"> {{ completeness }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Структура:</p>
+                    <p class="p-dark"> {{ structure }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Связность:</p>
+                    <p class="p-dark"> {{ coherence }} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="menu-content" id="mark-content">
         <div class="menu-content-data">
             <p>Оценка:</p>
@@ -203,6 +247,7 @@
                 <input type="hidden" id="chosen-ids" name="chosen_ids">
                 <input type="hidden" id="sentences" name="sentences">
                 <div class="annotation-modal-content">
+                    <p>Фрагмент с ошибкой: <span id="chosen_words" style="color:black;"></span></p>
                     <div style="width: 100%; overflow: hidden;">
                         <label id="tags-label" for="id_iderrortag" style="width: 550px; float: left; margin-top:15px;">Выберите тег:</label>
                         <!--<input type="text" id="tag-search" placeholder="Поиск тега" class="tag-search" style="width: 420px;">-->
@@ -262,6 +307,7 @@
         </div>
     </div>
 
+    {% if exercise_grading.textgrade and exercise_grading.completeness and exercise_grading.structure and exercise_grading.coherence %}
     <div id="submitModal" class="modal modal-overlay">
         <div class="modal-content">
             <div class="modal-head">
@@ -276,6 +322,21 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <div id="submitModal" class="modal modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3>Ошибка</h3>
+            </div>
+            <div class="modal-inner">
+                <p style="margin:15px">Завершение упражения невозможно. Отсутствует оценка исходного текста.</p>
+                <div class="modal-actions" style="justify-content:center; display:flex;">
+                    <button id="cancelSubmit" class="btn button btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="watch-text">
         {% for sentence in sentence_data %}
@@ -283,6 +344,7 @@
             <div class="tokens-container" id_sentence="{{ sentence.id_sentence }}">
                 <p class="sentence-number">{{ sentence.sentence.ordernumber|add:1 }}:</p>
                 {% for token in sentence.tokens %}
+                {% if exercise.exercisemark or token.token != '-EMPTY-' or token.exercise_errors %}
                 <svg class="clickable-icon" width="20" height="20" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="#768088" stroke-width="4" stroke-linecap="round" />
                 </svg>
@@ -330,6 +392,7 @@
                     <span class="word">{{ token.token }}</span>
                     {% endif %}
                 </span>
+                {% endif %}
                 {% endfor %}
                 <svg class="clickable-icon" width="20" height="20" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="#768088" stroke-width="4" stroke-linecap="round" />
@@ -337,6 +400,48 @@
             </div>
         </div>
         {% endfor %}
+
+        <div class="modal-overlay" id="modal">
+            <div class="modal-content">
+                <div class="modal-head">
+                    <p>Оценить текст</p>
+                    <button class="close-modal">
+                        <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                        </svg>
+                    </button>
+                </div>
+                <form method="post" id="grade-form">
+                    {% csrf_token %}
+                    <div class="grade-form-selects">
+                        <div class="grade-group">
+                            {{ grade_form.textgrade.label_tag }}
+                            {{ grade_form.textgrade }}
+                        </div>
+
+                        <div class="horizontal-wrap">
+                            <div class="grade-group">
+                                {{ grade_form.completeness.label_tag }}
+                                {{ grade_form.completeness }}
+                            </div>
+                            <div class="grade-group">
+                                {{ grade_form.structure.label_tag }}
+                                {{ grade_form.structure }}
+                            </div>
+                            <div class="grade-group">
+                                {{ grade_form.coherence.label_tag }}
+                                {{ grade_form.coherence }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grade-buttons">
+                        <button type="submit" name="grade-form" class="button">Сохранить</button>
+                        <button type="submit" class="button grey-button">Назад</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div class="unmarked_text" style="display:none;">{{unmarked_text}}</div>
@@ -450,13 +555,15 @@
                 document.getElementById('submitModal').style.display = 'none';
             });
 
-            document.querySelectorAll('.sentence-number').forEach(number => {
-                number.addEventListener('click', () => {
-                    number.parentElement.querySelectorAll('.word').forEach(word => {
-                        ClickOnWord(word);
+            if (document.querySelector(".submit-btn")) {
+                document.querySelectorAll('.sentence-number').forEach(number => {
+                    number.addEventListener('click', () => {
+                        number.parentElement.querySelectorAll('.word').forEach(word => {
+                            ClickOnWord(word);
+                        });
                     });
                 });
-            });
+            }
 
             const popup = document.getElementById('error-popup');
             const closePopupBtn = document.getElementById('close-popup');
@@ -665,6 +772,25 @@
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
                 document.getElementById('delete-annotation').style.display = "block";
 
+                const thisErrorElements = document.querySelectorAll('.error-tag');
+                var error_str = "";
+
+                for (const tokenElement of thisErrorElements) {
+                    const attributeValue = tokenElement?.dataset.errorId;
+                    if (attributeValue == iderror) {
+                        error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
+                    }
+                }
+
+                document.getElementById('chosen_words').innerHTML = error_str
+
+                const height = Math.max(
+                    document.body.scrollHeight,
+                    document.body.offsetHeight,
+                    document.documentElement.clientHeight,
+                    document.documentElement.scrollHeight,
+                    document.documentElement.offsetHeight
+                );
                 open_overlay(height)
                 document.getElementById('annotation-modal').style.top = (window.scrollY + window.innerHeight / 2) + "px";
 
@@ -845,11 +971,6 @@
                     e.stopPropagation(); // Чтобы не всплывало до .token
                     showPopup(this);
                 });
-                errorTagElement.addEventListener('click', function (e) {
-
-                    document.getElementById('annotation-modal').style.display = 'flex';
-                    EditAnnotationForm(this);
-                });
                 errorTagElement.addEventListener('mouseleave', function (e) {
                     const popup = document.getElementById('error-popup');
                     popup.classList.remove('show'); // Убираем класс для анимации исчезновения
@@ -858,6 +979,16 @@
                     }, 300); // Задержка, соответствующая длительности перехода
                 });
             });
+
+            if (document.querySelector(".submit-btn")) {
+                document.querySelectorAll('.error-tag').forEach(function (errorTagElement) {
+                    errorTagElement.addEventListener('click', function (e) {
+
+                        document.getElementById('annotation-modal').style.display = 'flex';
+                        EditAnnotationForm(this);
+                    });
+                });
+            }
 
             function ClickOnWord(word) {
                 var menu = document.getElementById('select-menu');
@@ -919,9 +1050,11 @@
                 innerSpan.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>';
                 innerSpan.className = 'word';
                 innerSpan.classList.add('empty-token');
-                innerSpan.addEventListener('click', () => {
-                    ClickOnWord(innerSpan);
-                });
+                if (document.querySelector(".submit-btn")) {
+                    innerSpan.addEventListener('click', () => {
+                        ClickOnWord(innerSpan);
+                    });
+                }
 
                 let token = icon.parentElement;
                 let word = icon.previousElementSibling;
@@ -931,33 +1064,6 @@
 
                 newToken.appendChild(innerSpan);
 
-                const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                const iconPath = document.createElementNS(
-                    'http://www.w3.org/2000/svg',
-                    'path'
-                );
-
-                iconSvg.setAttribute('fill', 'none');
-                iconSvg.setAttribute('height', '20');
-                iconSvg.setAttribute('width', '20');
-                iconSvg.setAttribute('viewBox', '0 0 54 54');
-                iconSvg.setAttribute('stroke', 'black');
-                iconSvg.classList.add('clickable-icon');
-                iconSvg.classList.add('empty-token');
-                iconPath.setAttribute(
-                    'd',
-                    'M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5'
-                );
-                iconPath.setAttribute('stroke-linecap', 'round');
-                iconPath.setAttribute('stroke', '#768088');
-                iconPath.setAttribute('stroke-width', '4');
-
-                iconSvg.addEventListener('click', () => {
-                    ClickOnEmpty(iconSvg);
-                });
-
-                iconSvg.appendChild(iconPath);
-
                 const parent = icon.parentNode;
                 const allChildren = Array.from(parent.childNodes);
                 const index = allChildren.indexOf(icon);
@@ -965,10 +1071,8 @@
                 // Вставить новый токен после SVG и еще SVG после него
                 if (index > -1 && index < allChildren.length - 1) {
                     parent.insertBefore(newToken, allChildren[index + 1]);
-                    parent.insertBefore(iconSvg, allChildren[index + 1]);
                 } else {
                     parent.appendChild(newToken);
-                    parent.appendChild(newIcon);
                 }
 
                 let position = word.getAttribute('data-position')
@@ -980,14 +1084,17 @@
                     position++;
                     ChangePositions(token, word);
                 }
+                icon.remove();
             }
 
             // добавление каждому пустому токену функции по клику
-            document.querySelectorAll('.clickable-icon').forEach(icon => {
-                icon.addEventListener('click', () => {
-                    ClickOnEmpty(icon);
+            if (document.querySelector(".submit-btn")) {
+                document.querySelectorAll('.clickable-icon').forEach(icon => {
+                    icon.addEventListener('click', () => {
+                        ClickOnEmpty(icon);
+                    });
                 });
-            });
+            }
 
             // Удаление пустых токенов
             document.getElementById('button-delete-tokens').addEventListener('click', () => {
@@ -1016,17 +1123,20 @@
                 menu.classList.add('hide');
             });
 
-            document.querySelectorAll('.word').forEach(word => {
-                word.addEventListener('click', () => {
-                    ClickOnWord(word);
+            if (document.querySelector(".submit-btn")) {
+                document.querySelectorAll('.word').forEach(word => {
+                    word.addEventListener('click', () => {
+                        ClickOnWord(word);
+                    });
                 });
-            });
+            }
 
         });
 
         // Скрипт для меню
         document.addEventListener('DOMContentLoaded', function () {
-            const rateBtn = document.querySelector('.rate-btn');
+            const rateBtn = document.querySelector('.rate-other-btn');
+            const submitBtn = document.querySelector('.submit-btn');
             const modal = document.getElementById('modal');
             const closeModal = document.querySelector('.close-modal');
             const menuBlocks = document.querySelectorAll('.menu-block');
@@ -1116,13 +1226,25 @@
                 });
             }
 
-            rateBtn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                document.querySelectorAll('.menu-content').forEach(c => {
-                    c.style.display = 'none';
+            if (submitBtn) {
+                submitBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        c.style.display = 'none';
+                    });
+                    document.getElementById('submitModal').style.display = 'flex';
                 });
-                document.getElementById('submitModal').style.display = 'flex';
-            });
+            }
+
+            if (submitBtn) {
+                rateBtn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    document.querySelectorAll('.menu-content').forEach(c => {
+                        c.style.display = 'none';
+                    });
+                    modal.style.display = 'flex';
+                });
+            }
 
             closeModal.addEventListener('click', function () {
                 modal.style.display = 'none';
@@ -1145,6 +1267,12 @@
 
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
+            var error_str = ""
+            document.querySelectorAll('.chosen_token').forEach(word => {
+                error_str += word.innerHTML + " ";
+            });
+            document.getElementById('chosen_words').innerHTML = error_str
+
             const height = Math.max(
                 document.body.scrollHeight,
                 document.body.offsetHeight,
@@ -1313,11 +1441,9 @@
         const headerElement = windowElement.getElementsByClassName("modal-head")[0];
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-        const height = document.body.offsetHeight;
+        headerElement.onmousedown = function (e) { dragMouseDown(e) };
 
-        headerElement.onmousedown = function (e) { dragMouseDown(e, height) };
-
-        function dragMouseDown(e, height) {
+        function dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
             pos3 = e.clientX;
@@ -1333,7 +1459,7 @@
             document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) };
         }
 
-        function elementDrag(e, x, y, border_bottom) {
+        function elementDrag(e, x, y, border_bottom, border_right) {
             e = e || window.event;
             e.preventDefault();
             pos1 = pos3 - e.clientX;

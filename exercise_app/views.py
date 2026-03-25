@@ -45,6 +45,7 @@ from .forms import (
     ExerciseTextTaskForm,
     Group,
     AddMarkForm,
+    StudentRateGradingTextForm,
     TeacherCommentForm,
     StudentReviewForm
 )
@@ -821,6 +822,10 @@ def grade_text(request, idexercise=2):
         "sentence_data": sentence_data,
         "exercise": exercise,
         "exercise_grading":exercise_grading,
+        "textgrade": exercise_grading.get_textgrade_display() if exercise_grading.textgrade else "Нет данных",
+        "completeness": exercise_grading.get_completeness_display() if exercise_grading.completeness else "Нет данных",
+        "structure": exercise_grading.get_structure_display() if exercise_grading.structure else "Нет данных",
+        "coherence": exercise_grading.get_coherence_display() if exercise_grading.coherence else "Нет данных",
         "in_time":in_time,
         "selected_markup": selected_markup,
         "poscheckflag": text.poscheckflag,
@@ -1024,17 +1029,15 @@ def student_grade_text(request, idexercise=2):
         return JsonResponse({'success': True})
 
     # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
-    if request.method == "POST" and "mark-form" in request.POST:
-         mark_form = AddMarkForm(request.POST, instance=exercise)
-         if mark_form.is_valid():
-             mark_form.save()
-             
-             #return redirect(request.path + f"?idexercise={exercise.idexercise}")
-             url = reverse('grade_text')
-             params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
-             return redirect(url + params)
+    if request.method == "POST" and "grade-form" in request.POST:
+        grade_form = StudentRateGradingTextForm(request.POST, instance=exercise_grading)
+        if grade_form.is_valid():
+            grade_form.save()
+            url = reverse('student_grade_text')
+            params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+            return redirect(url + params)
     else:
-         mark_form = AddMarkForm(instance=exercise)
+        grade_form = StudentRateGradingTextForm(instance=exercise_grading)
 
     student = text.idstudent
     user = student.iduser
@@ -1043,12 +1046,16 @@ def student_grade_text(request, idexercise=2):
     unmarked_text = (text.text).replace("-EMPTY-","")
 
     context = {
-        "mark_form": mark_form,
+        "grade_form": grade_form,
         "text": text,
         "annotation_form": annotation_form,
         "sentence_data": sentence_data,
         "exercise": exercise,
         "exercise_grading":exercise_grading,
+        "textgrade": exercise_grading.get_textgrade_display() if exercise_grading.textgrade else "Нет данных",
+        "completeness": exercise_grading.get_completeness_display() if exercise_grading.completeness else "Нет данных",
+        "structure": exercise_grading.get_structure_display() if exercise_grading.structure else "Нет данных",
+        "coherence": exercise_grading.get_coherence_display() if exercise_grading.coherence else "Нет данных",
         "in_time":in_time,
         "selected_markup": selected_markup,
         "poscheckflag": text.poscheckflag,
