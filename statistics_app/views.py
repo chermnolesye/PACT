@@ -450,6 +450,7 @@ def chart_types_errors(request):
             return JsonResponse({"data_type_errors": data}, status=200)
 
 def chart_grade_errors(request):
+
     if request.method != 'POST':
         languages = ['Deustache']
         groups = list(Group.objects.values('idgroup', 'groupname', 'idayear__title')
@@ -1170,7 +1171,6 @@ def chart_emotions_errors(request):
         levels = dashboards.get_levels()
         emotions = list(Emotion.objects.values('idemotion', 'emotionname'))
 
-        # ✅ ВОТ ЭТОТ БЛОК ПОМЕНЯТЬ
         groups = list(
             Group.objects.values("idgroup", "groupname", "idayear__title")
             .distinct()
