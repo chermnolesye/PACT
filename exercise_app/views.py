@@ -507,14 +507,13 @@ def review_student(request, idexercise=1):
             for r in reviews
         ])
     }
-
     # Завершение упражнения
     if request.method == 'POST':
         exercise.exercisestatus = True
         exercise.completiondate = timezone.now().date()
         exercise.save()
-        
-        return render(request, "review_student.html", context)
+        return redirect('review_student', idexercise=exercise.idexercise)
+    
     return render(request, "review_student.html", context)
 
 
