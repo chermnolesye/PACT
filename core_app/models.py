@@ -409,7 +409,27 @@ class ExerciseErrorToken(models.Model):
     idexerciseerrortoken = models.AutoField(primary_key=True)
     idexercisegrading = models.ForeignKey('ExerciseGrading', on_delete=models.CASCADE, db_column='idexercisegrading')
     idexerciseerror = models.ForeignKey('ExerciseError', on_delete=models.CASCADE, db_column='idexerciseerror')
-    idtoken = models.ForeignKey('Token', on_delete=models.CASCADE, db_column='idtoken')
+    idtoken = models.ForeignKey(
+        'Token', 
+        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        related_name="linked_token"
+        )
+    idprevtoken = models.ForeignKey(
+        'Token', 
+        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        related_name="prev_token"
+        )
+    idnexttoken = models.ForeignKey(
+        'Token', 
+        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        related_name="next_token"
+        )
 
     class Meta:
         db_table = 'tblexerciseerrortoken'
