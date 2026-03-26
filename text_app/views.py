@@ -1099,7 +1099,8 @@ def student_search_texts(request):
 
 @student_required
 def student_load_text(request):
-    student_profile = get_object_or_404(Student, iduser=request.user)
+    # student_profile = get_object_or_404(Student, iduser=request.user)
+    student_profile = Student.objects.filter(iduser=request.user).first()
     form = StudentLoadTextForm(request.POST)
 
     if request.method == "POST":
