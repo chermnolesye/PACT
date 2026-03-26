@@ -1,0 +1,81 @@
+{% load static %}
+<!-- 
+    Локальные библиотеки:
+    - static/vendor/jquery/jquery.min.js
+    - static/vendor/toastr/toastr.min.css
+    - static/vendor/toastr/toastr.min.js
+-->
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script> -->
+<link rel="stylesheet" href="{% static 'vendor/toastr/toastr.min.css' %}">
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'vendor/toastr/toastr.min.js' %}"></script>
+
+<script>
+    // Проверяем, что toastr загружен
+    if (typeof toastr !== 'undefined') {
+        // Глобальные настройки по умолчанию
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": true,
+            "positionClass": "toast-bottom-left",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+        
+        // Глобальные функции с разной длительностью
+        window.showSuccess = (msg) => {
+            toastr.success(msg, '', {
+                timeOut: 3000,      // 3 секунды
+                progressBar: true
+            });
+        };
+        
+        window.showError = (msg) => {
+            toastr.error(msg, 'Ошибка', {
+                timeOut: 6000,      // 6 секунд
+                closeButton: true,
+                progressBar: true
+            });
+        };
+        
+        window.showWarning = (msg) => {
+            toastr.warning(msg, 'Внимание', {
+                timeOut: 8000,      // 8 секунд
+                closeButton: true,
+                progressBar: true
+            });
+        };
+        
+        window.showInfo = (msg) => {
+            toastr.info(msg, '', {
+                timeOut: 4000,      // 4 секунды
+                progressBar: true
+            });
+        };
+        
+        // Универсальная функция (на всякий случай)
+        window.showNotification = function(message, type = 'info') {
+            switch(type) {
+                case 'success': showSuccess(message); break;
+                case 'error': showError(message); break;
+                case 'warning': showWarning(message); break;
+                default: showInfo(message);
+            }
+        };
+        
+        console.log('Toastr успешно загружен и настроен');
+    } else {
+        console.error('Toastr не загружен!');
+    }
+</script>

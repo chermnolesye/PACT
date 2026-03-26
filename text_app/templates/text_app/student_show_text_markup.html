@@ -356,19 +356,9 @@
             {% endfor %}
         </div>
     </div>
-    <!-- Шапка убрать коммент, если нужна
-    <script> 
-        document.addEventListener('DOMContentLoaded', function() {
-        fetch('/static/templates/base.html')
-            .then(response => response.text())
-            .then(data => {
-            document.getElementById('header-container').innerHTML = data;
-            let user_fio = "{{ fio|escapejs }}"; 
-            document.getElementById('user-link').textContent = user_fio;
-            });
-        });
-    
-    </script>-->
+{% endblock %}
+
+{% block extra_scripts %}
     <script>
         // Скрипт для отображения разметки (НЕ ДЫШАТЬ НА НЕГО!!!)
         document.addEventListener('DOMContentLoaded', function() {

@@ -529,7 +529,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
         const chosen = [];
         const chosen_ids = [];
@@ -1810,88 +1812,50 @@
                     'text_id': textId
                 })
             })
-
             .then(data => {
                 console.log('ДАННЫЕ ОТВЕТА:', data);
 
                 // Проверяем успешность выполнения функции POS-теггера
-                if (data.result && data.result.success === true) {
+                // if (data.result && data.result.success === true) {
+                if (data.success === true && data.result && data.result.success === true) {
                     console.log('POS-теггер выполнен успешно');
-                    resultDiv.innerHTML = '<div class="success-message">Частеречныя разметка обновлена. Страница будет перезагружена...</div>';
+                    // resultDiv.innerHTML = '<div class="success-message">Частеречныя разметка обновлена. Страница будет перезагружена...</div>';
+                    const updatedTokens = data.result?.updated_tokens || 0;
+                    showSuccess(`Частеречная разметка обновлена!\nОбновлено токенов: ${updatedTokens}`);
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
                 } else {
                     console.log('POS-теггер вернул ошибку');
 
-                    // Берем сообщение из result
                     const errorMessage = data.result?.message || data.message || 'Неизвестная ошибка';
-                    const errorsList = data.result?.errors ? data.result.errors.join('<br>') : '';
+                    const errorsList = data.result?.errors ? data.result.errors.join('\n') : '';
+                    const updatedTokens = data.result?.updated_tokens || 0;
+                    const skippedTokens = data.result?.skipped_tokens || 0;
 
-                    resultDiv.innerHTML = `
-                        <div class="error-message">
-                            <strong>Ошибка:</strong> ${errorMessage}<br>
-                            ${errorsList ? `<small>${errorsList}</small>` : ''}
-                            <br><br>
-                            <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
-                        </div>
-                    `;
+                    // Формируем полный текст уведомления
+                    let notificationMessage = errorMessage;
+                    if (errorsList) {
+                        notificationMessage += `\n\nДетали: ${errorsList}`;
+                    }
+                    notificationMessage += `\n\nОбновлено токенов: ${updatedTokens}, пропущено: ${skippedTokens}`;
+
+                    // Показываем уведомление
+                    showError(notificationMessage);
+                    resultDiv.style.display = 'none';
+                    // resultDiv.innerHTML = `
+                    //     <div class="error-message">
+                    //         <strong>Ошибка:</strong> ${errorMessage}<br>
+                    //         ${errorsList ? `<small>${errorsList}</small>` : ''}
+                    //         <br><br>
+                    //         <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
+                    //     </div>
+                    // `;
 
                     btn.disabled = false;
                     btn.textContent = 'Обновить частеречную разметку';
                 }
             })
-
-            // .then(response => {
-
-
-            //     console.log('Статус ответа:', response.status);
-            //     console.log('Headers:', response.headers);
-
-            //     // Проверяем content-type
-            //     const contentType = response.headers.get('content-type');
-            //     console.log('Content-Type:', contentType);
-
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP ошибка: ${response.status}`);
-            //     }
-
-
-            //     console.log('Статус ответа:', response.status);
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP ошибка: ${response.status}`);
-            //     }
-            //     return response.json();
-            // })
-            // .then(data => {
-            //     if (data.success === true) {
-            //         resultDiv.innerHTML = '<div class="success-message">POS-разметка выполнена успешно. Страница будет перезагружена...</div>';
-            //         setTimeout(() => {
-            //             // location.reload();
-            //         }, 2000);
-            //     } else {
-            //         const errorMessage = data.message || data.error || 'Неизвестная ошибка';
-            //         const errorsList = data.errors ? data.errors.join('<br>') : '';
-
-            //         resultDiv.innerHTML = `
-            //             <div class="error-message">
-            //                 <strong>✗ Ошибка:</strong> ${errorMessage}<br>
-            //                 ${errorsList ? `<small>${errorsList}</small>` : ''}
-            //                 <br><br>
-            //                 <em>Обновлено токенов: ${data.updated_tokens || 0}, пропущено: ${data.skipped_tokens || 0}</em>
-            //             </div>
-            //         `;
-
-            //         btn.disabled = false;
-            //         btn.textContent = 'Обновить частеречную разметку';
-            //     }
-            // })
-            // .catch(error => {
-            //     console.error('Ошибка:', error);
-            //     resultDiv.innerHTML = `<div class="error-message">Ошибка при отправке запроса: ${error.message}</div>`;
-            //     btn.disabled = false;
-            //     btn.textContent = 'Обновить частеречную разметку';
-            // });
         }
 
     </script>

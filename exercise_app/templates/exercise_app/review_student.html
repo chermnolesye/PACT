@@ -123,7 +123,7 @@
             
             <div class="review-view-container" id="reviewViewContainer">
                 <div class="review-content" id="reviewContent"></div>
-                <div class="student-review separator" id="review"></div>
+                <div class="separator" id="review"></div>
                 <div class="teacher-comment" id="teacherCommentSection">
                     <h3>Комментарий преподавателя:</h3>
                     <p id="teacherCommentText" class="text-muted"></p>
@@ -151,7 +151,7 @@
                 <!-- </div> -->
 
                 <div class="grade-buttons">
-                    <button type="submit"class="button">Да</button>
+                    <button type="submit" id="expireBtn" class="button">Да</button>
                     <button type="button" class="button grey-button" id="backModalBtn">Нет</button>
                 </div>
             </form>
@@ -162,8 +162,30 @@
         <button>Добавить рецензию</button>
     </div>
 
-</div>
+    <div id="deleteModal" class="modal modal-overlay">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p>Подтверждение удаления</p>
+                <button id="close-modal-review" class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-inner">
+                <p style="margin-bottom:15px">Вы уверены, что хотите удалить рецензию?</p>
+                <div class="modal-actions">
+                    <button id="confirmDelete" class="btn button btn-danger">Удалить</button>
+                    <button id="cancelDelete" class="btn button grey-button btn-secondary">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
     function toggleDropdown(button) {
         // родительский контейнер и выпадающее меню
@@ -211,8 +233,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         const rateBtn = document.querySelector('.rate-btn');
         const modal = document.getElementById('modal');
-        const closeModal = document.querySelector('.close-modal');
+        const closeModal = document.querySelector('#modal .close-modal');
         const backButton = document.getElementById('backModalBtn');
+
+        const deleteModal = document.getElementById('deleteModal');
+        const closeModalReview = document.getElementById('close-modal-review');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const cancelDelete = document.getElementById('cancelDelete');
 
         if (backButton) {
             backButton.addEventListener('click', function(e) {
@@ -238,6 +265,37 @@
             modal.style.display = 'none';
             }
         });
+
+
+        if (closeModalReview) {
+            closeModalReview.addEventListener('click', function() {
+                deleteModal.style.display = 'none';
+            });
+        }
+        
+        if (cancelDelete) {
+            cancelDelete.addEventListener('click', function() {
+                deleteModal.style.display = 'none';
+            });
+        }
+        
+        // Закрытие по клику на фон
+        if (deleteModal) {
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) {
+                    deleteModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (deleteModal) {
+            const modalContent = deleteModal.querySelector('.modal-content');
+            if (modalContent) {
+                modalContent.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+        }
     });
 </script>
 
@@ -519,7 +577,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const review = reviewInput.value.trim();
         
         if (!review) {
-            alert('Введите текст рецензии');
+            // alert('Введите текст рецензии');
+            toastr.warning('Введите текст рецензии');
             return;
         }
 
@@ -579,49 +638,118 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Показываем обновленную рецензию
                     displayFragmentReview(currentFragmentId);
+                    hideReviewForm();
+                    toastr.success('Рецензия обновлена');
                 } else {
                     // Перезагружаем страницу для новой рецензии
-                    location.reload();
+                    // location.reload();
+                    toastr.success('Рецензия добавлена');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000); // Даем время показать уведомление
                 }
                 
-                hideReviewForm();
+                // hideReviewForm();
+                
             } else {
-                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                // alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                toastr.error(data.error || 'Ошибка при сохранении рецензии');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Произошла ошибка при сохранении');
+            // alert('Произошла ошибка при сохранении');
+            toastr.error('Произошла ошибка при сохранении');
         });
     }
-    
+
     function deleteReview() {
         if (!currentFragmentId) return;
+
+        const deleteModal = document.getElementById('deleteModal');
+        const confirmBtn = document.getElementById('confirmDelete');
+        const cancelBtn = document.getElementById('cancelDelete');
+
+        deleteModal.style.display = 'flex';
+
+        const performDelete = function() {
+            const fragment = fragmentsData[currentFragmentId];
+            
+            fetch(fragment.deleteUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    // alert('Ошибка при удалении');
+                    toastr.error('Ошибка при удалении');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // alert('Произошла ошибка при удалении');
+                toastr.error('Произошла ошибка при удалении');
+            });
+
+            deleteModal.style.display = 'none';
+            confirmBtn.removeEventListener('click', performDelete);
+            cancelBtn.removeEventListener('click', closeModal);
+            document.removeEventListener('click', outsideClick);
+        };
+
+        const closeModal = function() {
+            deleteModal.style.display = 'none';
+            confirmBtn.removeEventListener('click', performDelete);
+            cancelBtn.removeEventListener('click', closeModal);
+            document.removeEventListener('click', outsideClick);
+        };
         
-        if (!confirm('Удалить эту рецензию?')) return;
-        
-        const fragment = fragmentsData[currentFragmentId];
-        
-        fetch(fragment.deleteUrl, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrfToken
+        const outsideClick = function(e) {
+            if (e.target === deleteModal) {
+                closeModal();
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Ошибка при удалении');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Произошла ошибка при удалении');
-        });
+        };
+
+        confirmBtn.onclick = performDelete;
+        cancelBtn.onclick = closeModal;
+        
+        // Добавляем обработчик для клика вне окна
+        document.addEventListener('click', outsideClick);
     }
+    
+    // function deleteReview() {
+    //     if (!currentFragmentId) return;
+        
+    //     if (!confirm('Удалить эту рецензию?')) return;
+        
+    //     const fragment = fragmentsData[currentFragmentId];
+        
+    //     fetch(fragment.deleteUrl, {
+    //         method: 'POST',
+    //         headers: {
+    //             'X-Requested-With': 'XMLHttpRequest',
+    //             'X-CSRFToken': csrfToken
+    //         }
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         if (data.success) {
+    //             location.reload();
+    //         } else {
+    //             alert('Ошибка при удалении');
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error:', error);
+    //         alert('Произошла ошибка при удалении');
+    //     });
+    // }
     
     // ===== ОБРАБОТЧИКИ СОБЫТИЙ =====
 
@@ -641,7 +769,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const selection = window.currentSelection;
             
             if (!selection) {
-                alert('Сначала выделите текст');
                 return;
             }
 
@@ -651,7 +778,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Проверяем, что выделение не пустое
             if (!selection.text || selection.text.length === 0) {
-                alert('Выделите текст для добавления рецензии');
                 return;
             }
             
