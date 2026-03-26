@@ -1,0 +1,32 @@
+"""
+Скопируйте этот файл в local.py и заполните своими значениями.
+local.py не нужно коммитить.
+
+ВАЖНО:
+Обязательно укажите версию:
+"german"  - немецкая версия
+"french"  - французская версия
+"""
+
+# Обязательная настройка
+PACT_PROJECT_VERSION = "german"
+
+DEBUG = False
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+]
+
+# Пример: переопределить базу
+# DATABASES["default"]["HOST"] = "127.0.0.1"
+# DATABASES["default"]["PORT"] = "3306"
+# DATABASES["default"]["USER"] = "root"
+# DATABASES["default"]["PASSWORD"] = "real_password"
+
+# Пример: путь до RFTagger
+# USE_WSL_FOR_RFTAGGER = False
+# RFTAGGER_PATH = "/opt/rftagger/RFTagger"
+
+# Пример: дополнительные хосты
+# ALLOWED_HOSTS.append("your-domain.com")
