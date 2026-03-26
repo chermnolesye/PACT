@@ -14,6 +14,7 @@ from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
 from django.urls import reverse
 from django.utils.html import escape
+from authorization_app.decorators import *
 from core_app.models import (
     ExerciseTextType,
     Exercise,
@@ -69,7 +70,7 @@ def load_exercise_data(request):
         return JsonResponse(data)    
     return JsonResponse({})
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def teacher_exercises(request):
     exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.filter(iduserteacher=request.user.iduser).all())
     # exercises_queryset = exercise_filter.qs
@@ -140,7 +141,7 @@ def delete_exercise_ajax(request, exercise_id):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')    
+@teacher_required    
 def add_exercise(request):
     if request.method == 'POST':
         form = AddExerciseForm(request.POST)
@@ -298,7 +299,7 @@ def load_groups(request):
 '''
     БЕК КАТИ
 '''
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def add_review_text(request):
     if request.method == 'POST':
         form = AddExerciseTextForm(request.POST)
@@ -324,7 +325,7 @@ def add_review_text(request):
     
     return render(request, 'add_review_text.html', {'form': form})
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def review_teacher(request, idexercise=1):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
@@ -458,6 +459,7 @@ def delete_teacher_comment(request, fragment_id):
         })
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+@student_required
 def review_student(request, idexercise=1):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
@@ -516,8 +518,6 @@ def review_student(request, idexercise=1):
         return redirect('review_student', idexercise=exercise.idexercise)
     
     return render(request, "review_student.html", context)
-
-
 
 def save_student_review(request, exercise_id):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -600,8 +600,7 @@ def delete_student_review(request, fragment_id):
     
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def review_text_list(request):
     reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())
     texts = reviewtext_filter.qs.order_by('-loaddate')
@@ -609,7 +608,7 @@ def review_text_list(request):
     context = {'texts' : texts, 'filter': reviewtext_filter}
     return render(request, 'review_text_list.html', context)
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def review_text(request, idexercisetext=2):
     text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
     tasks = ExerciseTextTask.objects.filter(idexercisetext=idexercisetext)
@@ -697,7 +696,7 @@ def get_count_end(count):
 '''
     БЕК ДАШИ
 '''
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def grade_text(request, idexercise=2):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     
@@ -905,7 +904,7 @@ def grade_text(request, idexercise=2):
     }
     return render(request, "grade_text.html", context)
 
-# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@student_required
 def student_grade_text(request, idexercise=2):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     
@@ -1195,8 +1194,7 @@ def student_grade_text(request, idexercise=2):
     }
     return render(request, "student_grade_text.html", context)
 
-# Поменять на тест с правами студента
-# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@student_required
 def student_exercises(request):
     student_ids = Student.objects.filter(iduser=request.user).values_list('idstudent', flat=True)
     base_queryset = Exercise.objects.filter(idstudent__in=student_ids)

@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
+from authorization_app.decorators import *
 from core_app.models import (
     Group,
     AcademicYear,
@@ -17,7 +18,7 @@ from .forms import (
     TransferStudentForm
 )
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def show_groups(request):
     query = request.GET.get('q', '')
     course = request.GET.get('course')
@@ -78,8 +79,7 @@ def show_groups(request):
         'academic_years': academic_years,
     })
 
-
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def add_group(request):
     if request.method == 'POST':
         form = AddGroupForm(request.POST)
@@ -94,8 +94,7 @@ def add_group(request):
 
     return render(request, 'add_group.html', {'form': form})
 
-
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def edit_group(request, group_id):
     group = get_object_or_404(Group, idgroup=group_id)
     students = Student.objects.filter(idgroup=group)

@@ -12,6 +12,7 @@ PACT_LANGUAGE_NAME = "Deutsche"
 NLTK_LANGUAGE = "german"
 PROJECT_LANGUAGE_CODE = "de"
 
+POS_TAGGER_BACKEND = "rftagger"
 
 DATABASES = {
     "default": {
