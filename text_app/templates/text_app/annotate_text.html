@@ -1788,7 +1788,7 @@
             resultDiv.innerHTML = '<div class="loading">Отправка запроса...</div>';
 
             btn.disabled = true;
-            btn.textContent = 'Выполняется...';
+            btn.textContent = 'Разметка выполняется...';
 
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
@@ -1811,6 +1811,15 @@
                     'action': 'run_pos_tagger',
                     'text_id': textId
                 })
+            })
+            .then(response => {
+                console.log('RAW RESPONSE:', response);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                return response.json();
             })
             .then(data => {
                 console.log('ДАННЫЕ ОТВЕТА:', data);

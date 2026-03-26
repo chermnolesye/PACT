@@ -1,7 +1,9 @@
+import json
 import os
 import shlex
 import subprocess
 from pathlib import Path
+from urllib import parse, request
 from uuid import uuid4
 
 from django.conf import settings
@@ -10,11 +12,118 @@ from django.db import transaction
 from core_app.models import Text, Sentence, Token, PosTag
 
 
+CORENLP_TREEBANK_TO_DB_TAG = {
+    # adjectives / adverbs
+    "JJ": "ADJ",
+    "JJR": "ADJ",
+    "JJS": "ADJ",
+    "RB": "ADV",
+    "RBR": "ADV",
+    "RBS": "ADV",
+    "WRB": "ADV",
+
+    # nouns / proper nouns
+    "NN": "NOUN",
+    "NNS": "NOUN",
+    "NNP": "PROPN",
+    "NNPS": "PROPN",
+
+    # pronouns
+    "PRP": "PRON",
+    "PRP$": "PRON",
+    "WP": "PRON",
+    "WP$": "PRON",
+    "EX": "PRON",
+
+    # determiners
+    "DT": "DET",
+    "WDT": "DET",
+    "PDT": "DET",
+
+    # particles
+    "RP": "PART",
+    "POS": "PART",
+    "TO": "PART",
+
+    # numerals
+    "CD": "NUM",
+
+    # conjunctions
+    "CC": "CCONJ",
+    "IN": "SCONJ",
+
+    # verbs / auxiliaries
+    "VB": "VERB",
+    "VBD": "VERB",
+    "VBG": "VERB",
+    "VBN": "VERB",
+    "VBP": "VERB",
+    "VBZ": "VERB",
+    "MD": "AUX",
+
+    # interjections / symbols / other
+    "UH": "INTJ",
+    "SYM": "SYM",
+    "FW": "X",
+    "LS": "X",
+
+    # punctuation
+    ",": "PUNCT",
+    ".": "PUNCT",
+    ":": "PUNCT",
+    "``": "PUNCT",
+    "''": "PUNCT",
+    "-LRB-": "PUNCT",
+    "-RRB-": "PUNCT",
+    "-LSB-": "PUNCT",
+    "-RSB-": "PUNCT",
+    "-LCB-": "PUNCT",
+    "-RCB-": "PUNCT",
+    "#": "PUNCT",
+    "$": "SYM",
+}
+
+
+DIRECT_DB_TAGS = {
+    "ADJ",
+    "ADP",
+    "ADV",
+    "AUX",
+    "CCONJ",
+    "DET",
+    "INTJ",
+    "NOUN",
+    "NUM",
+    "PART",
+    "PRON",
+    "PROPN",
+    "PUNCT",
+    "SCONJ",
+    "SYM",
+    "VERB",
+    "DET:PART",
+    "X",
+}
+
+
+def is_pos_tagger_available() -> bool:
+    """
+    Проверяет доступность активного POS-разметчика из настроек.
+    """
+    backend = getattr(settings, "POS_TAGGER_BACKEND", "").lower()
+
+    if backend == "rftagger":
+        return is_rftagger_available()
+
+    if backend == "corenlp":
+        return is_corenlp_available()
+
+    return False
+
+
 def is_rftagger_available() -> bool:
     """
     Проверяет, доступен ли RFTagger в текущей среде.
-    Локально на Windows проверяет вызов через WSL.
-    На Linux-сервере проверяет наличие бинарника.
     """
     try:
         if settings.USE_WSL_FOR_RFTAGGER:
@@ -32,7 +141,7 @@ def is_rftagger_available() -> bool:
             binary_path = os.path.join(
                 settings.RFTAGGER_PATH,
                 "cmd",
-                f"rftagger-{settings.RFTAGGER_LANGUAGE}"
+                f"rftagger-{settings.RFTAGGER_LANGUAGE}",
             )
             if not os.path.isfile(binary_path):
                 return False
@@ -43,14 +152,38 @@ def is_rftagger_available() -> bool:
         return False
 
 
+def is_corenlp_available() -> bool:
+    """
+    Проверяет, отвечает ли CoreNLP сервер.
+    """
+    try:
+        base_url = getattr(settings, "CORENLP_URL", "").rstrip("/")
+        if not base_url:
+            return False
+
+        _run_corenlp("Bonjour.")
+        return True
+
+    except Exception:
+        return False
+
+
 def annotate_text_pos(text_id: int) -> dict:
-    if not is_rftagger_available():
+    """
+    Выполняет POS-разметку текста через backend из settings.POS_TAGGER_BACKEND.
+    Поддерживает:
+    - rftagger
+    - corenlp
+    """
+    backend = getattr(settings, "POS_TAGGER_BACKEND", "").lower()
+
+    if not is_pos_tagger_available():
         return {
             "success": False,
-            "message": "RFTagger недоступен в текущей среде",
+            "message": f"POS-разметчик '{backend}' недоступен в текущей среде",
             "updated_tokens": 0,
             "skipped_tokens": 0,
-            "errors": ["RFTagger недоступен, POS-разметка пропущена"],
+            "errors": [f"POS-разметчик '{backend}' недоступен, разметка пропущена"],
         }
 
     text = Text.objects.filter(idtext=text_id).first()
@@ -79,13 +212,12 @@ def annotate_text_pos(text_id: int) -> dict:
     if not pos_tag_map:
         return {
             "success": False,
-            "message": "Таблица PosTag пуста или в ней нет tagtextabbrev",
+            "message": "Таблица PosTag пуста или в ней нет tagtext/tagtextabbrev",
             "updated_tokens": 0,
             "skipped_tokens": 0,
             "errors": [],
         }
 
-    # Все токены текста сразу, в правильном порядке
     token_objects = list(
         Token.objects.filter(idsentence__idtext=text)
         .select_related("idsentence")
@@ -110,7 +242,6 @@ def annotate_text_pos(text_id: int) -> dict:
             "errors": [],
         }
 
-    # Собираем весь текст из предложений одним файлом
     full_text = "\n".join(
         (sentence.sentensetext or "").replace("-EMPTY-", "").strip()
         for sentence in sentences
@@ -131,60 +262,75 @@ def annotate_text_pos(text_id: int) -> dict:
     skipped_tokens = 0
 
     try:
-        raw_output = _run_rftagger(full_text)
+        if backend == "rftagger":
+            raw_output = _run_rftagger(full_text)
+            parsed_tokens = _parse_rftagger_output(raw_output)
+
+        elif backend == "corenlp":
+            raw_output = _run_corenlp(full_text)
+            parsed_tokens = _parse_corenlp_output(raw_output)
+
+        else:
+            return {
+                "success": False,
+                "message": f"Неизвестный backend POS-разметки: {backend}",
+                "updated_tokens": 0,
+                "skipped_tokens": 0,
+                "errors": [f"Неизвестный backend: {backend}"],
+            }
+
     except Exception as e:
         return {
             "success": False,
-            "message": "Ошибка запуска RFTagger",
+            "message": f"Ошибка запуска POS-разметчика '{backend}'",
             "updated_tokens": 0,
             "skipped_tokens": 0,
             "errors": [str(e)],
         }
 
-    parsed_tokens = _parse_rftagger_output(raw_output)
     if not parsed_tokens:
         return {
             "success": False,
-            "message": "RFTagger не вернул токены",
+            "message": f"{backend} не вернул токены",
             "updated_tokens": 0,
             "skipped_tokens": 0,
-            "errors": ["RFTagger вернул пустой результат"],
+            "errors": [f"{backend} вернул пустой результат"],
         }
 
-    # Сначала пробуем быстрый линейный матчинг
-    map_result, error_score = _fast_map_lists(
-        parsed_tokens,
-        sentence_tokens
-    )
+    map_result, error_score = _fast_map_lists(parsed_tokens, sentence_tokens)
 
-    # Если быстрый матчинг не справился, откатываемся на старый рекурсивный
     if map_result is None:
         map_result, error_score = _map_lists(
             parsed_tokens,
             sentence_tokens,
             0,
             0,
-            0
+            0,
         )
 
     if error_score > 10:
         errors.append(f"Слишком много ошибок сопоставления токенов: {error_score}")
 
-    converted_result = _convert_tags(map_result)
+    if backend == "rftagger":
+        converted_result = _convert_rftagger_tags(map_result)
+    elif backend == "corenlp":
+        converted_result = _convert_corenlp_tags(map_result)
+    else:
+        converted_result = []
 
-    # Быстрое обновление через bulk_update
     token_by_id = {token.idtoken: token for token in token_objects}
     changed_tokens = []
 
     with transaction.atomic():
         Token.objects.filter(idsentence__idtext=text).update(idpostag=None)
 
-        for token_id, short_tag in converted_result:
-            pos_tag_obj = pos_tag_map.get(short_tag)
+        for token_id, final_tag in converted_result:
+            pos_tag_obj = pos_tag_map.get(final_tag)
+
             if not pos_tag_obj:
                 skipped_tokens += 1
                 errors.append(
-                    f"Для token_id={token_id} не найден PosTag с tagtextabbrev='{short_tag}'"
+                    f"Для token_id={token_id} не найден PosTag для тега '{final_tag}'"
                 )
                 continue
 
@@ -201,9 +347,13 @@ def annotate_text_pos(text_id: int) -> dict:
         if changed_tokens:
             Token.objects.bulk_update(changed_tokens, ["idpostag"])
 
+    success_message = "POS-разметка завершена"
+    if skipped_tokens > 0:
+        success_message += f" (обновлено: {updated_tokens}, пропущено: {skipped_tokens})"
+
     return {
         "success": True,
-        "message": "POS-разметка завершена",
+        "message": success_message,
         "updated_tokens": updated_tokens,
         "skipped_tokens": skipped_tokens,
         "errors": errors,
@@ -212,21 +362,26 @@ def annotate_text_pos(text_id: int) -> dict:
 
 def _get_pos_tag_map() -> dict:
     """
-    Собирает словарь 
+    Собирает словарь POS-тегов.
     """
     result = {}
 
     for tag in PosTag.objects.all():
         abbrev = (tag.tagtextabbrev or "").strip()
+        full_tag = (tag.tagtext or "").strip()
+
         if abbrev:
             result[abbrev] = tag
+
+        if full_tag:
+            result[full_tag] = tag
 
     return result
 
 
 def _run_rftagger(text_content: str) -> str:
     """
-    Запускает RFTagger на всём тексте 
+    Запускает RFTagger на всём тексте.
     """
     tmp_dir = Path(settings.BASE_DIR) / "_rftagger_tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -254,7 +409,11 @@ def _run_rftagger(text_content: str) -> str:
             )
         else:
             command = [
-                os.path.join(settings.RFTAGGER_PATH, "cmd", f"rftagger-{settings.RFTAGGER_LANGUAGE}"),
+                os.path.join(
+                    settings.RFTAGGER_PATH,
+                    "cmd",
+                    f"rftagger-{settings.RFTAGGER_LANGUAGE}",
+                ),
                 str(temp_path),
             ]
 
@@ -275,12 +434,48 @@ def _run_rftagger(text_content: str) -> str:
             temp_path.unlink()
 
 
+def _run_corenlp(text_content: str) -> dict:
+    """
+    Отправляет текст в CoreNLP сервер и получает JSON.
+    """
+    base_url = getattr(settings, "CORENLP_URL", "").rstrip("/")
+    annotators = getattr(settings, "CORENLP_ANNOTATORS", "tokenize,ssplit,pos")
+    language = getattr(settings, "CORENLP_LANGUAGE", "french")
+
+    if not base_url:
+        raise RuntimeError("CORENLP_URL не задан в настройках")
+
+    properties = {
+        "annotators": annotators,
+        "outputFormat": "json",
+        "pipelineLanguage": language,
+        "tokenize.language": language,
+        "ssplit.isOneSentence": "false",
+    }
+
+    query = parse.urlencode({
+        "properties": json.dumps(properties, ensure_ascii=False)
+    })
+
+    url = f"{base_url}/?{query}"
+    data = text_content.encode("utf-8")
+
+    req = request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "text/plain; charset=utf-8"},
+        method="POST",
+    )
+
+    with request.urlopen(req, timeout=60) as response:
+        body = response.read().decode("utf-8")
+
+    return json.loads(body)
+
+
 def _windows_path_to_wsl_path(windows_path: str) -> str:
     """
-    Преобразует путь Windows вида:
-    C:\\path\\to\\file.txt
-    в путь WSL вида:
-    /mnt/c/path/to/file.txt
+    Преобразует путь Windows в путь WSL.
     """
     path = Path(windows_path).resolve()
     drive = path.drive.rstrip(":").lower()
@@ -290,6 +485,9 @@ def _windows_path_to_wsl_path(windows_path: str) -> str:
 
 
 def _parse_rftagger_output(raw_output: str) -> list:
+    """
+    Преобразует stdout RFTagger в список (token_text, raw_tag).
+    """
     result = []
 
     for line in raw_output.splitlines():
@@ -297,7 +495,6 @@ def _parse_rftagger_output(raw_output: str) -> list:
         if not line:
             continue
 
-        # служебные строки пропускаем
         if line.startswith("reading parameter file"):
             continue
         if line == "0" or line == "1":
@@ -314,9 +511,26 @@ def _parse_rftagger_output(raw_output: str) -> list:
     return result
 
 
-def _convert_tags(rftagger_map: list) -> list:
+def _parse_corenlp_output(raw_output: dict) -> list:
     """
-    Переводит теги RFTagger 
+    Преобразует JSON CoreNLP в список (token_text, raw_tag).
+    """
+    result = []
+
+    sentences = raw_output.get("sentences", [])
+    for sentence in sentences:
+        for token in sentence.get("tokens", []):
+            token_text = token.get("originalText") or token.get("word") or ""
+            raw_tag = token.get("pos") or ""
+            if token_text and raw_tag:
+                result.append((token_text, raw_tag))
+
+    return result
+
+
+def _convert_rftagger_tags(rftagger_map: list) -> list:
+    """
+    Преобразует теги RFTagger в сокращения, используемые в базе.
     """
     result = []
 
@@ -426,10 +640,39 @@ def _convert_tags(rftagger_map: list) -> list:
 
     return result
 
-def _fast_map_lists(tagger_tokens: list, sentence_tokens: list):
+
+def _convert_corenlp_tags(corenlp_map: list) -> list:
+    """
+    Преобразует теги CoreNLP 
+    """
     result = []
 
-    # выкидываем -EMPTY- токены из БД для быстрого сопоставления
+    for token_id, raw_tag in corenlp_map:
+        cleaned_tag = (raw_tag or "").strip()
+        if not cleaned_tag:
+            continue
+
+        if cleaned_tag in DIRECT_DB_TAGS:
+            result.append((token_id, cleaned_tag))
+            continue
+
+        mapped_tag = CORENLP_TREEBANK_TO_DB_TAG.get(cleaned_tag)
+        if mapped_tag:
+            result.append((token_id, mapped_tag))
+            continue
+
+        # неизвестные теги уводим в X, чтобы разметка не пропадала совсем
+        result.append((token_id, "X"))
+
+    return result
+
+
+def _fast_map_lists(tagger_tokens: list, sentence_tokens: list):
+    """
+    Быстрое линейное сопоставление токенов разметчика и токенов из БД.
+    """
+    result = []
+
     filtered_sentence_tokens = [
         token for token in sentence_tokens
         if token["tokentext"] != "-EMPTY-"
@@ -443,19 +686,25 @@ def _fast_map_lists(tagger_tokens: list, sentence_tokens: list):
         raw_tag = tagger_item[1]
         db_token = db_item["tokentext"]
 
-        # обычное полное совпадение
         if db_token == tagger_token:
             result.append((db_item["idtoken"], raw_tag))
             continue
 
-        # частый случай: в БД токен "." отдельно, а таггер склеил слово с точкой
-        # например "Test" + "." в БД и "Test." у таггера
-        # этот быстрый матчинг такое не обрабатывает, значит уходим в fallback
         return None, 1
 
     return result, 0
 
-def _map_lists(tagger_tokens: list, sentence_tokens: list, tagger_index: int, sentence_index: int, error_score: int = 0):
+
+def _map_lists(
+    tagger_tokens: list,
+    sentence_tokens: list,
+    tagger_index: int,
+    sentence_index: int,
+    error_score: int = 0,
+):
+    """
+    Более гибкое рекурсивное сопоставление токенов.
+    """
     ret = []
     error_count = 0
 

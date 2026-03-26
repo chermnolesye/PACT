@@ -27,6 +27,7 @@ from core_app.models import (
     User,
 )
 from .pos_tagger import annotate_text_pos
+from django.http import Http404
 
 def show_text_markup(request, text_id=None):
     if text_id is None:
@@ -585,7 +586,16 @@ def get_default_text_type():
     text_type = TextType.objects.filter(texttypename="Не указано").first()
     if text_type:
         return text_type
-    return get_object_or_404(TextType, idtexttype=14)
+
+    text_type = TextType.objects.filter(texttypename="Другое").first()
+    if text_type:
+        return text_type
+
+    text_type = TextType.objects.order_by("idtexttype").first()
+    if text_type:
+        return text_type
+
+    raise Http404("В таблице TextType нет ни одной записи")
 
 @user_passes_test(has_teacher_rights, login_url='/auth/login/')
 def search_texts(request):
