@@ -3,32 +3,21 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.utils.crypto import get_random_string
 from django.db.models import Q
-
+from authorization_app.decorators import *
 from admin_app.forms import StudentRegistrationForm, TeacherRegistrationForm
 from core_app.models import User, Student, Rights
-
-
-def admin_right_required(view_func):
-    @login_required
-    def _wrapped(request, *args, **kwargs):
-        user = request.user
-        if not hasattr(user, 'idrights') or user.idrights.rightsname != "Администратор":
-            return redirect('search_texts')
-        return view_func(request, *args, **kwargs)
-    return _wrapped
-
 
 def generate_password(length=8):
     allowed_chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz234567890'
     return get_random_string(length, allowed_chars=allowed_chars)
 
 
-@admin_right_required
+@admin_required
 def admin_index(request):
     return render(request, 'admin_app/index.html')
 
 
-@admin_right_required
+@admin_required
 def teachers_list(request):
     q = (request.GET.get('q') or '').strip()
 
@@ -50,7 +39,7 @@ def teachers_list(request):
     return render(request, 'admin_app/teachers_list.html', {'teachers': teachers, 'q': q})
 
 
-@admin_right_required
+@admin_required
 def students_list(request):
     q = (request.GET.get('q') or '').strip()
 
@@ -72,7 +61,7 @@ def students_list(request):
     return render(request, 'admin_app/students_list.html', {'students': students, 'q': q})
 
 
-@admin_right_required
+@admin_required
 def reset_user_password(request, iduser: int):
     if request.method != 'POST':
         return redirect('admin_index')
@@ -95,7 +84,7 @@ def reset_user_password(request, iduser: int):
     return redirect(request.POST.get('next') or 'admin_index')
 
 
-@admin_right_required
+@admin_required
 def register_student(request):
     if request.method == 'POST':
         form = StudentRegistrationForm(request.POST)
@@ -134,7 +123,7 @@ def register_student(request):
     return render(request, 'admin_app/register_student.html', {'form': form})
 
 
-@admin_right_required
+@admin_required
 def register_teacher(request):
     if request.method == 'POST':
         form = TeacherRegistrationForm(request.POST)

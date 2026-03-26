@@ -26,7 +26,9 @@ import openpyxl
 from openpyxl.styles import Font
 import numpy as np
 import scipy
+from authorization_app.decorators import *
 
+@teacher_required
 def export_group_error_stats(request):
     group_id = request.GET.get('group')
     if not group_id:
@@ -93,7 +95,7 @@ def export_group_error_stats(request):
     wb.save(response)
     return response
 
-
+@teacher_required
 def statistics_view(request):
     groups = (
         Group.objects.select_related("idayear")
@@ -117,7 +119,7 @@ def statistics_view(request):
 
     return render(request, "statistics.html", context)
 
-
+@teacher_required
 def error_stats(request):
     tags = ErrorTag.objects.all().values(
         "iderrortag",
@@ -178,7 +180,7 @@ def error_stats(request):
     context = {"tags_error": dict(grouped_tags)}
     return render(request, "error_stats.html", context)
 
-
+@teacher_required
 def chart_types_errors(request):
     if request.method != "POST":
         levels = dashboards.get_levels()
@@ -449,6 +451,7 @@ def chart_types_errors(request):
 
             return JsonResponse({"data_type_errors": data}, status=200)
 
+@teacher_required
 def chart_grade_errors(request):
 
     if request.method != 'POST':
@@ -732,6 +735,7 @@ def chart_grade_errors(request):
             
             return JsonResponse({'data_grade_errors': data_errorlevel}, status=200)
 
+@teacher_required
 def chart_types_grade_errors(request):
     if request.method != 'POST':
         print("=== PROCESSING TYPES GRADE ERRORS GET REQUEST ===")
@@ -971,7 +975,7 @@ def chart_types_grade_errors(request):
     # Если прилетело что-то неизвестное
     return JsonResponse({"error": "Unknown flag_post"}, status=400)
 
-
+@teacher_required
 def chart_student_dynamics(request):		
     if request.method != 'POST':
         tags = list(ErrorTag.objects.values('iderrortag', 'tagtext', 'tagtextrussian')
@@ -1056,7 +1060,7 @@ def get_tag_children(tag_id):
         idtagparent=tag_id
     ).values_list('iderrortag', flat=True))
 
-
+@teacher_required
 def chart_groups_errors(request):		
     if request.method != 'POST':
         tags = list(ErrorTag.objects.values('iderrortag', 'tagtext', 'tagtextrussian')
@@ -1164,6 +1168,7 @@ def chart_groups_errors(request):
                 'text_types': []
             }, status=500)
 
+@teacher_required
 def chart_emotions_errors(request):
     if request.method != 'POST':
         print("=== PROCESSING EMOTIONS GET REQUEST ===")
@@ -1368,6 +1373,7 @@ def chart_emotions_errors(request):
 
             return JsonResponse({"data_type_errors": data}, status=200)
 
+@teacher_required
 def chart_self_rating_errors(request):
     if request.method != 'POST':
 
@@ -1576,7 +1582,7 @@ def chart_self_rating_errors(request):
 
             return JsonResponse({"data_type_errors": data}, status=200)
 
-        
+@teacher_required    
 def chart_relation_assessment_self_rating(request):    
     if request.method != 'POST':
         return render(request, 'dashboard_assessment_self_rating.html', {'right': True})
@@ -1679,6 +1685,7 @@ def chart_relation_assessment_self_rating(request):
 
 # ПОИСК ЗАВИСИМОСТЕЙ
 
+@teacher_required
 def relation_emotions_self_rating(request):	
 	if request.method != 'POST':
 		languages = ['Deustache']
@@ -1737,7 +1744,7 @@ def relation_emotions_self_rating(request):
 		
 		return JsonResponse({'data_relation': data, 'relation': relation, 'data_fisher': data_fisher}, status=200)
 
-
+@teacher_required
 def relation_emotions_assessment(request):	
 	if request.method != 'POST':
 		languages = ['Deustache']
@@ -1795,7 +1802,7 @@ def relation_emotions_assessment(request):
 		
 		return JsonResponse({'data_relation': data, 'relation': relation, 'data_fisher': data_fisher}, status=200)
 
-
+@teacher_required
 def relation_self_rating_assessment(request):	
 	if request.method != 'POST':
 		languages = ['Deustache']
@@ -1850,7 +1857,7 @@ def relation_self_rating_assessment(request):
 		
 		return JsonResponse({'data_relation': data, 'relation': relation, 'data_fisher': data_fisher}, status=200)
 
-
+@teacher_required
 def relation_course_errors(request):	
 	if request.method != 'POST':
 		languages = ['Deustache']
