@@ -751,6 +751,42 @@ def grade_text(request, idexercise=2):
                         "idtagparent": error.iderrortag.idtagparent,
                     })
             
+            
+            empty_next_error_tokens = token.next_token.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+
+            next_errors_list = []
+
+            for eet in empty_next_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    next_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+
+            if (next_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber + 1,
+                    "exercise_errors": next_errors_list,
+                })
+
             exercise_error_tokens = token.linked_token.select_related(
                 "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
             ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
@@ -785,6 +821,42 @@ def grade_text(request, idexercise=2):
                 "errors": errors_list,
                 "exercise_errors": exercise_errors_list,
             })
+
+            
+            empty_prev_error_tokens = token.prev_token.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+
+            prev_errors_list = []
+
+            for eet in empty_prev_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    prev_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+
+            if (prev_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber - 1,
+                    "exercise_errors": prev_errors_list,
+                })
 
         sentence_data.append({
             "id_sentence": sentence.idsentence,
@@ -887,16 +959,17 @@ def student_grade_text(request, idexercise=2):
                         "idtagparent": exerror.iderrortag.idtagparent,
                     })
 
-            tokens_data.append({
-                "token_id": None,
-                "token": '-EMPTY-',
-                "pos_tag": None,
-                "pos_tag_russian": None,
-                "pos_tag_abbrev": None,
-                "pos_tag_color": None,
-                "token_order_number": token.tokenordernumber + 1,
-                "exercise_errors": next_errors_list,
-            })
+            if (next_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber + 1,
+                    "exercise_errors": next_errors_list,
+                })
 
             exercise_error_tokens = token.linked_token.select_related(
                 "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
@@ -955,16 +1028,17 @@ def student_grade_text(request, idexercise=2):
                         "idtagparent": exerror.iderrortag.idtagparent,
                     })
 
-            tokens_data.append({
-                "token_id": None,
-                "token": '-EMPTY-',
-                "pos_tag": None,
-                "pos_tag_russian": None,
-                "pos_tag_abbrev": None,
-                "pos_tag_color": None,
-                "token_order_number": token.tokenordernumber - 1,
-                "exercise_errors": prev_errors_list,
-            })
+            if (prev_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber - 1,
+                    "exercise_errors": prev_errors_list,
+                })
 
         sentence_data.append({
             "id_sentence": sentence.idsentence,
