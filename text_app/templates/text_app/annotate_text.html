@@ -1810,11 +1810,11 @@
                     'text_id': textId
                 })
             })
-             .then(response => {
+            .then(response => {
                 console.log('RAW RESPONSE:', response);
 
                 if (!response.ok) {
-                    throw new Error(HTTP error: ${response.status});
+                    throw new Error(`HTTP error: ${response.status}`);
                 }
 
                 return response.json();
