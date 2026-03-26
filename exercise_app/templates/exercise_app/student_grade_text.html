@@ -93,6 +93,7 @@
                 </svg>
             </span>
         </div>
+        {% endif %}
         <div class="menu-block" id="gray_border" data-target="grade-content">
             <span>
                 Оценка исходного текста
@@ -101,7 +102,6 @@
                 </svg>
             </span>
         </div>
-        {% endif %}
         <button class="rate-other-btn">Оценить исходный текст</button>
         <button class="submit-btn">Завершить</button>
         {% endif %}
@@ -245,7 +245,7 @@
             <form method="post" id="annotation-form">
                 {% csrf_token %}
                 <input type="hidden" id="chosen-ids" name="chosen_ids">
-                <input type="hidden" id="sentences" name="sentences">
+                <input type="hidden" id="empty_tokens" name="empty_tokens">
                 <div class="annotation-modal-content">
                     <p>Фрагмент с ошибкой: <span id="chosen_words" style="color:black;"></span></p>
                     <div style="width: 100%; overflow: hidden;">
@@ -345,9 +345,11 @@
                 <p class="sentence-number">{{ sentence.sentence.ordernumber|add:1 }}:</p>
                 {% for token in sentence.tokens %}
                 {% if exercise.exercisemark or token.token != '-EMPTY-' or token.exercise_errors %}
+                
                 <svg class="clickable-icon" width="20" height="20" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="#768088" stroke-width="4" stroke-linecap="round" />
                 </svg>
+
                 <span class="token"
                       id_token="{{ token.token_id }}"
                       data-pos-tag="{{ token.pos_tag }}"
@@ -385,7 +387,7 @@
                     {% endif %}
 
                     {% if token.token == '-EMPTY-' %}
-                    <span class="word">
+                    <span class="word old-empty-token">
                         <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>
                     </span>
                     {% else %}
@@ -394,9 +396,11 @@
                 </span>
                 {% endif %}
                 {% endfor %}
+                {% if sentence.tokens|last != '-EMPTY-' %}
                 <svg class="clickable-icon" width="20" height="20" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="#768088" stroke-width="4" stroke-linecap="round" />
                 </svg>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -489,6 +493,19 @@
             const errorsCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
             const originalViewCheckbox = document.querySelector('.option-group:nth-child(4) input[type="checkbox"]');
             const tokens = document.querySelectorAll('.token');
+
+            //удаление лишних плюсиков
+            document.querySelectorAll(".token").forEach(token => {
+                let word = token.querySelector(".word");
+                if (word.classList.contains('old-empty-token')) {
+                    if (token.nextElementSibling instanceof SVGElement) {
+                        (token.nextElementSibling).remove()
+                    }
+                    if (token.previousElementSibling instanceof SVGElement) {
+                        (token.previousElementSibling).remove()
+                    }
+                }
+            });
 
             // Функция обновления отображения
             function updateDisplay() {
@@ -711,7 +728,6 @@
             async function fetchDataAsync(url, let_tags) {
                 const response = await fetch(url);
                 list_tags = await response.json();
-                console.log(list_tags);
                 createSelect(list_tags);
             }
 
@@ -766,7 +782,6 @@
                             РЕДАКТИРОВАНИЕ
             */
             function EditAnnotationForm(tokenElement) {
-                console.log("РЕДАКТИРОВАНИЕ ОТКРЫТО")
                 // let iderror = tokenElement.data.errorId;
                 let iderror = tokenElement?.dataset.errorId || null;
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
@@ -811,8 +826,6 @@
                         let i = 0;
                         Array.from(reasonSelect.options).forEach(option => {
                             if (option.text === reasonText) {
-                                console.log(reasonText, i);
-                                console.log(reasonSelect.children[3]);
                                 reasonSelect.children[0].removeAttribute("selected");
                                 reasonSelect.children[i].setAttribute("selected", '');
                                 option.selected = option.text;
@@ -820,7 +833,6 @@
                             }
                             i = i + 1;
                         });
-                        console.log(reasonSelect.children);
                     }
                 }
 
@@ -865,7 +877,6 @@
 
             // Функция для сохранения отредактированной аннотации
             function saveAnnotation(errorId) {
-                console.log('saveAnnotation', errorId);
                 //location.reload();
                 document.getElementById('save-annotation').onclick = function () { };
 
@@ -1137,8 +1148,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const rateBtn = document.querySelector('.rate-other-btn');
             const submitBtn = document.querySelector('.submit-btn');
-            const modal = document.getElementById('modal');
-            const closeModal = document.querySelector('.close-modal');
+            const closeModal = document.querySelectorAll('.close-modal');
             const menuBlocks = document.querySelectorAll('.menu-block');
             const backButton = document.querySelector('.button-grey');
 
@@ -1246,9 +1256,11 @@
                 });
             }
 
-            closeModal.addEventListener('click', function () {
-                modal.style.display = 'none';
-            });
+            closeModal.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    btn.parentElement.parentElement.parentElement.style.display = 'none';
+                });
+            })
 
             modal.addEventListener('click', function (e) {
                 if (e.target === modal) {
@@ -1344,7 +1356,6 @@
         */
 
         function addErrorAnnotation() {
-            console.log('addErrorAnnotation');
 
             // Этот кусок скрипта на валидацию формы,
             // чтоб незаполненные обязательные поля подсвечивались,
@@ -1361,7 +1372,7 @@
             const chosen_ids = [];
             const sentence_ids = [];
             const positions = [];
-            const sentencesMap = {};
+            const empty_tokens = [];
 
             // Собираем ID выбранных токенов и информацию о новых пустых токенах
             chosen.forEach(word => {
@@ -1369,29 +1380,31 @@
 
                 // Если это новый пустой токен
                 if (word.classList.contains('empty-token')) {
-                    let sentence_id = token.getAttribute('sentence_id');
                     let position = token.getAttribute('data-position');
-
-                    if (!sentencesMap[sentence_id]) {
-                        sentencesMap[sentence_id] = {
-                            id_sentence: sentence_id,
-                            empty_token_pos: [position]
+                    if (position == 0) {
+                        data = {
+                            prev_id: null,
+                            next_id: (token.nextElementSibling).getAttribute('id_token')
                         };
                     } else {
-                        sentencesMap[sentence_id].empty_token_pos.push(position);
+                        data = {
+                            prev_id: (token.previousElementSibling).getAttribute('id_token'),
+                            next_id: null
+                        };
                     }
+                    empty_tokens.push(data);
                 }
                 // Если это обычный токен
                 else if (token.hasAttribute('id_token')) {
                     chosen_ids.push(token.getAttribute('id_token'));
                 }
             });
-
-            const sentences = Object.values(sentencesMap);
+            const new_empty_tokens = Object.values(empty_tokens);
+            console.log(empty_tokens)
 
             // Прокидываем данные в скрытые поля
             document.getElementById('chosen-ids').value = JSON.stringify(chosen_ids);
-            document.getElementById('sentences').value = JSON.stringify(sentences);
+            document.getElementById('empty_tokens').value = JSON.stringify(new_empty_tokens);
 
             // Устанавливаем флаг формы
             // const form = document.getElementById('annotation-form');
@@ -1423,7 +1436,7 @@
 
             // Прокидываем данные в скрытые поля
             document.getElementById('chosen-ids').value = JSON.stringify(chosen_ids);
-            document.getElementById('sentences').value = JSON.stringify([]);
+            document.getElementById('empty_tokens').value = JSON.stringify([]);
 
             // Устанавливаем флаг удаления
             const form = document.getElementById('annotation-form');
