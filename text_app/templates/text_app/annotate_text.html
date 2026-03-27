@@ -1695,7 +1695,7 @@
             formData.append('text_id', textId);
             formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
 
-            fetch('/text/check_ai/', {
+            fetch("{% url 'check_ai' %}", {
                 method: 'POST',
                 body: formData,
             })

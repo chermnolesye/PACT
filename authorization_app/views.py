@@ -29,9 +29,13 @@ def user_login(request):
                     return redirect('admin_index')
 
                 if user.idrights.idrights in [2]:
-                    return redirect('search_texts')
+                    # return redirect('search_texts')
+                    next_url = request.GET.get('next', reverse('search_texts'))
+                    return redirect(next_url)
                 else:
-                    return redirect('student_search_texts') 
+                    # return redirect('student_search_texts')
+                    next_url = request.GET.get('next', reverse('student_search_texts'))
+                    return redirect(next_url)
             else:
                 messages.error(request, "Неверный логин или пароль.")
     else:
