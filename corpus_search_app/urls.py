@@ -3,7 +3,7 @@ from .views import (
     corpus_search,
     corpus_filters_api,
     corpus_search_api,
-    corpus_text_detail,
+    corpus_text_detail
 )
 
 urlpatterns = [

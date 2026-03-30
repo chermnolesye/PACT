@@ -1,10 +1,15 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Поиск по корпусу</title>
-</head>
-<body>
+{% extends base_template %}
+
+{% load static %}
+
+{% block title %}Поиск по корпусу{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/corpus_search.css' %}" />
+    {% endblock %}
+
+
+{% block content %}
     <h1>Поиск по корпусу</h1>
 
     <!-- <button id="load-filters-btn">Загрузить фильтры</button> -->
@@ -16,7 +21,9 @@
     <hr>
     <h2>Результаты</h2>
     <div id="results"></div>
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
     const groupsContainer = document.getElementById("groups-container");
     let filtersData = null;
@@ -229,5 +236,5 @@
         loadFilters();
     });
 </script>
-</body>
-</html>
+
+{% endblock %}

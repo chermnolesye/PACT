@@ -19,9 +19,25 @@ from core_app.models import (
     Reason,
 )
 
-
 def corpus_search(request):
-    return render(request, "corpus_search.html")
+    if not request.user.is_authenticated:
+        base_template = 'guest_base.html'
+    else:
+        if hasattr(request.user, 'idrights'):
+            if request.user.idrights.idrights == 2:
+                base_template = 'base.html'
+            elif request.user.idrights.idrights == 1:
+                base_template = 'student_base.html'
+            elif request.user.idrights.idrights == 4:
+                base_template = 'admin_base.html'
+            else:
+                base_template = 'guest_base.html'
+        else:
+            base_template = 'guest_base.html'
+    context = {
+        'base_template': base_template
+    }
+    return render(request, "corpus_search.html", context)
 
 
 @require_GET
