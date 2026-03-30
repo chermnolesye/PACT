@@ -52,10 +52,18 @@
         </div>
         {% endif %}
         {% endif %}
+        <div class="menu-block" data-target="grade-content"  id="gray_border">
+            <span>
+                Оценка исходного текста
+                <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
+                </svg>
+            </span>
+        </div>
         {% if exercise.exercisemark %}
         <div class="menu-block" id="gray_border" data-target="mark-content">
             <span>
-                Оценка:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
+                Оценка за упражнение:&nbsp;{{ exercise.get_exercisemark_display }}&nbsp;
             </span>
             <svg width="10" height="10" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.5753 2L7.70808 10.5L1.84082 2" stroke="#000" stroke-width="3" stroke-linecap="round" />
@@ -165,9 +173,33 @@
         </div>
     </div>
 
+    <div class="menu-content" id="grade-content">
+        <div class="menu-content-grade">
+            <div class="menu-content-grade-col ">
+                <p>Оценка исходного текста</p>
+                <div class="menu-content-data">
+                    <p>Оценка:</p>
+                    <p class="p-dark"> {{ textgrade }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Полнота:</p>
+                    <p class="p-dark"> {{ completeness }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Структура:</p>
+                    <p class="p-dark"> {{ structure }} </p>
+                </div>
+                <div class="menu-content-data">
+                    <p>Связность:</p>
+                    <p class="p-dark"> {{ coherence }} </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="menu-content" id="mark-content">
         <div class="menu-content-data">
-            <p>Оценка:</p>
+            <p>Оценка за упражнение:</p>
             <p class="p-dark"> {{ exercise.get_exercisemark_display }} </p>
         </div>
         <div class="menu-content-data">
@@ -343,6 +375,9 @@
         </div>
         {% endfor %}
     </div>
+{% endblock %}
+
+{% block extra_scripts %}
     <script>
         const chosen = [];
         document.addEventListener('DOMContentLoaded', function () {
@@ -351,7 +386,7 @@
                 tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
                 tokenElementsTeacher.forEach(el => {
                     if (tokenElement.dataset.errorTag == el.dataset.errorTag) {
-                        tokenElement.style.background ="#8FFF73"
+                        tokenElement.style.background = "#8FFF73"
                     }
                 })
             })
@@ -498,7 +533,7 @@
                     document.getElementById('errS').style.display = "none"
                     document.getElementById('annS').style.display = "inline"
                 }
-                
+
                 const rect = tokenElement.getBoundingClientRect();
                 const offsetLeft = rect.left + window.scrollX;
                 const offsetTop = rect.top + window.scrollY;
@@ -693,7 +728,7 @@
                             }
                         })
                         if (!tokenElementStudent) {
-                            MissedErr = MissedErr+ 1
+                            MissedErr = MissedErr + 1
                         }
                         else {
                             FoundRightErr = FoundRightErr + 1

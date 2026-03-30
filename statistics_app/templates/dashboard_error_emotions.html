@@ -1,18 +1,21 @@
 {% load static %} 
-{%block plugins%}
+{% block plugins %}
 <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 <script src="{% static 'js/external/axios.min.js' %}"></script>
 <script src="{% static 'js/external/chart.umd.min.js' %}"></script>
 <script src="{% static 'js/external/xlsx.full.min.js' %}"></script>
 <script src="{% static 'js/external/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'js/external/jquery.min.js' %}"></script>
-{%endblock plugins%} {% block link %}
+{% endblock plugins %}
+
+{% block link %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/dashboards.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'css/external/bootstrap.min.css' %}" />
 {% endblock link %}
 
 {% block content %}
 <main class="container-fluid mt-5 fs-5">
+
 	<h2 class="text-primary text-center my-5">Количество ошибок в разрезе типов ошибок для заданного эмоционально-физиологического состояния</h2>
 
 	<div class="d-flex flex-column flex-md-row my-4 gap-4 justify-content-evenly">
@@ -28,11 +31,10 @@
 		<div id="signature" class="col">
 			<label class="text-center text-primary"> Подписи на </label>
 			<hr class="mt-1"/>
-			{% verbatim %}
 			<select class="form-select" v-model="selected_language_labels" @change="on_change_language_labels">
-				<option v-for="language_label in language_labels">{{ language_label }}</option>
+				<option value="russian">Русском</option>
+				<option value="project">{{ language_label_in_russian }}</option>
 			</select>
-			{% endverbatim %}
 		</div>
 
 		<div id="level_detail" class="col">
@@ -81,6 +83,7 @@
 					</div>
 				</div>
 			</div>
+
 			<div class="col">
 				<div class="d-flex flex-column flex-md-row gap-2">
 					<div class="col-0">
@@ -88,9 +91,9 @@
 					</div>
 					<div id="tag_parents" class="col">
 						{% verbatim %}
-						<select class="form-select" v-model="selected_tag_parent" @change="on_change_tag_parent" >
+						<select class="form-select" v-model="selected_tag_parent" @change="on_change_tag_parent">
 							<option selected> -- </option>
-							<option v-for="tag_parent in tag_parents":value="tag_parent.iderrortag">
+							<option v-for="tag_parent in tag_parents" :value="tag_parent.iderrortag">
 								{{ tag_parent.tagtextrussian }}
 							</option>
 						</select>
@@ -99,6 +102,7 @@
 				</div>
 			</div>
 		</div>
+
 		<div class="d-flex flex-column flex-md-row gap-2">
 			<div class="col">
 				<button
@@ -128,7 +132,7 @@
 				</button>
 			</div>
 			<div class="col-0">
-			 	<button id="btn-download" type="button" class="btn btn-primary" onclick="on_download()" >Скачать</button>
+			 	<button id="btn-download" type="button" class="btn btn-primary" onclick="on_download()">Скачать</button>
 			</div>
 		</div>
 	</div>
@@ -139,7 +143,7 @@
 				<form id="form_filters" name="filters">
 					<div class="d-flex flex-column flex-md-row my-4 gap-4 justify-content-evenly">
 						<div class="card col-5">
-							<div class="card-header text-secondary" > Фильтры по студентам </div>
+							<div class="card-header text-secondary"> Фильтры по студентам </div>
 							<div id="filters_for_student" class="card-body">
 								<div class="form-check">
 									<input
@@ -198,8 +202,7 @@
 													v-model="selected_group"
 													size="6"
 												>
-													<option v-for="group in filtered_groups" 
-															:value="group.idgroup">
+													<option v-for="group in filtered_groups" :value="group.idgroup">
 														{{ group.groupname }} ({{ group.idayear__title }})
 													</option>
 												</select>
@@ -320,7 +323,7 @@
 													v-model="selected_course"
 													@change="on_change_course"
 												>
-													<option v-for="course in courses":value="course.studycourse">
+													<option v-for="course in courses" :value="course.studycourse">
 														{{ course.studycourse }}
 													</option>
 												</select>
@@ -362,7 +365,7 @@
 													v-model="selected_text"
 													@change="on_change_text"
 												>
-													<option v-for="text in texts":value="text.header">
+													<option v-for="text in texts" :value="text.header">
 														{{ text.header }}
 													</option>
 												</select>
@@ -398,9 +401,7 @@
 													v-model="selected_text_type"
 													@change="on_change_text_type"
 												>
-													<option
-														v-for="text_type in text_types":value="text_type.texttypename"
-													>
+													<option v-for="text_type in text_types" :value="text_type.texttypename">
 														{{ text_type.texttypename }}
 													</option>
 												</select>
@@ -418,8 +419,7 @@
 	</div>
 
 	<hr class="mt-2" />
-	<div id="legend_checked_filters">
-	</div>
+	<div id="legend_checked_filters"></div>
 
 	<div id="diagrams" class="d-flex flex-column my-2">
 		<div id="diagrams_emotions_errors">
@@ -432,19 +432,20 @@
 		</div>
 	</div>
 </main>
-{% endblock content%} {%block script%}
+{% endblock content %}
 
+{% block script %}
 <script type="text/javascript">
-	var list_levels = {{levels | safe}}
-	var list_emotions = {{emotions | safe}}
-	var list_groups = {{groups | safe}}
+	var list_levels = {{ levels|safe }}
+	var list_emotions = {{ emotions|safe }}
+	var list_groups = {{ groups|safe }}
 	var list_enrollment_date = []
-	var list_courses = {{courses | safe}}
-	var list_texts = {{texts | safe}}
-	var list_text_types = {{ text_types | safe}}
-	var list_data = {{data | safe}}
-	var list_tag_parents = {{tag_parents | safe}}
-	let dict_children = {{dict_children | safe}}
+	var list_courses = {{ courses|safe }}
+	var list_texts = {{ texts|safe }}
+	var list_text_types = {{ text_types|safe }}
+	var list_data = {{ data|safe }}
+	var list_tag_parents = {{ tag_parents|safe }}
+	let dict_children = {{ dict_children|safe }}
 
 	var data_for_language = list_data
 
@@ -526,7 +527,7 @@
 	function on_download() {
 		var data = []
 		data.push(["id_tag", "tag_parent", "tag_text", "tag_text_russian", "count_data", "count_data_on_tokens"])
-		for (let i=0; i<data_for_language.length; i++) {
+		for (let i = 0; i < data_for_language.length; i++) {
 			data.push([
 				data_for_language[i].iderrortag, 
 				data_for_language[i].idtagparent,
@@ -814,32 +815,32 @@
 	    }
 	})
 
-var emotions_app = new Vue({
-    el: '#emotions',
-    data: {
-        emotions: list_emotions,
-        selected_emotion: ''
-    },
-    mounted() {
-        if (this.emotions.length > 0) {
-            this.selected_emotion = this.emotions[0].idemotion;
-            const emotion = this.emotions.find(e => e.idemotion == this.selected_emotion);
-            current_emotion = emotion ? emotion.emotionname : '';
-            console.log("Auto-selected emotion:", current_emotion);
-            post_request_data();
-            update_legend_filters();
-        }
-    },
-    methods: {
-        async on_change_emotion() {
-            const emotion = this.emotions.find(e => e.idemotion == this.selected_emotion);
-            current_emotion = emotion ? emotion.emotionname : '';
-            console.log("Emotion changed to:", current_emotion);
-            await post_request_data();
-            update_legend_filters();
-        }
-    }
-})
+	var emotions_app = new Vue({
+	    el: '#emotions',
+	    data: {
+	        emotions: list_emotions,
+	        selected_emotion: ''
+	    },
+	    mounted() {
+	        if (this.emotions.length > 0) {
+	            this.selected_emotion = this.emotions[0].idemotion;
+	            const emotion = this.emotions.find(e => e.idemotion == this.selected_emotion);
+	            current_emotion = emotion ? emotion.emotionname : '';
+	            console.log("Auto-selected emotion:", current_emotion);
+	            post_request_data();
+	            update_legend_filters();
+	        }
+	    },
+	    methods: {
+	        async on_change_emotion() {
+	            const emotion = this.emotions.find(e => e.idemotion == this.selected_emotion);
+	            current_emotion = emotion ? emotion.emotionname : '';
+	            console.log("Emotion changed to:", current_emotion);
+	            await post_request_data();
+	            update_legend_filters();
+	        }
+	    }
+	})
 
 	var tag_parents_app = new Vue({
 		el: '#tag_parents',
@@ -855,7 +856,7 @@ var emotions_app = new Vue({
 					var grouped_data_for_tag = []
 					var tag_children = dict_children[this.selected_tag_parent]
 					
-					for (let i=0; i<tag_children.length; i++) {
+					for (let i = 0; i < tag_children.length; i++) {
 						var grouped_data = data_for_language.filter(data => data.iderrortag == tag_children[i])
 						if (grouped_data.length != 0) {
 							grouped_data_for_tag.push(grouped_data[0])
@@ -880,8 +881,7 @@ var emotions_app = new Vue({
 	var signature_app = new Vue({
 		el: '#signature',
 		data: {
-			language_labels: ['Русском', 'Немецком'],
-			selected_language_labels: 'Русском'
+			selected_language_labels: 'russian'
 		},
 		methods: {
 			on_change_language_labels() {
@@ -1233,8 +1233,8 @@ var emotions_app = new Vue({
 					sorted_data.sort((a, b) => (b.count_data_on_tokens || 0) - (a.count_data_on_tokens || 0));
 				}
 
-				for (let i=0; i<sorted_data.length; i++) {
-					if (signature_app.selected_language_labels == 'Русском') {
+				for (let i = 0; i < sorted_data.length; i++) {
+					if (signature_app.selected_language_labels == 'russian') {
 						labels.push(sorted_data[i].tagtextrussian)
 					} else {
 						labels.push(sorted_data[i].tagtext)
@@ -1254,223 +1254,223 @@ var emotions_app = new Vue({
 	})
 
 	var emotions_errors_pie_app = new Vue({
-    el: '#emotions_errors_pie',
-    data: {
-        chart: null,
-        labels: [],
-        stars: [],
-        chart_type: 'pie',
-        loading: false
-    },
-    mounted() {
-        this.init_chart()
-        this.get_data()
-        this.update_chart()
-    },
-    methods: {
-        init_chart() {
-            var ctx = this.$refs.chart.getContext('2d')
+	    el: '#emotions_errors_pie',
+	    data: {
+	        chart: null,
+	        labels: [],
+	        stars: [],
+	        chart_type: 'pie',
+	        loading: false
+	    },
+	    mounted() {
+	        this.init_chart()
+	        this.get_data()
+	        this.update_chart()
+	    },
+	    methods: {
+	        init_chart() {
+	            var ctx = this.$refs.chart.getContext('2d')
 
-            const lineLabelPlugin = {
-                id: 'lineLabels',
-                afterDraw(chart) {
-                    const ctx = chart.ctx;
-                    ctx.save();
-                    
-                    const dataset = chart.data.datasets[0];
-                    const meta = chart.getDatasetMeta(0);
-                    const total = dataset.data.reduce((a, b) => a + b, 0);
+	            const lineLabelPlugin = {
+	                id: 'lineLabels',
+	                afterDraw(chart) {
+	                    const ctx = chart.ctx;
+	                    ctx.save();
+	                    
+	                    const dataset = chart.data.datasets[0];
+	                    const meta = chart.getDatasetMeta(0);
+	                    const total = dataset.data.reduce((a, b) => a + b, 0);
 
-                    const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
-                    const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
-                    const radius = Math.min(
-                        (chart.chartArea.right - chart.chartArea.left) / 2,
-                        (chart.chartArea.bottom - chart.chartArea.top) / 2
-                    ) * 0.8;
-                    
-                    meta.data.forEach((element, index) => {
-                        const percentage = total > 0 ? (dataset.data[index] / total) * 100 : 0;
+	                    const centerX = chart.chartArea.left + (chart.chartArea.right - chart.chartArea.left) / 2;
+	                    const centerY = chart.chartArea.top + (chart.chartArea.bottom - chart.chartArea.top) / 2;
+	                    const radius = Math.min(
+	                        (chart.chartArea.right - chart.chartArea.left) / 2,
+	                        (chart.chartArea.bottom - chart.chartArea.top) / 2
+	                    ) * 0.8;
+	                    
+	                    meta.data.forEach((element, index) => {
+	                        const percentage = total > 0 ? (dataset.data[index] / total) * 100 : 0;
 
-                        if (percentage < 1.5) return;
-                        
-                        const label = chart.data.labels[index];
-                        const shortLabel = label.length > 20 ? label.substring(0, 20) + '...' : label;
-                        const labelText = `${shortLabel} (${percentage.toFixed(1)}%)`;
+	                        if (percentage < 1.5) return;
+	                        
+	                        const label = chart.data.labels[index];
+	                        const shortLabel = label.length > 20 ? label.substring(0, 20) + '...' : label;
+	                        const labelText = `${shortLabel} (${percentage.toFixed(1)}%)`;
 
-                        if (meta.data.length === 1) {
-                            const textX = centerX + radius + 70;
-                            const textY = centerY;
+	                        if (meta.data.length === 1) {
+	                            const textX = centerX + radius + 70;
+	                            const textY = centerY;
 
-                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                            ctx.strokeStyle = '#ccc';
-                            ctx.lineWidth = 1;
-                            const textWidth = ctx.measureText(labelText).width;
-                            ctx.fillRect(textX - 5, textY - 8, textWidth + 10, 16);
-                            ctx.strokeRect(textX - 5, textY - 8, textWidth + 10, 16);
+	                            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+	                            ctx.strokeStyle = '#ccc';
+	                            ctx.lineWidth = 1;
+	                            const textWidth = ctx.measureText(labelText).width;
+	                            ctx.fillRect(textX - 5, textY - 8, textWidth + 10, 16);
+	                            ctx.strokeRect(textX - 5, textY - 8, textWidth + 10, 16);
 
-                            ctx.fillStyle = '#333';
-                            ctx.font = '11px Arial';
-                            ctx.textAlign = 'left';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(labelText, textX, textY);
-                            
-                            return; 
-                        }
-                        
-                        const startAngle = element.startAngle;
-                        const endAngle = element.endAngle;
-                        const midAngle = startAngle + (endAngle - startAngle) / 2;
+	                            ctx.fillStyle = '#333';
+	                            ctx.font = '11px Arial';
+	                            ctx.textAlign = 'left';
+	                            ctx.textBaseline = 'middle';
+	                            ctx.fillText(labelText, textX, textY);
+	                            
+	                            return; 
+	                        }
+	                        
+	                        const startAngle = element.startAngle;
+	                        const endAngle = element.endAngle;
+	                        const midAngle = startAngle + (endAngle - startAngle) / 2;
 
-                        const labelX = centerX + Math.cos(midAngle) * radius;
-                        const labelY = centerY + Math.sin(midAngle) * radius;
+	                        const labelX = centerX + Math.cos(midAngle) * radius;
+	                        const labelY = centerY + Math.sin(midAngle) * radius;
 
-                        const isLeft = labelX < centerX;
-                        const lineLength = 60;
+	                        const isLeft = labelX < centerX;
+	                        const lineLength = 60;
 
-                        const lineEndX = labelX + Math.cos(midAngle) * lineLength;
-                        const lineEndY = labelY + Math.sin(midAngle) * lineLength;
+	                        const lineEndX = labelX + Math.cos(midAngle) * lineLength;
+	                        const lineEndY = labelY + Math.sin(midAngle) * lineLength;
 
-                        const textX = lineEndX + (isLeft ? -10 : 10);
-                        const textY = lineEndY;
+	                        const textX = lineEndX + (isLeft ? -10 : 10);
+	                        const textY = lineEndY;
 
-                        ctx.strokeStyle = '#666';
-                        ctx.lineWidth = 1;
-                        ctx.setLineDash([5, 3]);
-                        ctx.beginPath();
-                        ctx.moveTo(labelX, labelY);
-                        ctx.lineTo(lineEndX, lineEndY);
-                        ctx.stroke();
-                        ctx.setLineDash([]);
+	                        ctx.strokeStyle = '#666';
+	                        ctx.lineWidth = 1;
+	                        ctx.setLineDash([5, 3]);
+	                        ctx.beginPath();
+	                        ctx.moveTo(labelX, labelY);
+	                        ctx.lineTo(lineEndX, lineEndY);
+	                        ctx.stroke();
+	                        ctx.setLineDash([]);
 
-                        const textWidth = ctx.measureText(labelText).width;
-                        const textHeight = 16;
+	                        const textWidth = ctx.measureText(labelText).width;
+	                        const textHeight = 16;
 
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.strokeStyle = '#ccc';
-                        ctx.lineWidth = 1;
-                        
-                        if (isLeft) {
-                            ctx.fillRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
-                            ctx.strokeRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
-                        } else {
-                            ctx.fillRect(textX - 2, textY - 8, textWidth + 10, textHeight);
-                            ctx.strokeRect(textX - 2, textY - 8, textWidth + 10, textHeight);
-                        }
+	                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+	                        ctx.strokeStyle = '#ccc';
+	                        ctx.lineWidth = 1;
+	                        
+	                        if (isLeft) {
+	                            ctx.fillRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+	                            ctx.strokeRect(textX - textWidth - 8, textY - 8, textWidth + 10, textHeight);
+	                        } else {
+	                            ctx.fillRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+	                            ctx.strokeRect(textX - 2, textY - 8, textWidth + 10, textHeight);
+	                        }
 
-                        ctx.fillStyle = '#333';
-                        ctx.font = '11px Arial';
-                        ctx.textAlign = isLeft ? 'right' : 'left';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(labelText, isLeft ? textX - 5 : textX + 5, textY);
-                    });
-                    
-                    ctx.restore();
-                }
-            };
+	                        ctx.fillStyle = '#333';
+	                        ctx.font = '11px Arial';
+	                        ctx.textAlign = isLeft ? 'right' : 'left';
+	                        ctx.textBaseline = 'middle';
+	                        ctx.fillText(labelText, isLeft ? textX - 5 : textX + 5, textY);
+	                    });
+	                    
+	                    ctx.restore();
+	                }
+	            };
 
-            this.chart = new Chart(ctx, {
-                type: this.chart_type,
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Тип ошибки',
-                        backgroundColor: colors,
-                        borderColor: function(context) {
-                            const chart = context.chart;
-                            const meta = chart.getDatasetMeta(0);
-                            if (meta.data.length === 1) {
-                                return 'transparent';
-                            }
-                            return '#000000';
-                        },
-                        borderWidth: function(context) {
-                            const chart = context.chart;
-                            const meta = chart.getDatasetMeta(0);
-                            if (meta.data.length === 1) {
-                                return 0;
-                            }
-                            return 0.3;
-                        },
-                        data: []
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false 
-                        },
-                        tooltip: {
-                            enabled: true,
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
-                                    return `${label}: ${value.toFixed(2)}% (${percentage})`;
-                                }
-                            }
-                        }
-                    },
-                    layout: {
-                        padding: {
-                            left: 100,
-                            right: 100,
-                            top: 100,
-                            bottom: 100
-                        }
-                    }
-                },
-                plugins: [lineLabelPlugin]
-            })
-        },
-        update_chart() {
-            if (this.chart) {
-                this.chart.data.labels = this.labels
-                this.chart.data.datasets[0].data = this.stars
-                this.chart.update()
-            }
-        },
-        get_data() {
-            var labels = []
-            var points = []
-            var type_stat = document.getElementById("selected_stat").value
+	            this.chart = new Chart(ctx, {
+	                type: this.chart_type,
+	                data: {
+	                    labels: [],
+	                    datasets: [{
+	                        label: 'Тип ошибки',
+	                        backgroundColor: colors,
+	                        borderColor: function(context) {
+	                            const chart = context.chart;
+	                            const meta = chart.getDatasetMeta(0);
+	                            if (meta.data.length === 1) {
+	                                return 'transparent';
+	                            }
+	                            return '#000000';
+	                        },
+	                        borderWidth: function(context) {
+	                            const chart = context.chart;
+	                            const meta = chart.getDatasetMeta(0);
+	                            if (meta.data.length === 1) {
+	                                return 0;
+	                            }
+	                            return 0.3;
+	                        },
+	                        data: []
+	                    }]
+	                },
+	                options: {
+	                    responsive: true,
+	                    plugins: {
+	                        legend: {
+	                            display: false 
+	                        },
+	                        tooltip: {
+	                            enabled: true,
+	                            callbacks: {
+	                                label: function(context) {
+	                                    const label = context.label || '';
+	                                    const value = context.parsed;
+	                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+	                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+	                                    return `${label}: ${value.toFixed(2)}% (${percentage})`;
+	                                }
+	                            }
+	                        }
+	                    },
+	                    layout: {
+	                        padding: {
+	                            left: 100,
+	                            right: 100,
+	                            top: 100,
+	                            bottom: 100
+	                        }
+	                    }
+	                },
+	                plugins: [lineLabelPlugin]
+	            })
+	        },
+	        update_chart() {
+	            if (this.chart) {
+	                this.chart.data.labels = this.labels
+	                this.chart.data.datasets[0].data = this.stars
+	                this.chart.update()
+	            }
+	        },
+	        get_data() {
+	            var labels = []
+	            var points = []
+	            var type_stat = document.getElementById("selected_stat").value
 
-            let count = 0
-            let count_on_tokens = 0
-            for (let i=0; i<data_for_language.length; i++) {
-                count += data_for_language[i].count_data
-                count_on_tokens += data_for_language[i].count_data_on_tokens || 0
-            }
+	            let count = 0
+	            let count_on_tokens = 0
+	            for (let i = 0; i < data_for_language.length; i++) {
+	                count += data_for_language[i].count_data
+	                count_on_tokens += data_for_language[i].count_data_on_tokens || 0
+	            }
 
-            var sorted_data = [...data_for_language];
-            if (type_stat == 'абсолютная') {
-                sorted_data.sort((a, b) => b.count_data - a.count_data);
-            } else {
-                sorted_data.sort((a, b) => (b.count_data_on_tokens || 0) - (a.count_data_on_tokens || 0));
-            }
+	            var sorted_data = [...data_for_language];
+	            if (type_stat == 'абсолютная') {
+	                sorted_data.sort((a, b) => b.count_data - a.count_data);
+	            } else {
+	                sorted_data.sort((a, b) => (b.count_data_on_tokens || 0) - (a.count_data_on_tokens || 0));
+	            }
 
-            for (let i=0; i<sorted_data.length; i++) {
-                if (signature_app.selected_language_labels == 'Русском') {
-                    labels.push(sorted_data[i].tagtextrussian)
-                } else {
-                    labels.push(sorted_data[i].tagtext)
-                }
+	            for (let i = 0; i < sorted_data.length; i++) {
+	                if (signature_app.selected_language_labels == 'russian') {
+	                    labels.push(sorted_data[i].tagtextrussian)
+	                } else {
+	                    labels.push(sorted_data[i].tagtext)
+	                }
 
-                if (type_stat == 'абсолютная') {
-                    points.push(count > 0 ? (sorted_data[i].count_data * 100 / count) : 0)
-                } else {
-                    const value = sorted_data[i].count_data_on_tokens || 0
-                    points.push(count_on_tokens > 0 ? (value * 100 / count_on_tokens) : 0)
-                }
-            }
+	                if (type_stat == 'абсолютная') {
+	                    points.push(count > 0 ? (sorted_data[i].count_data * 100 / count) : 0)
+	                } else {
+	                    const value = sorted_data[i].count_data_on_tokens || 0
+	                    points.push(count_on_tokens > 0 ? (value * 100 / count_on_tokens) : 0)
+	                }
+	            }
 
-            this.labels = labels
-            this.stars = points
-        }
-    }
-})
+	            this.labels = labels
+	            this.stars = points
+	        }
+	    }
+	})
 
 	function on_change_font_size() {
 		var size = document.getElementById("font_size").value
@@ -1488,4 +1488,4 @@ var emotions_app = new Vue({
 		update_legend_filters();
 	});
 </script>
-{%endblock script%}
+{% endblock script %}

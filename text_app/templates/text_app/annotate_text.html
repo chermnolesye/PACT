@@ -321,23 +321,7 @@
                 </button>
             </div>
 
-            <!-- Модальное окно для оценки ИИ -->
-            <div id="ai-result-modal" class="modal-overlay" style="display:none;">
-                <div class="modal-content" style="max-width:400px;">
-                    <div class="modal-head">
-                        <p>Результат проверки на ИИ</p>
-                        <button onclick="document.getElementById('ai-result-modal').style.display='none'" class="close-modal">
-                            <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div style="padding:20px;" id="ai-result-content">
-                        <p>Загрузка...</p>
-                    </div>
-                </div>
-            </div>
-
+            
 
             <form method="post" id="grade-form">
                 {% csrf_token %}
@@ -381,6 +365,24 @@
             </form>
         </div>
     </div>
+    <!-- Модальное окно для оценки ИИ -->
+    <div id="ai-result-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="max-width:400px;">
+            <div class="modal-head">
+                <p>Результат проверки на ИИ</p>
+                <button onclick="document.getElementById('ai-result-modal').style.display='none'" class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <div style="padding:20px;" id="ai-result-content">
+                <p>Загрузка...</p>
+            </div>
+        </div>
+    </div>
+
+
 
     <div class="text-header">
         <h1 class="text-title">{{ text.header }}</h1>
@@ -468,6 +470,7 @@
                 <input type="hidden" id="chosen-ids" name="chosen_ids">
                 <input type="hidden" id="sentences" name="sentences">
                 <div class="annotation-modal-content">
+                    <p>Фрагмент с ошибкой: <span id="chosen_words" style="color:black;"></span></p>
                     <div style="width: 100%; overflow: hidden;">
                         <label id="tags-label" for="id_iderrortag" style="width: 550px; float: left; margin-top:15px;">Выберите тег:</label>
                         <!--<input type="text" id="tag-search" placeholder="Поиск тега" class="tag-search" style="width: 420px;">-->
@@ -526,7 +529,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block extra_scripts %}
     <script>
         const chosen = [];
         const chosen_ids = [];
@@ -838,6 +843,18 @@
                 let iderror = tokenElement?.dataset.errorId || null;
                 document.getElementById('save-annotation').onclick = function () { saveAnnotation(iderror); };
                 document.getElementById('delete-annotation').style.display = "block";
+
+                const thisErrorElements = document.querySelectorAll('.error-tag');
+                var error_str = "";
+
+                for (const tokenElement of thisErrorElements) {
+                    const attributeValue = tokenElement?.dataset.errorId;
+                    if (attributeValue == iderror) {
+                        error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
+                    }
+                }
+
+                document.getElementById('chosen_words').innerHTML = error_str
 
                 const height = Math.max(
                     document.body.scrollHeight,
@@ -1391,7 +1408,11 @@
 
         // Открытие модального окна при клике на кнопку "Добавить аннотацию"
         document.getElementById('button-add-annotation').addEventListener('click', function () {
-
+            var error_str = ""
+            document.querySelectorAll('.chosen_token').forEach(word => {
+                error_str += word.innerHTML + " ";
+            });
+            document.getElementById('chosen_words').innerHTML = error_str
             const height = Math.max(
                 document.body.scrollHeight,
                 document.body.offsetHeight,
@@ -1710,11 +1731,9 @@
         const headerElement = windowElement.getElementsByClassName("modal-head")[0];
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
-        const height = document.body.offsetHeight;
+        headerElement.onmousedown = function (e) { dragMouseDown(e) };
 
-        headerElement.onmousedown = function (e) { dragMouseDown(e, height) };
-
-        function dragMouseDown(e, height) {
+        function dragMouseDown(e) {
             e = e || window.event;
             e.preventDefault();
             pos3 = e.clientX;
@@ -1730,14 +1749,13 @@
             document.onmousemove = function (e) { elementDrag(e, x, y, border_bottom, border_right) };
         }
 
-        function elementDrag(e, x, y, border_bottom) {
+        function elementDrag(e, x, y, border_bottom, border_right) {
             e = e || window.event;
             e.preventDefault();
             pos1 = pos3 - e.clientX;
             pos2 = pos4 - e.clientY;
             pos3 = e.clientX;
             pos4 = e.clientY;
-
             if (pos4 >= y + 10 && border_bottom - pos4 >= 10 - y) {
                 windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
             }
@@ -1770,7 +1788,7 @@
             resultDiv.innerHTML = '<div class="loading">Отправка запроса...</div>';
 
             btn.disabled = true;
-            btn.textContent = 'Выполняется...';
+            btn.textContent = 'Разметка выполняется...';
 
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
@@ -1794,88 +1812,59 @@
                     'text_id': textId
                 })
             })
+            .then(response => {
+                console.log('RAW RESPONSE:', response);
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error: ${response.status}`);
+                }
+
+                return response.json();
+            })
             .then(data => {
                 console.log('ДАННЫЕ ОТВЕТА:', data);
 
                 // Проверяем успешность выполнения функции POS-теггера
-                if (data.result && data.result.success === true) {
+                // if (data.result && data.result.success === true) {
+                if (data.success === true && data.result && data.result.success === true) {
                     console.log('POS-теггер выполнен успешно');
-                    resultDiv.innerHTML = '<div class="success-message">Частеречныя разметка обновлена. Страница будет перезагружена...</div>';
+                    // resultDiv.innerHTML = '<div class="success-message">Частеречныя разметка обновлена. Страница будет перезагружена...</div>';
+                    const updatedTokens = data.result?.updated_tokens || 0;
+                    showSuccess(`Частеречная разметка обновлена!\nОбновлено токенов: ${updatedTokens}`);
                     setTimeout(() => {
                         location.reload();
                     }, 2000);
                 } else {
                     console.log('POS-теггер вернул ошибку');
 
-                    // Берем сообщение из result
                     const errorMessage = data.result?.message || data.message || 'Неизвестная ошибка';
-                    const errorsList = data.result?.errors ? data.result.errors.join('<br>') : '';
+                    const errorsList = data.result?.errors ? data.result.errors.join('\n') : '';
+                    const updatedTokens = data.result?.updated_tokens || 0;
+                    const skippedTokens = data.result?.skipped_tokens || 0;
 
-                    resultDiv.innerHTML = `
-                        <div class="error-message">
-                            <strong>Ошибка:</strong> ${errorMessage}<br>
-                            ${errorsList ? `<small>${errorsList}</small>` : ''}
-                            <br><br>
-                            <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
-                        </div>
-                    `;
+                    // Формируем полный текст уведомления
+                    let notificationMessage = errorMessage;
+                    if (errorsList) {
+                        notificationMessage += `\n\nДетали: ${errorsList}`;
+                    }
+                    notificationMessage += `\n\nОбновлено токенов: ${updatedTokens}, пропущено: ${skippedTokens}`;
+
+                    // Показываем уведомление
+                    showError(notificationMessage);
+                    resultDiv.style.display = 'none';
+                    // resultDiv.innerHTML = `
+                    //     <div class="error-message">
+                    //         <strong>Ошибка:</strong> ${errorMessage}<br>
+                    //         ${errorsList ? `<small>${errorsList}</small>` : ''}
+                    //         <br><br>
+                    //         <em>Обновлено токенов: ${data.result?.updated_tokens || 0}, пропущено: ${data.result?.skipped_tokens || 0}</em>
+                    //     </div>
+                    // `;
 
                     btn.disabled = false;
                     btn.textContent = 'Обновить частеречную разметку';
                 }
             })
-
-            // .then(response => {
-
-
-            //     console.log('Статус ответа:', response.status);
-            //     console.log('Headers:', response.headers);
-
-            //     // Проверяем content-type
-            //     const contentType = response.headers.get('content-type');
-            //     console.log('Content-Type:', contentType);
-
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP ошибка: ${response.status}`);
-            //     }
-
-
-            //     console.log('Статус ответа:', response.status);
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP ошибка: ${response.status}`);
-            //     }
-            //     return response.json();
-            // })
-            // .then(data => {
-            //     if (data.success === true) {
-            //         resultDiv.innerHTML = '<div class="success-message">POS-разметка выполнена успешно. Страница будет перезагружена...</div>';
-            //         setTimeout(() => {
-            //             // location.reload();
-            //         }, 2000);
-            //     } else {
-            //         const errorMessage = data.message || data.error || 'Неизвестная ошибка';
-            //         const errorsList = data.errors ? data.errors.join('<br>') : '';
-
-            //         resultDiv.innerHTML = `
-            //             <div class="error-message">
-            //                 <strong>✗ Ошибка:</strong> ${errorMessage}<br>
-            //                 ${errorsList ? `<small>${errorsList}</small>` : ''}
-            //                 <br><br>
-            //                 <em>Обновлено токенов: ${data.updated_tokens || 0}, пропущено: ${data.skipped_tokens || 0}</em>
-            //             </div>
-            //         `;
-
-            //         btn.disabled = false;
-            //         btn.textContent = 'Обновить частеречную разметку';
-            //     }
-            // })
-            // .catch(error => {
-            //     console.error('Ошибка:', error);
-            //     resultDiv.innerHTML = `<div class="error-message">Ошибка при отправке запроса: ${error.message}</div>`;
-            //     btn.disabled = false;
-            //     btn.textContent = 'Обновить частеречную разметку';
-            // });
         }
 
     </script>

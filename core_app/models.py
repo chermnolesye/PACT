@@ -376,9 +376,28 @@ class Exercise(models.Model):
         return f"Задание {self.idexercise} - {self.idexercisetype.exercisename}"
     
 class ExerciseGrading(models.Model):
+    TASK_RATES = (
+        (1, '1'),
+        (2, '2-'),
+        (3, '2'),
+        (4, '2+'),
+        (5, '3-'),
+        (6, '3'),
+        (7, '3+'),
+        (8, '4-'),
+        (9, '4'),
+        (10, '4+'),
+        (11, '5-'),
+        (12, '5')
+    )
+
     idexercisegrading = models.AutoField(primary_key=True)
     idtext = models.ForeignKey('Text', on_delete=models.CASCADE, db_column='idtext')
     idexercise = models.ForeignKey('Exercise', on_delete=models.CASCADE, db_column='idexercise')
+    textgrade = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
+    completeness = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
+    structure = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
+    coherence = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
 
     class Meta:
         db_table = 'tblexercisegrading'
@@ -390,7 +409,27 @@ class ExerciseErrorToken(models.Model):
     idexerciseerrortoken = models.AutoField(primary_key=True)
     idexercisegrading = models.ForeignKey('ExerciseGrading', on_delete=models.CASCADE, db_column='idexercisegrading')
     idexerciseerror = models.ForeignKey('ExerciseError', on_delete=models.CASCADE, db_column='idexerciseerror')
-    idtoken = models.ForeignKey('Token', on_delete=models.CASCADE, db_column='idtoken')
+    idtoken = models.ForeignKey(
+        'Token', 
+        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        related_name="linked_token"
+        )
+    idprevtoken = models.ForeignKey(
+        'Token', 
+        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        related_name="prev_token"
+        )
+    idnexttoken = models.ForeignKey(
+        'Token', 
+        on_delete=models.CASCADE,
+        blank=True, 
+        null=True,
+        related_name="next_token"
+        )
 
     class Meta:
         db_table = 'tblexerciseerrortoken'
