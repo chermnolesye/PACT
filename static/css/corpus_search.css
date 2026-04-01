@@ -1,0 +1,212 @@
+
+.corpus-search-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-group {
+    border: 1px solid #999;
+    border-radius: var(--border-radius);
+    padding: 10px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.search-group label{
+    color: var(--grey-color);
+    margin: 0px 5px;
+}
+
+.search-group:first-child .delete-group-btn {
+    display: none;
+}
+
+.search-group-title {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.delete-group-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.delete-group-btn:hover {
+    background-color: #cc0000;
+}
+
+.filter-row {
+    margin-bottom: 8px;
+}
+
+.filter-row label {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.filter-row input[type="text"],
+.filter-row select {
+    margin-left: 5px;
+    padding: 3px 5px;
+}
+
+.filter-row input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.filter-row .not-label {
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.operator-select {
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+
+/* тест селектов */
+
+/* .filter-row input[type="text"],
+.filter-row select {
+    padding: 3px 5px;
+    width: 200px; 
+}
+
+.filter-row select {
+    text-overflow: ellipsis; 
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.filter-row select:hover {
+    overflow: visible;
+    width: auto;
+    min-width: 200px;
+} */
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.filter-row input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.filter-row .not-label {
+    cursor: pointer;
+    flex-shrink: 0; 
+    min-width: 30px; 
+}
+
+.filter-row .field-label {
+    cursor: default;
+    flex-shrink: 0;
+    min-width: 120px;
+}
+
+.filter-row input[type="text"],
+.filter-row select {
+    padding: 3px 5px;
+    flex: 1; 
+    min-width: 0; 
+}
+
+
+/* результаты поиска */
+.search-result-item {
+    width: 1000px;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.search-result-item mark {
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: bold;
+    padding: 0 2px;
+}
+
+.sentence-context {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+    padding: 8px;
+    background-color: #f9f9f9;
+    border-left: 3px solid #007bff;
+}
+
+.sentence-context pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.sentence-context .prev-sentence,
+.sentence-context .next-sentence {
+    color: #666;
+
+}
+
+.sentence-context .current-sentence {
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.pagination .step-links a {
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #007bff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.pagination .step-links a:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.pagination .current {
+    padding: 5px 10px;
+    color: #6c757d;
+}
+
+.pagination .current-number {
+    font-weight: bold;
+    color: #007bff;
+}

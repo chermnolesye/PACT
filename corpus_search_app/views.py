@@ -7,7 +7,12 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET, require_POST
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+import re
+
 from core_app.models import (
+    Sentence,
     Text,
     TextType,
     Emotion,
@@ -156,6 +161,10 @@ def corpus_search_api(request):
 
     groups = payload.get("groups", [])
     operators = payload.get("operators", [])
+    
+    # Пагинация
+    page = payload.get("page", 1)
+    page_size = payload.get("page_size", 10)
 
     if not isinstance(groups, list) or not groups:
         return JsonResponse({"results": [], "count": 0})
@@ -179,20 +188,191 @@ def corpus_search_api(request):
         .order_by("-createdate", "-idtext")
     )
 
+    # Условия для поиска по словоформам, которые будем использовать для подсветки в результатах
+    wordform_conditions = []
+    for group in groups:
+        wordform = group.get("wordform", {})
+        if wordform.get("value"):
+            wordform_conditions.append({
+                "value": wordform["value"].lower(),
+                "not": wordform.get("not", False)
+            })
+    # 
+
+    paginator = Paginator(texts, page_size)
+    try:
+        paginated_texts = paginator.page(page)
+    except PageNotAnInteger:
+        paginated_texts = paginator.page(1)
+    except EmptyPage:
+        paginated_texts = paginator.page(paginator.num_pages)
+
     results = []
-    for text in texts:
+    # for text in texts:
+    for text in paginated_texts:
+        sentences = list(Sentence.objects.filter(idtext=text).order_by("ordernumber"))
+        
+        matching_sentences = []
+        
+        # Проверяем, есть ли в запросе словоформы
+        has_wordforms = any(group.get("wordform", {}).get("value") for group in groups)
+        
+        if has_wordforms:
+            # Ищем предложения, соответствующие условиям по словоформам
+            for idx, sentence in enumerate(sentences):
+                matches, matched_word = _sentence_matches_wordform_conditions(sentence, groups, operators)
+                
+                if matches:
+                    # Получаем соседние предложения
+                    prev_sentence = sentences[idx - 1] if idx > 0 else None
+                    next_sentence = sentences[idx + 1] if idx + 1 < len(sentences) else None
+                    
+                    # Подсветка найденного слова
+                    highlighted_text = sentence.sentensetext
+                    if matched_word:
+                        highlighted_text = _highlight_word(sentence.sentensetext, matched_word)
+                        # import re
+                        # pattern = re.compile(re.escape(matched_word), re.IGNORECASE)
+                        # highlighted_text = pattern.sub(
+                        #     lambda m: f'<mark class="highlight">{m.group(0)}</mark>',
+                        #     sentence.sentensetext
+                        # )
+                    
+                    matching_sentences.append({
+                        "current": {
+                            "text": sentence.sentensetext,
+                            "highlighted_text": highlighted_text,
+                            "order": sentence.ordernumber
+                        },
+                        "previous": {
+                            "text": prev_sentence.sentensetext if prev_sentence else None,
+                            "order": prev_sentence.ordernumber if prev_sentence else None
+                        } if prev_sentence else None,
+                        "next": {
+                            "text": next_sentence.sentensetext if next_sentence else None,
+                            "order": next_sentence.ordernumber if next_sentence else None
+                        } if next_sentence else None,
+                        "matched_word": matched_word
+                    })
+        else:
+            # Если нет поиска по словоформам, показываем первое предложение как пример
+            first_sentence = sentences[0] if sentences else None
+            if first_sentence:
+                matching_sentences.append({
+                    "current": {
+                        "text": first_sentence.sentensetext,
+                        "highlighted_text": first_sentence.sentensetext,
+                        "order": first_sentence.ordernumber
+                    },
+                    "previous": None,
+                    "next": None
+                })
+
         results.append({
             "id": text.idtext,
             "header": text.header,
             "createdate": text.createdate.strftime("%d.%m.%Y") if text.createdate else "",
             "text_type": text.idtexttype.texttypename if text.idtexttype else "Не указано",
             "emotion": text.idemotion.emotionname if text.idemotion else "Не указано",
+            "matching_sentences": matching_sentences
         })
 
+
+        # results.append({
+        #     "id": text.idtext,
+        #     "header": text.header,
+        #     "createdate": text.createdate.strftime("%d.%m.%Y") if text.createdate else "",
+        #     "text_type": text.idtexttype.texttypename if text.idtexttype else "Не указано",
+        #     "emotion": text.idemotion.emotionname if text.idemotion else "Не указано",
+        # })
+
+    is_teacher = False
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'idrights'):
+            if request.user.idrights.idrights == 2:
+                is_teacher = True
+
     return JsonResponse({
-        "count": len(results),
+        # "count": len(results),
+        "is_teacher": is_teacher,
         "results": results,
+        "count": paginator.count,
+        "page_obj": {
+            "number": paginated_texts.number,
+            "num_pages": paginator.num_pages,
+            "has_previous": paginated_texts.has_previous(),
+            "has_next": paginated_texts.has_next(),
+            "previous_page_number": paginated_texts.previous_page_number() if paginated_texts.has_previous() else None,
+            "next_page_number": paginated_texts.next_page_number() if paginated_texts.has_next() else None,
+        }
     })
+
+def _highlight_word(text, word):
+    """Подсвечивает целое слово в тексте"""
+    if not word:
+        return text
+    
+    # регулярное выражение для поиска целого слова
+    # re.IGNORECASE - игнорируем регистр
+    # \b - граница слова
+    pattern = r'\b(' + re.escape(word) + r')\b'
+    
+    def replace_func(match):
+        return f'<mark class="highlight">{match.group(1)}</mark>'
+    
+    highlighted = re.sub(pattern, replace_func, text, flags=re.IGNORECASE)
+    return highlighted
+
+def _sentence_matches_wordform_conditions(sentence, groups, operators):
+    """Проверяет, соответствует ли предложение условиям по словоформам с учетом операторов между блоками"""
+    sentence_lower = sentence.sentensetext.lower()
+    block_results = []
+    
+    for group in groups:
+        wordform = group.get("wordform", {})
+        if not wordform.get("value"):
+            # Если в блоке нет словоформы, считаем что блок выполнен (не влияет)
+            block_results.append(True)
+            continue
+
+        search_word = wordform["value"].lower()
+        is_not = wordform.get("not", False)
+
+        pattern = r'\b' + re.escape(search_word) + r'\b'
+        found = bool(re.search(pattern, sentence_lower))
+        # found = search_word in sentence_lower
+        if is_not:
+            found = not found
+        
+        block_results.append(found)
+    
+    # Применяем операторы между блоками
+    if not block_results:
+        return False, None
+    
+    # Первый блок всегда учитываем
+    result = block_results[0]
+    matched_word = None
+    
+    # Применяем операторы
+    for i, op in enumerate(operators):
+        next_result = block_results[i + 1] if i + 1 < len(block_results) else False
+        
+        if op == "AND":
+            result = result and next_result
+        elif op == "OR":
+            result = result or next_result
+    
+    # Если результат True, находим слово для подсветки (первое попавшееся)
+    if result:
+        for group in groups:
+            wordform = group.get("wordform", {})
+            if wordform.get("value") and not wordform.get("not", False):
+                if wordform["value"].lower() in sentence_lower:
+                    matched_word = wordform["value"]
+                    break
+    
+    return result, matched_word
 
 
 @require_GET
