@@ -1,0 +1,679 @@
+{% extends base_template %}
+
+{% load static %}
+
+{% block title %}Поиск по корпусу{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/corpus_search.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="corpus-search-container">
+    <h1 class="highlighted-header">Поиск по корпусу</h1>
+
+    <!-- <button id="load-filters-btn">Загрузить фильтры</button> -->   
+    <div id="groups-container"></div>
+    <button id="add-group-btn" class="button search-button">
+        <svg width="24" height="24" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        </svg> 
+        Добавить блок
+    </button>
+
+    <button id="search-btn" class="button search-button">
+        <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50.9583 50.9583L61.1666 61.1666M16.6875 6.53745C22.5094 3.17781 29.3541 2.04905 35.9465 3.36146C42.5389 4.67386 48.4294 8.33792 52.5208 13.6711C56.6122 19.0043 58.6254 25.6429 58.1854 32.3502C57.7455 39.0576 54.8823 45.3763 50.1293 50.1293C45.3763 54.8823 39.0576 57.7455 32.3502 58.1854C25.6429 58.6254 19.0043 56.6122 13.6711 52.5208C8.33792 48.4294 4.67386 42.5389 3.36146 35.9465C2.04905 29.3541 3.17781 22.5094 6.53745 16.6875" stroke="#FFFDFD" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        Найти
+    </button>
+
+    <hr>
+    <h2 class="highlighted-header">Результаты</h2>
+    <div id="results"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let pageSize = 10;
+    let isLoading = false; // Для предотвращения множественных запросов
+    let currentQuery = null;
+
+    const groupsContainer = document.getElementById("groups-container");
+    let filtersData = null;
+    let groupIndex = 0;
+
+    async function loadFilters() {
+        try {
+            const response = await fetch("/corpus/api/filters/");
+            filtersData = await response.json();
+
+            if (groupIndex === 0) {
+                addGroup();
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки фильтров:", error);
+            alert("Не удалось загрузить фильтры");
+        }
+    }
+
+    function makeSelect(options, valueKey, textKey, name) {
+        const select = document.createElement("select");
+        select.dataset.field = name;
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "---";
+        select.appendChild(emptyOption);
+
+        options.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item[valueKey];
+            option.textContent = item[textKey];
+            select.appendChild(option);
+        });
+
+        return select;
+    }
+
+    function addGroup() {
+        if (!filtersData) {
+            alert("Фильтры еще не загружены");
+            return;
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "search-group";
+        // wrapper.style.border = "1px solid #999";
+        // wrapper.style.padding = "10px";
+        // wrapper.style.marginBottom = "10px";
+        // wrapper.style.position = "relative";
+        wrapper.dataset.groupIndex = groupIndex;
+
+        // Добавляем кнопку удаления (только для блоков, которые можно удалить)
+        if (groupIndex > 0) { // Первый блок не удаляем, чтобы всегда был хотя бы один
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "✕ Удалить блок";
+            deleteButton.className = "delete-group-btn";
+            // deleteButton.style.position = "absolute";
+            // deleteButton.style.top = "5px";
+            // deleteButton.style.right = "5px";
+            // deleteButton.style.backgroundColor = "#ff4444";
+            // deleteButton.style.color = "white";
+            // deleteButton.style.border = "none";
+            // deleteButton.style.padding = "5px 10px";
+            // deleteButton.style.cursor = "pointer";
+            // deleteButton.style.borderRadius = "3px";
+            deleteButton.onclick = function() {
+                deleteGroup(wrapper);
+            };
+            wrapper.appendChild(deleteButton);
+        }
+
+        if (groupIndex > 0) {
+            const operatorDiv = document.createElement("div");
+            operatorDiv.className = "operator-select";
+
+            const operatorSelect = document.createElement("select");
+            operatorSelect.dataset.operator = "true";
+
+            const andOption = document.createElement("option");
+            andOption.value = "AND";
+            andOption.textContent = "И";
+
+            const orOption = document.createElement("option");
+            orOption.value = "OR";
+            orOption.textContent = "ИЛИ";
+
+            operatorSelect.appendChild(andOption);
+            operatorSelect.appendChild(orOption);
+
+            wrapper.appendChild(document.createTextNode("Связь с предыдущим блоком: "));
+            wrapper.appendChild(operatorSelect);
+            // wrapper.appendChild(document.createElement("br"));
+            // wrapper.appendChild(document.createElement("br"));
+            wrapper.appendChild(operatorDiv);
+        }
+
+        // function addTextInput(labelText, fieldName) {
+        //     const div = document.createElement("div");
+        //     div.className = "filter-row";
+
+        //     const label = document.createElement("label");
+        //     label.textContent = labelText + ": ";
+
+        //     const notCheckbox = document.createElement("input");
+        //     notCheckbox.type = "checkbox";
+        //     notCheckbox.dataset.notField = fieldName;
+
+        //     const input = document.createElement("input");
+        //     input.type = "text";
+        //     input.dataset.field = fieldName;
+
+        //     wrapper.appendChild(document.createTextNode("НЕ "));
+        //     wrapper.appendChild(notCheckbox);
+        //     wrapper.appendChild(label);
+        //     wrapper.appendChild(input);
+        //     // wrapper.appendChild(document.createElement("br"));
+        //     wrapper.appendChild(div);
+        // }
+
+        // function addSelectInput(labelText, fieldName, options, valueKey, textKey) {
+        //     const div = document.createElement("div");
+        //     div.className = "filter-row";
+
+        //     const label = document.createElement("label");
+        //     label.textContent = labelText + ": ";
+
+        //     const notCheckbox = document.createElement("input");
+        //     notCheckbox.type = "checkbox";
+        //     notCheckbox.dataset.notField = fieldName;
+
+        //     const select = makeSelect(options, valueKey, textKey, fieldName);
+
+        //     wrapper.appendChild(document.createTextNode("НЕ "));
+        //     wrapper.appendChild(notCheckbox);
+        //     wrapper.appendChild(label);
+        //     wrapper.appendChild(select);
+        //     // wrapper.appendChild(document.createElement("br"));
+        //     wrapper.appendChild(div);
+        // }
+
+        function addTextInput(labelText, fieldName) {
+            const div = document.createElement("div");
+            div.className = "filter-row";
+            
+            const notCheckbox = document.createElement("input");
+            notCheckbox.type = "checkbox";
+            notCheckbox.id = `${fieldName}_not_${groupIndex}`;
+            notCheckbox.dataset.notField = fieldName;
+            
+            const notLabel = document.createElement("label");
+            notLabel.htmlFor = notCheckbox.id;
+            notLabel.textContent = "НЕ";
+            notLabel.className = "not-label";
+            
+            const fieldLabel = document.createElement("label");
+            fieldLabel.textContent = labelText + ": ";
+            fieldLabel.className = "field-label";
+            
+            const input = document.createElement("input");
+            input.type = "text";
+            input.dataset.field = fieldName;
+            input.id = `${fieldName}_${groupIndex}`;
+            
+            div.appendChild(notCheckbox);
+            div.appendChild(notLabel);
+            div.appendChild(fieldLabel);
+            div.appendChild(input);
+            
+            wrapper.appendChild(div);
+        }
+
+        function addSelectInput(labelText, fieldName, options, valueKey, textKey) {
+            const div = document.createElement("div");
+            div.className = "filter-row";
+            
+            const notCheckbox = document.createElement("input");
+            notCheckbox.type = "checkbox";
+            notCheckbox.id = `${fieldName}_not_${groupIndex}`;
+            notCheckbox.dataset.notField = fieldName;
+            
+            const notLabel = document.createElement("label");
+            notLabel.htmlFor = notCheckbox.id;
+            notLabel.textContent = "НЕ";
+            notLabel.className = "not-label";
+            
+            const fieldLabel = document.createElement("label");
+            fieldLabel.textContent = labelText + ": ";
+            fieldLabel.className = "field-label";
+            
+            const select = makeSelect(options, valueKey, textKey, fieldName);
+            select.id = `${fieldName}_${groupIndex}`;
+            
+            div.appendChild(notCheckbox);
+            div.appendChild(notLabel);
+            div.appendChild(fieldLabel);
+            div.appendChild(select);
+            
+            wrapper.appendChild(div);
+        }
+
+        addTextInput("Словоформа", "wordform");
+        addSelectInput("Часть речи", "pos_tag_id", filtersData.pos_tags, "idpostag", "tagtext");
+        addSelectInput("Тег ошибки", "error_tag_id", filtersData.error_tags, "iderrortag", "tagtextrussian");
+        addSelectInput("Степень грубости", "error_level_id", filtersData.error_levels, "iderrorlevel", "errorlevelname");
+        addSelectInput("Причина ошибки", "reason_id", filtersData.reasons, "idreason", "reasonname");
+        addTextInput("Название текста", "title");
+        addSelectInput("Тип текста", "text_type_id", filtersData.text_types, "idtexttype", "texttypename");
+        addSelectInput("Психо-эмоциональное состояние", "emotion_id", filtersData.emotions, "idemotion", "emotionname");
+
+        groupsContainer.appendChild(wrapper);
+        groupIndex += 1;
+    }
+
+    function deleteGroup(groupElement) {
+        if (confirm("Вы уверены, что хотите удалить этот блок?")) {
+            const groupIndex = parseInt(groupElement.dataset.groupIndex);
+            groupElement.remove();
+            
+            // Обновляем индексы оставшихся блоков
+            const remainingGroups = document.querySelectorAll("#groups-container > div");
+            remainingGroups.forEach((group, idx) => {
+                group.dataset.groupIndex = idx;
+                
+                // Обновляем текст в кнопках удаления (опционально)
+                const deleteBtn = group.querySelector("button");
+                if (deleteBtn && deleteBtn.textContent.includes("Удалить блок")) {
+                    // Можно оставить без изменений или добавить номер блока
+                    deleteBtn.textContent = `✕ Удалить блок ${idx + 1}`;
+                }
+            });
+            
+            // Опционально: если удалили все блоки, добавляем один пустой
+            if (remainingGroups.length === 0) {
+                addGroup();
+            }
+        }
+    }
+
+    function collectPayload() {
+        const blocks = Array.from(groupsContainer.children);
+        const groups = [];
+        const operators = [];
+
+        blocks.forEach((block, index) => {
+            if (index > 0) {
+                const operatorSelect = block.querySelector("[data-operator='true']");
+                operators.push(operatorSelect ? operatorSelect.value : "AND");
+            }
+
+            const group = {};
+            const fields = [
+                "wordform",
+                "pos_tag_id",
+                "error_tag_id",
+                "error_level_id",
+                "reason_id",
+                "title",
+                "text_type_id",
+                "emotion_id"
+            ];
+
+            fields.forEach(fieldName => {
+                const fieldElement = block.querySelector(`[data-field='${fieldName}']`);
+                const notElement = block.querySelector(`[data-not-field='${fieldName}']`);
+
+                let value = null;
+                if (fieldElement) {
+                    value = fieldElement.value;
+                    if (value === "") {
+                        value = null;
+                    } else if (fieldName.endsWith("_id")) {
+                        value = Number(value);
+                    }
+                }
+
+                group[fieldName] = {
+                    value: value,
+                    not: notElement ? notElement.checked : false
+                };
+            });
+
+            groups.push(group);
+        });
+
+        return { groups, operators };
+    }
+
+    // async function doSearch() {
+    //     const payload = collectPayload();
+
+    //     const response = await fetch("/corpus/api/search/", {
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json"
+    //         },
+    //         body: JSON.stringify(payload)
+    //     });
+
+    //     const data = await response.json();
+    //     const resultsDiv = document.getElementById("results");
+    //     resultsDiv.innerHTML = "";
+
+    //     const countP = document.createElement("p");
+    //     countP.textContent = "Найдено: " + data.count;
+    //     resultsDiv.appendChild(countP);
+
+    //     data.results.forEach(item => {
+    //         const div = document.createElement("div");
+    //         div.style.border = "1px solid #ccc";
+    //         div.style.marginBottom = "10px";
+    //         div.style.padding = "10px";
+
+    //          // Заголовок текста
+    //         const header = document.createElement("h3");
+    //         header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
+    //         div.appendChild(header);
+
+    //         // Метаданные
+    //         const meta = document.createElement("div");
+    //         meta.style.color = "#666";
+    //         meta.style.marginBottom = "10px";
+    //         meta.innerHTML = `
+    //             Дата: ${item.createdate || "Не указано"} | 
+    //             Тип текста: ${item.text_type} | 
+    //             Состояние: ${item.emotion}
+    //         `;
+    //         div.appendChild(meta);
+
+    //         // Найденные предложения
+    //         if (item.matching_sentences && item.matching_sentences.length > 0) {
+    //             const sentencesTitle = document.createElement("h4");
+    //             sentencesTitle.textContent = "Найденные фрагменты:";
+    //             div.appendChild(sentencesTitle);
+                
+    //             item.matching_sentences.forEach(sentenceContext => {
+    //                 const sentenceDiv = document.createElement("div");
+    //                 sentenceDiv.style.marginBottom = "15px";
+    //                 sentenceDiv.style.padding = "8px";
+    //                 sentenceDiv.style.backgroundColor = "#f9f9f9";
+    //                 sentenceDiv.style.borderLeft = "3px solid #007bff";
+                    
+    //                 // Предыдущее предложение
+    //                 if (sentenceContext.previous) {
+    //                     const prevSpan = document.createElement("div");
+    //                     prevSpan.style.color = "#666";
+    //                     prevSpan.style.fontStyle = "italic";
+    //                     prevSpan.style.marginBottom = "5px";
+    //                     prevSpan.innerHTML = `${sentenceContext.previous.text}`;
+    //                     sentenceDiv.appendChild(prevSpan);
+    //                 }
+                    
+    //                 // Текущее предложение (с подсветкой)
+    //                 const currentSpan = document.createElement("div");
+    //                 currentSpan.style.fontWeight = "bold";
+    //                 currentSpan.style.marginBottom = "5px";
+    //                 if (sentenceContext.current.highlighted_text) {
+    //                     currentSpan.innerHTML = sentenceContext.current.highlighted_text;
+    //                 } else {
+    //                     currentSpan.textContent = sentenceContext.current.text;
+    //                 }
+    //                 sentenceDiv.appendChild(currentSpan);
+                    
+    //                 // Следующее предложение
+    //                 if (sentenceContext.next) {
+    //                     const nextSpan = document.createElement("div");
+    //                     nextSpan.style.color = "#666";
+    //                     nextSpan.style.fontStyle = "italic";
+    //                     nextSpan.innerHTML = `${sentenceContext.next.text}`;
+    //                     sentenceDiv.appendChild(nextSpan);
+    //                 }
+                    
+    //                 sentenceDiv.appendChild(document.createElement("hr"));
+    //                 sentenceDiv.appendChild(document.createElement("br"));
+                    
+    //                 div.appendChild(sentenceDiv);
+    //             });
+    //         }
+
+    //         // div.innerHTML = `
+    //         //     <a href="/corpus/text/${item.id}/"><strong>${item.header}</strong></a><br>
+    //         //     Дата: ${item.createdate || "Не указано"}<br>
+    //         //     Тип текста: ${item.text_type}<br>
+    //         //     Состояние: ${item.emotion}
+    //         // `;
+
+    //         resultsDiv.appendChild(div);
+    //     });
+    // }
+
+    async function doSearch(page = 1) {
+        if (isLoading) return;
+        
+        isLoading = true;
+        const payload = collectPayload();
+        payload.page = page;
+        payload.page_size = pageSize;
+        
+        // Сохраняем запрос для использования в ссылках пагинации
+        currentQuery = payload;
+
+        try {
+            const response = await fetch("/corpus/api/search/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            
+            // Проверяем, есть ли данные пагинации
+            if (data.page_obj) {
+                currentPage = data.page_obj.number;
+                totalPages = data.page_obj.num_pages;
+            } else {
+                // Если пагинация не пришла, показываем все результаты
+                totalPages = 1;
+            }
+            
+            displayResults(data);
+            
+            // Показываем пагинацию только если есть данные и страниц больше 1
+            if (data.page_obj && data.page_obj.num_pages > 1) {
+                displayPagination(data.page_obj);
+            }
+            
+        } catch (error) {
+            console.error("Ошибка при поиске:", error);
+            alert("Произошла ошибка при поиске");
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    function displayResults(data) {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        // Показываем количество результатов
+        const countP = document.createElement("p");
+        countP.textContent = `Найдено: ${data.count}`;
+        resultsDiv.appendChild(countP);
+
+        // Проверяем, есть ли результаты
+        if (!data.results || data.results.length === 0) {
+            const noResults = document.createElement("p");
+            noResults.textContent = "Ничего не найдено";
+            noResults.style.color = "#666";
+            noResults.style.fontStyle = "italic";
+            resultsDiv.appendChild(noResults);
+            return;
+        }
+
+        const isTeacher = data.is_teacher;
+
+        data.results.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "search-result-item";
+
+            const header = document.createElement("h3");
+            // header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
+            if (isTeacher) {
+                header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
+            } else {
+                header.textContent = item.header;
+            }
+            div.appendChild(header);
+
+            // const meta = document.createElement("div");
+            // meta.style.color = "#666";
+            // meta.style.marginBottom = "10px";
+            // meta.style.fontSize = "0.9em";
+            // meta.innerHTML = `
+            //     Дата: ${item.createdate || "Не указано"} | 
+            //     Тип текста: ${item.text_type} | 
+            //     Состояние: ${item.emotion}
+            // `;
+            // div.appendChild(meta);
+
+            if (item.matching_sentences && item.matching_sentences.length > 0) {
+                // const sentencesTitle = document.createElement("h4");
+                // sentencesTitle.textContent = "Найденные фрагменты:";
+                // sentencesTitle.style.marginBottom = "10px";
+                // div.appendChild(sentencesTitle);
+                
+                item.matching_sentences.forEach(sentenceContext => {
+                    const sentenceDiv = document.createElement("div");
+                    sentenceDiv.className = "sentence-context";
+                    sentenceDiv.style.marginBottom = "15px";
+                    sentenceDiv.style.padding = "8px";
+                    sentenceDiv.style.backgroundColor = "#f9f9f9";
+                    sentenceDiv.style.borderLeft = "3px solid #007bff";
+                    sentenceDiv.style.borderRadius = "3px";
+                    
+                    if (sentenceContext.previous) {
+                        const prevSpan = document.createElement("div");
+                        prevSpan.className = "prev-sentence";
+                        prevSpan.innerHTML = `${sentenceContext.previous.text}`;
+                        sentenceDiv.appendChild(prevSpan);
+                    }
+                    
+                    const currentSpan = document.createElement("div");
+                    currentSpan.className = "current-sentence";
+                    if (sentenceContext.current.highlighted_text) {
+                        currentSpan.innerHTML = sentenceContext.current.highlighted_text;
+                    } else {
+                        currentSpan.textContent = sentenceContext.current.text;
+                    }
+                    sentenceDiv.appendChild(currentSpan);
+                    
+                    if (sentenceContext.next) {
+                        const nextSpan = document.createElement("div");
+                        nextSpan.className = "next-sentence";
+                        nextSpan.innerHTML = `${sentenceContext.next.text}`;
+                        sentenceDiv.appendChild(nextSpan);
+                    }
+                    
+                    div.appendChild(sentenceDiv);
+                });
+            }
+
+            resultsDiv.appendChild(div);
+        });
+    }
+
+    function displayPagination(pageObj) {
+        const resultsDiv = document.getElementById("results");
+        
+        // Удаляем старую пагинацию, если есть
+        const oldPagination = resultsDiv.querySelector(".pagination");
+        if (oldPagination) {
+            oldPagination.remove();
+        }
+        
+        if (totalPages <= 1) return;
+
+        const paginationDiv = document.createElement("div");
+        paginationDiv.className = "pagination";
+        paginationDiv.style.marginTop = "20px";
+        paginationDiv.style.textAlign = "center";
+        paginationDiv.style.display = "flex";
+        paginationDiv.style.justifyContent = "center";
+        paginationDiv.style.gap = "10px";
+        paginationDiv.style.flexWrap = "wrap";
+
+        if (pageObj.has_previous) {
+            const firstLink = document.createElement("span");
+            firstLink.className = "step-links";
+            const firstA = document.createElement("a");
+            firstA.href = "#";
+            firstA.innerHTML = "&laquo; Первая";
+            firstA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(1);
+                }
+            };
+            firstLink.appendChild(firstA);
+            paginationDiv.appendChild(firstLink);
+        }
+
+        if (pageObj.has_previous) {
+            const prevLink = document.createElement("span");
+            prevLink.className = "step-links";
+            const prevA = document.createElement("a");
+            prevA.href = "#";
+            prevA.innerHTML = "&#8249; Назад";
+            prevA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(pageObj.previous_page_number);
+                }
+            };
+            prevLink.appendChild(prevA);
+            paginationDiv.appendChild(prevLink);
+        }
+        
+        const currentSpan = document.createElement("span");
+        currentSpan.className = "current";
+        currentSpan.innerHTML = `Страница <span class="current-number">${pageObj.number}</span> из ${pageObj.num_pages}`;
+        paginationDiv.appendChild(currentSpan);
+        
+        if (pageObj.has_next) {
+            const nextLink = document.createElement("span");
+            nextLink.className = "step-links";
+            const nextA = document.createElement("a");
+            nextA.href = "#";
+            nextA.innerHTML = "Вперед &#8250;";
+            nextA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(pageObj.next_page_number);
+                }
+            };
+            nextLink.appendChild(nextA);
+            paginationDiv.appendChild(nextLink);
+        }
+
+        if (pageObj.has_next) {
+            const lastLink = document.createElement("span");
+            lastLink.className = "step-links";
+            const lastA = document.createElement("a");
+            lastA.href = "#";
+            lastA.innerHTML = "Последняя &raquo;";
+            lastA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(pageObj.num_pages);
+                }
+            };
+            lastLink.appendChild(lastA);
+            paginationDiv.appendChild(lastLink);
+        }
+        
+        resultsDiv.appendChild(paginationDiv);
+    }
+
+    // Функция для прокрутки к результатам
+    function scrollToResults() {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    document.getElementById("add-group-btn").addEventListener("click", addGroup);
+    document.getElementById("search-btn").addEventListener("click", () => doSearch(1));
+
+    document.addEventListener("DOMContentLoaded", function () {
+        loadFilters();
+    });
+</script>
+
+{% endblock %}

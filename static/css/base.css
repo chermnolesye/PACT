@@ -387,7 +387,7 @@ nav {
 .drop_down_link {
 }
 
-input[type="checkbox"] {
+.header input[type="checkbox"] {
     display: none;
 }
 
@@ -422,7 +422,7 @@ nav label {
             padding: 2px;
         }
 
-    input[type="checkbox"]:checked ~ label + ul {
+    header input[type="checkbox"]:checked ~ label + ul {
         display: block;
     }
 
