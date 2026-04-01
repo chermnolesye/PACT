@@ -2,8 +2,9 @@ ARG PYTHON_VERSION=3.11
 FROM python:${PYTHON_VERSION}-slim as base
 
 ENV PYTHONDONTWRITEBYTECODE=1
-
 ENV PYTHONUNBUFFERED=1
+ENV TRANSFORMERS_CACHE=/app/model_cache
+ENV HF_HOME=/app/model_cache
 
 WORKDIR /app
 
@@ -26,6 +27,18 @@ RUN apt-get update && apt-get install -y \
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m pip install -r requirements.txt
+
+RUN python -c "import nltk; nltk.download('punkt_tab', download_dir='/usr/local/share/nltk_data')"
+
+RUN python -c "from transformers import AutoTokenizer, AutoModelForCausalLM; \
+    AutoTokenizer.from_pretrained('gpt2'); \
+    AutoModelForCausalLM.from_pretrained('gpt2'); \
+    AutoTokenizer.from_pretrained('dbddv01/gpt2-french-small'); \
+    AutoModelForCausalLM.from_pretrained('dbddv01/gpt2-french-small'); \
+    AutoTokenizer.from_pretrained('stefan-it/german-gpt2-larger'); \
+    AutoModelForCausalLM.from_pretrained('stefan-it/german-gpt2-larger')"
+
+RUN chmod -R 777 /app/model_cache
 
 USER appuser
 

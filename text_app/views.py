@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotationForm, StudentLoadTextForm
 from .filters import StudentTextFilter
 from nltk.tokenize import sent_tokenize, word_tokenize
+from authorization_app.decorators import *
 from core_app.models import (
     Text,
     Token,
@@ -27,7 +28,9 @@ from core_app.models import (
     User,
 )
 from .pos_tagger import annotate_text_pos
+from django.http import Http404
 
+@student_required
 def show_text_markup(request, text_id=None):
     if text_id is None:
         text_id = request.GET.get('text_id')
@@ -159,7 +162,7 @@ def show_text_markup(request, text_id=None):
 
     return render(request, "student_show_text_markup.html", context)
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def annotate_text(request, text_id=2379):
     text_id = request.GET.get("text_id")
     if text_id:
@@ -229,7 +232,6 @@ def annotate_text(request, text_id=2379):
             url = reverse('annotate_text')
             params = f"?text_id={text.idtext}&markup={selected_markup}"
             return redirect(url + params)
-
     else:
         grade_form = AddTextAnnotationForm(instance=text)
 
@@ -410,8 +412,7 @@ def annotate_text(request, text_id=2379):
 
     return render(request, "annotate_text.html", context)
 
-
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def teacher_load_text(request):
     if (
         request.headers.get("x-requested-with") == "XMLHttpRequest"
@@ -542,8 +543,6 @@ def teacher_load_text(request):
         },
     )
 
-
-
 def get_teacher_fio(request):
     return request.session.get("teacher_fio", "")
 
@@ -586,9 +585,18 @@ def get_default_text_type():
     text_type = TextType.objects.filter(texttypename="Не указано").first()
     if text_type:
         return text_type
-    return get_object_or_404(TextType, idtexttype=14)
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+    text_type = TextType.objects.filter(texttypename="Другое").first()
+    if text_type:
+        return text_type
+
+    text_type = TextType.objects.order_by("idtexttype").first()
+    if text_type:
+        return text_type
+
+    raise Http404("В таблице TextType нет ни одной записи")
+
+@teacher_required
 def search_texts(request):
     group_data = [
         {
@@ -698,6 +706,32 @@ def search_texts(request):
         "fio": get_teacher_fio(request),
     }
     return render(request, "search_texts.html", context)
+
+
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import sys
+import os
+
+@require_POST
+@teacher_required
+def check_ai(request):
+    text_id = request.POST.get('text_id')
+    if not text_id:
+        return JsonResponse({'error': 'Не передан text_id'}, status=400)
+    
+    try:
+        from core_app.models import Text
+        text_obj = get_object_or_404(Text, idtext=text_id)
+        full_text = text_obj.text
+        
+        sys.path.insert(0, '/app')
+        from ai_detector import get_ai_detector
+        detector = get_ai_detector()
+        result = detector.analyze_text(full_text)
+        return JsonResponse(result)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
     # text_type_id = request.GET.get('text_type', '')
     
     # groups = (
@@ -901,21 +935,12 @@ def search_texts(request):
     # }
     # return render(request, "search_texts.html", context)
 
-
-def has_student_rights(user):
-    return (
-        user.is_authenticated
-        and hasattr(user, "idrights")
-        and user.idrights
-        and user.idrights.rightsname == "Студент"
-    )
-
 def get_student_fio(request):
     user = request.user
     return f"{user.lastname} {user.firstname} {user.middlename or ''}".strip()
 
-@user_passes_test(has_student_rights, login_url="/auth/login/")
-@login_required
+
+@student_required
 def student_search_texts(request):
     texts_qs = Text.objects.filter(idstudent__iduser=request.user).select_related(
         'idtexttype', 
@@ -1072,6 +1097,7 @@ def student_search_texts(request):
     # }
     # return render(request, "student_search_texts.html", context)
 
+@student_required
 def student_load_text(request):
     student_profile = get_object_or_404(Student, iduser=request.user)
     form = StudentLoadTextForm(request.POST)
@@ -1140,7 +1166,6 @@ def student_load_text(request):
         "student_load_text.html",
         {"form": form},
     )
-
 
 @require_POST
 @csrf_exempt

@@ -33,12 +33,10 @@
 		<div id="signature" class="col">
 			<label class="text-center text-primary"> Подписи на </label>
 			<hr class="mt-1"/>
-			{% verbatim %}
 			<select class="form-select" v-model="selected_language_labels" @change="on_change_language_labels">
 				<option value="russian">Русском</option>
-				<option value="german">Немецком</option>
+				<option value="project">{{ language_label_in_russian }}</option>>
 			</select>
-			{% endverbatim %}
 		</div>
 
 		<div id="level_detail" class="col">

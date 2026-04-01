@@ -14,6 +14,7 @@ from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
 from django.urls import reverse
 from django.utils.html import escape
+from authorization_app.decorators import *
 from core_app.models import (
     ExerciseTextType,
     Exercise,
@@ -45,6 +46,7 @@ from .forms import (
     ExerciseTextTaskForm,
     Group,
     AddMarkForm,
+    StudentRateGradingTextForm,
     TeacherCommentForm,
     StudentReviewForm
 )
@@ -68,7 +70,7 @@ def load_exercise_data(request):
         return JsonResponse(data)    
     return JsonResponse({})
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def teacher_exercises(request):
     exercise_filter = ExerciseFilter(request.GET, queryset=Exercise.objects.filter(iduserteacher=request.user.iduser).all())
     # exercises_queryset = exercise_filter.qs
@@ -139,7 +141,7 @@ def delete_exercise_ajax(request, exercise_id):
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')    
+@teacher_required    
 def add_exercise(request):
     if request.method == 'POST':
         form = AddExerciseForm(request.POST)
@@ -297,7 +299,7 @@ def load_groups(request):
 '''
     БЕК КАТИ
 '''
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def add_review_text(request):
     if request.method == 'POST':
         form = AddExerciseTextForm(request.POST)
@@ -323,7 +325,7 @@ def add_review_text(request):
     
     return render(request, 'add_review_text.html', {'form': form})
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def review_teacher(request, idexercise=1):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
@@ -457,6 +459,7 @@ def delete_teacher_comment(request, fragment_id):
         })
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
+@student_required
 def review_student(request, idexercise=1):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     exercisereview = get_object_or_404(ExerciseReview, idexercise=idexercise)
@@ -507,17 +510,14 @@ def review_student(request, idexercise=1):
             for r in reviews
         ])
     }
-
     # Завершение упражнения
     if request.method == 'POST':
         exercise.exercisestatus = True
         exercise.completiondate = timezone.now().date()
         exercise.save()
-        
-        return render(request, "review_student.html", context)
+        return redirect('review_student', idexercise=exercise.idexercise)
+    
     return render(request, "review_student.html", context)
-
-
 
 def save_student_review(request, exercise_id):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -600,8 +600,7 @@ def delete_student_review(request, fragment_id):
     
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
-
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def review_text_list(request):
     reviewtext_filter = ReviewTextFilter(request.GET, queryset=ExerciseText.objects.all())
     texts = reviewtext_filter.qs.order_by('-loaddate')
@@ -609,7 +608,7 @@ def review_text_list(request):
     context = {'texts' : texts, 'filter': reviewtext_filter}
     return render(request, 'review_text_list.html', context)
 
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def review_text(request, idexercisetext=2):
     text = get_object_or_404(ExerciseText, idexercisetext=idexercisetext)
     tasks = ExerciseTextTask.objects.filter(idexercisetext=idexercisetext)
@@ -697,7 +696,7 @@ def get_count_end(count):
 '''
     БЕК ДАШИ
 '''
-@user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@teacher_required
 def grade_text(request, idexercise=2):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     
@@ -750,7 +749,43 @@ def grade_text(request, idexercise=2):
                         "idtagparent": error.iderrortag.idtagparent,
                     })
             
-            exercise_error_tokens = token.exerciseerrortoken_set.select_related(
+            
+            empty_next_error_tokens = token.next_token.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+
+            next_errors_list = []
+
+            for eet in empty_next_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    next_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+
+            if (next_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber + 1,
+                    "exercise_errors": next_errors_list,
+                })
+
+            exercise_error_tokens = token.linked_token.select_related(
                 "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
             ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
             
@@ -784,6 +819,42 @@ def grade_text(request, idexercise=2):
                 "errors": errors_list,
                 "exercise_errors": exercise_errors_list,
             })
+
+            
+            empty_prev_error_tokens = token.prev_token.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+
+            prev_errors_list = []
+
+            for eet in empty_prev_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    prev_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+
+            if (prev_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber - 1,
+                    "exercise_errors": prev_errors_list,
+                })
 
         sentence_data.append({
             "id_sentence": sentence.idsentence,
@@ -822,6 +893,10 @@ def grade_text(request, idexercise=2):
         "sentence_data": sentence_data,
         "exercise": exercise,
         "exercise_grading":exercise_grading,
+        "textgrade": exercise_grading.get_textgrade_display() if exercise_grading.textgrade else "Нет данных",
+        "completeness": exercise_grading.get_completeness_display() if exercise_grading.completeness else "Нет данных",
+        "structure": exercise_grading.get_structure_display() if exercise_grading.structure else "Нет данных",
+        "coherence": exercise_grading.get_coherence_display() if exercise_grading.coherence else "Нет данных",
         "in_time":in_time,
         "selected_markup": selected_markup,
         "poscheckflag": text.poscheckflag,
@@ -829,7 +904,7 @@ def grade_text(request, idexercise=2):
     }
     return render(request, "grade_text.html", context)
 
-# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@student_required
 def student_grade_text(request, idexercise=2):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)
     
@@ -859,7 +934,42 @@ def student_grade_text(request, idexercise=2):
             pos_tag_abbrev = token.idpostag.tagtextabbrev if token.idpostag else None
             pos_tag_color = token.idpostag.tagcolor if token.idpostag else None
 
-            exercise_error_tokens = token.exerciseerrortoken_set.select_related(
+            empty_next_error_tokens = token.next_token.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+
+            next_errors_list = []
+
+            for eet in empty_next_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    next_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+
+            if (next_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber + 1,
+                    "exercise_errors": next_errors_list,
+                })
+
+            exercise_error_tokens = token.linked_token.select_related(
                 "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
             ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
             
@@ -893,6 +1003,41 @@ def student_grade_text(request, idexercise=2):
                 "exercise_errors": exercise_errors_list,
             })
 
+            empty_prev_error_tokens = token.prev_token.select_related(
+                "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
+            ).filter(idexercisegrading_id=exercise_grading.idexercisegrading)
+
+            prev_errors_list = []
+
+            for eet in empty_prev_error_tokens:
+                exerror = eet.idexerciseerror
+                if exerror and exerror.iderrortag:
+                    prev_errors_list.append({
+                        "error_tag_id": exerror.iderrortag,
+                        "error_id": exerror.idexerciseerror,
+                        "error_tag": exerror.iderrortag.tagtext,
+                        "error_tag_russian": exerror.iderrortag.tagtextrussian,
+                        "error_tag_abbrev": exerror.iderrortag.tagtextabbrev,
+                        "error_color": exerror.iderrortag.tagcolor,
+                        "error_level": exerror.iderrorlevel.errorlevelname if exerror.iderrorlevel else "Не указано",
+                        "error_correct": exerror.correct or "Не указано",
+                        "error_comment": exerror.comment or "Не указано",
+                        "error_reason": exerror.idreason.reasonname if exerror.idreason else "Не указано",
+                        "idtagparent": exerror.iderrortag.idtagparent,
+                    })
+
+            if (prev_errors_list):
+                tokens_data.append({
+                    "token_id": None,
+                    "token": '-EMPTY-',
+                    "pos_tag": None,
+                    "pos_tag_russian": None,
+                    "pos_tag_abbrev": None,
+                    "pos_tag_color": None,
+                    "token_order_number": token.tokenordernumber - 1,
+                    "exercise_errors": prev_errors_list,
+                })
+
         sentence_data.append({
             "id_sentence": sentence.idsentence,
             "sentence": sentence,
@@ -906,10 +1051,10 @@ def student_grade_text(request, idexercise=2):
         if annotation_form.is_valid():
             try:
                 chosen_ids = json.loads(request.POST.get('chosen_ids', '[]'))
-                sentences_data = json.loads(request.POST.get('sentences', '[]'))
+                empty_tokens = json.loads(request.POST.get('empty_tokens', '[]'))
 
                 print("Chosen IDs:", chosen_ids)
-                print("Sentences data:", sentences_data)
+                print("Empty tokens data:", empty_tokens)
                 print("Form data:", request.POST)
 
                 with transaction.atomic():
@@ -919,29 +1064,18 @@ def student_grade_text(request, idexercise=2):
                     new_error.save()
 
                     #Если есть новые пустые токены — создаём их
-                    for sentence_info in sentences_data:
-                        sentence_id = sentence_info['id_sentence']
-                        empty_token_positions = sentence_info['empty_token_pos']
-
+                    for token_data in empty_tokens:
+                        prev_id = token_data['prev_id']
+                        next_id = token_data['next_id']
                         try:
-                            sentence = Sentence.objects.get(idsentence=sentence_id)
-                            for position in sorted([int(p) for p in empty_token_positions]):
-                                print("Сдвигаем токены начиная с позиции:", position)
-                                Token.objects.filter(
-                                    idsentence=sentence,
-                                    tokenordernumber__gte=position
-                                ).update(tokenordernumber=F('tokenordernumber') + 1)
-                                # Создаём новый токен
-                                new_token = Token.objects.create(
-                                    idsentence=sentence,
-                                    tokentext='-EMPTY-',  
-                                    tokenordernumber=position
-                                )
-                                print("Создан токен с порядковым номером:", new_token.tokenordernumber)
-
-                                # Добавляем его id в список выделенных 
-                                chosen_ids.append(str(new_token.idtoken))
-                        except Sentence.DoesNotExist:
+                            if (next_id):
+                                token = Token.objects.get(idtoken=next_id)
+                                ExerciseErrorToken.objects.create(idnexttoken=token, idexerciseerror=new_error,idexercisegrading=exercise_grading)
+                            else:
+                                token = Token.objects.get(idtoken=prev_id)
+                                ExerciseErrorToken.objects.create(idprevtoken=token, idexerciseerror=new_error,idexercisegrading=exercise_grading)
+                        except Token.DoesNotExist:
+                            print(prev_id,next_id)
                             continue
 
                     #Привязываем ошибку ко всем выделенным 
@@ -1025,17 +1159,15 @@ def student_grade_text(request, idexercise=2):
         return JsonResponse({'success': True})
 
     # ФОРМА ДЛЯ ВЫСТАВЛЕНИЯ ОЦЕНКИ
-    if request.method == "POST" and "mark-form" in request.POST:
-         mark_form = AddMarkForm(request.POST, instance=exercise)
-         if mark_form.is_valid():
-             mark_form.save()
-             
-             #return redirect(request.path + f"?idexercise={exercise.idexercise}")
-             url = reverse('grade_text')
-             params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
-             return redirect(url + params)
+    if request.method == "POST" and "grade-form" in request.POST:
+        grade_form = StudentRateGradingTextForm(request.POST, instance=exercise_grading)
+        if grade_form.is_valid():
+            grade_form.save()
+            url = reverse('student_grade_text')
+            params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
+            return redirect(url + params)
     else:
-         mark_form = AddMarkForm(instance=exercise)
+        grade_form = StudentRateGradingTextForm(instance=exercise_grading)
 
     student = text.idstudent
     user = student.iduser
@@ -1044,12 +1176,16 @@ def student_grade_text(request, idexercise=2):
     unmarked_text = (text.text).replace("-EMPTY-","")
 
     context = {
-        "mark_form": mark_form,
+        "grade_form": grade_form,
         "text": text,
         "annotation_form": annotation_form,
         "sentence_data": sentence_data,
         "exercise": exercise,
         "exercise_grading":exercise_grading,
+        "textgrade": exercise_grading.get_textgrade_display() if exercise_grading.textgrade else "Нет данных",
+        "completeness": exercise_grading.get_completeness_display() if exercise_grading.completeness else "Нет данных",
+        "structure": exercise_grading.get_structure_display() if exercise_grading.structure else "Нет данных",
+        "coherence": exercise_grading.get_coherence_display() if exercise_grading.coherence else "Нет данных",
         "in_time":in_time,
         "selected_markup": selected_markup,
         "poscheckflag": text.poscheckflag,
@@ -1058,8 +1194,7 @@ def student_grade_text(request, idexercise=2):
     }
     return render(request, "student_grade_text.html", context)
 
-# Поменять на тест с правами студента
-# @user_passes_test(has_teacher_rights, login_url='/auth/login/')
+@student_required
 def student_exercises(request):
     student_ids = Student.objects.filter(iduser=request.user).values_list('idstudent', flat=True)
     base_queryset = Exercise.objects.filter(idstudent__in=student_ids)

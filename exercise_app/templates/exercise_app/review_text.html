@@ -234,9 +234,11 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
 
+<!-- СКРИПТЫ СТРАНИЦЫ: ВСЕ JavaScript КОД ПОМЕЩАТЬ СЮДА, НЕ В BLOCK CONTENT! -->
+{% block extra_scripts %}
 <script>
-
     document.addEventListener('DOMContentLoaded', function() {
         // Переключение видимости задания
         document.querySelectorAll('.toggle-btn').forEach(button => {

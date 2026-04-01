@@ -64,6 +64,21 @@
     min-width: 250px;
 }
 
+#progressBar {
+    width: 90%;
+    background-color: var(--grey-color);
+    margin: 0 5%;
+}
+
+#bar {
+    width: 1%;
+    height: 30px;
+    background-color: var(--primary-color);
+    text-align: center;
+    line-height: 30px;
+    color: white;
+}
+
 @media (max-width:970px) {
     .horizontal-wrap{
         display:block;

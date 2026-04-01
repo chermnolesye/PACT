@@ -225,7 +225,10 @@
         {% endfor %}
     </div>
 </div>
+{% endblock %}
 
+<!-- СКРИПТЫ СТРАНИЦЫ: ВСЕ JavaScript КОД ПОМЕЩАТЬ СЮДА, НЕ В BLOCK CONTENT! -->
+{% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const container = document.querySelector('.exercises');
