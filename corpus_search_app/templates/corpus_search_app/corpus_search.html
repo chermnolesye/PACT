@@ -12,21 +12,25 @@
 <div class="corpus-search-container">
     <h1 class="highlighted-header">Поиск по корпусу</h1>
 
-    <!-- <button id="load-filters-btn">Загрузить фильтры</button> -->   
-    <div id="groups-container"></div>
-    <button id="add-group-btn" class="button search-button">
-        <svg width="24" height="24" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round"/>
-        </svg> 
-        Добавить блок
-    </button>
+    <!-- <button id="load-filters-btn">Загрузить фильтры</button> -->
+    <div class="request-container">
+        <div id="groups-container"></div>
+        <div class="request-buttons-container">
+            <button id="add-group-btn" class="button search-button">
+                <svg width="24" height="24" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                </svg> 
+                Добавить блок
+            </button>
 
-    <button id="search-btn" class="button search-button">
-        <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50.9583 50.9583L61.1666 61.1666M16.6875 6.53745C22.5094 3.17781 29.3541 2.04905 35.9465 3.36146C42.5389 4.67386 48.4294 8.33792 52.5208 13.6711C56.6122 19.0043 58.6254 25.6429 58.1854 32.3502C57.7455 39.0576 54.8823 45.3763 50.1293 50.1293C45.3763 54.8823 39.0576 57.7455 32.3502 58.1854C25.6429 58.6254 19.0043 56.6122 13.6711 52.5208C8.33792 48.4294 4.67386 42.5389 3.36146 35.9465C2.04905 29.3541 3.17781 22.5094 6.53745 16.6875" stroke="#FFFDFD" stroke-width="4" stroke-linecap="round"/>
-        </svg>
-        Найти
-    </button>
+            <button id="search-btn" class="button search-button">
+                <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50.9583 50.9583L61.1666 61.1666M16.6875 6.53745C22.5094 3.17781 29.3541 2.04905 35.9465 3.36146C42.5389 4.67386 48.4294 8.33792 52.5208 13.6711C56.6122 19.0043 58.6254 25.6429 58.1854 32.3502C57.7455 39.0576 54.8823 45.3763 50.1293 50.1293C45.3763 54.8823 39.0576 57.7455 32.3502 58.1854C25.6429 58.6254 19.0043 56.6122 13.6711 52.5208C8.33792 48.4294 4.67386 42.5389 3.36146 35.9465C2.04905 29.3541 3.17781 22.5094 6.53745 16.6875" stroke="#FFFDFD" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                Найти
+            </button>
+        </div>
+    </div>
 
     <hr>
     <h2 class="highlighted-header">Результаты</h2>
@@ -99,7 +103,9 @@
         if (groupIndex > 0) { // Первый блок не удаляем, чтобы всегда был хотя бы один
             const deleteButton = document.createElement("button");
             deleteButton.textContent = "✕ Удалить блок";
-            deleteButton.className = "delete-group-btn";
+            //deleteButton.className = "delete-group-btn";
+            deleteButton.className = "button grey-button delete-group-btn";
+
             // deleteButton.style.position = "absolute";
             // deleteButton.style.top = "5px";
             // deleteButton.style.right = "5px";
@@ -195,7 +201,7 @@
             
             const notLabel = document.createElement("label");
             notLabel.htmlFor = notCheckbox.id;
-            notLabel.textContent = "НЕ";
+            notLabel.textContent = "Исключить";
             notLabel.className = "not-label";
             
             const fieldLabel = document.createElement("label");
@@ -207,10 +213,11 @@
             input.dataset.field = fieldName;
             input.id = `${fieldName}_${groupIndex}`;
             
-            div.appendChild(notCheckbox);
-            div.appendChild(notLabel);
             div.appendChild(fieldLabel);
             div.appendChild(input);
+            div.appendChild(notLabel);
+            div.appendChild(notCheckbox);
+            
             
             wrapper.appendChild(div);
         }
@@ -226,7 +233,7 @@
             
             const notLabel = document.createElement("label");
             notLabel.htmlFor = notCheckbox.id;
-            notLabel.textContent = "НЕ";
+            notLabel.textContent = "Исключить";
             notLabel.className = "not-label";
             
             const fieldLabel = document.createElement("label");
@@ -236,10 +243,12 @@
             const select = makeSelect(options, valueKey, textKey, fieldName);
             select.id = `${fieldName}_${groupIndex}`;
             
-            div.appendChild(notCheckbox);
-            div.appendChild(notLabel);
+
             div.appendChild(fieldLabel);
             div.appendChild(select);
+            div.appendChild(notLabel);
+            div.appendChild(notCheckbox);
+            
             
             wrapper.appendChild(div);
         }
@@ -251,7 +260,7 @@
         addSelectInput("Причина ошибки", "reason_id", filtersData.reasons, "idreason", "reasonname");
         addTextInput("Название текста", "title");
         addSelectInput("Тип текста", "text_type_id", filtersData.text_types, "idtexttype", "texttypename");
-        addSelectInput("Психо-эмоциональное состояние", "emotion_id", filtersData.emotions, "idemotion", "emotionname");
+        addSelectInput("Эмоция", "emotion_id", filtersData.emotions, "idemotion", "emotionname");
 
         groupsContainer.appendChild(wrapper);
         groupIndex += 1;

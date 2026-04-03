@@ -6,10 +6,25 @@
     justify-content: center;
 }
 
+.request-container {
+    width: auto;
+    max-width: 1200px;
+}
+
+.request-buttons-container{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .search-button {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
+    width: 180px;
 }
 
 .search-group {
@@ -39,18 +54,18 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background-color: #ff4444;
+    /* background-color: #ff4444;
     color: white;
     border: none;
     padding: 5px 10px;
     cursor: pointer;
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 12px; */
 }
 
-.delete-group-btn:hover {
+/* .delete-group-btn:hover {
     background-color: #cc0000;
-}
+} */
 
 .filter-row {
     margin-bottom: 8px;
@@ -135,6 +150,11 @@
     min-width: 0; 
 }
 
+
+.filter-row input[type="checkbox"]:checked {
+    filter: hue-rotate(0deg) brightness(0.9);
+    accent-color: var(--red-color);
+}
 
 /* результаты поиска */
 .search-result-item {
