@@ -31,9 +31,7 @@
             </button>
         </div>
     </div>
-
-    <hr>
-    <h2 class="highlighted-header">Результаты</h2>
+    
     <div id="results"></div>
 
 </div>
@@ -62,7 +60,7 @@
             }
         } catch (error) {
             console.error("Ошибка загрузки фильтров:", error);
-            alert("Не удалось загрузить фильтры");
+            toastr.warning('Не удалось загрузить фильтры. Попробуйте обновить страницу.');
         }
     }
 
@@ -87,34 +85,26 @@
 
     function addGroup() {
         if (!filtersData) {
-            alert("Фильтры еще не загружены");
+            toastr.warning('Фильтры еще не загружены. Пожалуйста, подождите.');
             return;
         }
 
         const wrapper = document.createElement("div");
         wrapper.className = "search-group";
-        // wrapper.style.border = "1px solid #999";
-        // wrapper.style.padding = "10px";
-        // wrapper.style.marginBottom = "10px";
-        // wrapper.style.position = "relative";
         wrapper.dataset.groupIndex = groupIndex;
 
         // Добавляем кнопку удаления (только для блоков, которые можно удалить)
         if (groupIndex > 0) { // Первый блок не удаляем, чтобы всегда был хотя бы один
             const deleteButton = document.createElement("button");
-            deleteButton.textContent = "✕ Удалить блок";
+            // deleteButton.textContent = "✕ Удалить блок";
+            deleteButton.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Удалить блок
+            `;
             //deleteButton.className = "delete-group-btn";
             deleteButton.className = "button grey-button delete-group-btn";
-
-            // deleteButton.style.position = "absolute";
-            // deleteButton.style.top = "5px";
-            // deleteButton.style.right = "5px";
-            // deleteButton.style.backgroundColor = "#ff4444";
-            // deleteButton.style.color = "white";
-            // deleteButton.style.border = "none";
-            // deleteButton.style.padding = "5px 10px";
-            // deleteButton.style.cursor = "pointer";
-            // deleteButton.style.borderRadius = "3px";
             deleteButton.onclick = function() {
                 deleteGroup(wrapper);
             };
@@ -123,10 +113,11 @@
 
         if (groupIndex > 0) {
             const operatorDiv = document.createElement("div");
-            operatorDiv.className = "operator-select";
+            operatorDiv.className = "operator-select";            
 
             const operatorSelect = document.createElement("select");
             operatorSelect.dataset.operator = "true";
+            operatorSelect.id = `operator-select-${groupIndex}`;
 
             const andOption = document.createElement("option");
             andOption.value = "AND";
@@ -212,6 +203,7 @@
             input.type = "text";
             input.dataset.field = fieldName;
             input.id = `${fieldName}_${groupIndex}`;
+            fieldLabel.htmlFor = input.id;
             
             div.appendChild(fieldLabel);
             div.appendChild(input);
@@ -242,6 +234,7 @@
             
             const select = makeSelect(options, valueKey, textKey, fieldName);
             select.id = `${fieldName}_${groupIndex}`;
+            fieldLabel.htmlFor = select.id;
             
 
             div.appendChild(fieldLabel);
@@ -267,27 +260,24 @@
     }
 
     function deleteGroup(groupElement) {
-        if (confirm("Вы уверены, что хотите удалить этот блок?")) {
-            const groupIndex = parseInt(groupElement.dataset.groupIndex);
-            groupElement.remove();
+        const groupIndex = parseInt(groupElement.dataset.groupIndex);
+        groupElement.remove();
+        
+        // Обновляем индексы оставшихся блоков
+        const remainingGroups = document.querySelectorAll("#groups-container > div");
+        remainingGroups.forEach((group, idx) => {
+            group.dataset.groupIndex = idx;
             
-            // Обновляем индексы оставшихся блоков
-            const remainingGroups = document.querySelectorAll("#groups-container > div");
-            remainingGroups.forEach((group, idx) => {
-                group.dataset.groupIndex = idx;
-                
-                // Обновляем текст в кнопках удаления (опционально)
-                const deleteBtn = group.querySelector("button");
-                if (deleteBtn && deleteBtn.textContent.includes("Удалить блок")) {
-                    // Можно оставить без изменений или добавить номер блока
-                    deleteBtn.textContent = `✕ Удалить блок ${idx + 1}`;
-                }
-            });
-            
-            // Опционально: если удалили все блоки, добавляем один пустой
-            if (remainingGroups.length === 0) {
-                addGroup();
-            }
+            // Обновляем текст в кнопках удаления (опционально)
+            // const deleteBtn = group.querySelector("button");
+            // if (deleteBtn && deleteBtn.textContent.includes("Удалить блок")) {
+            //     deleteBtn.textContent = `✕ Удалить блок ${idx + 1}`;
+            // }
+        });
+        
+        //если удалили все блоки, добавляем один пустой
+        if (remainingGroups.length === 0) {
+            addGroup();
         }
     }
 
@@ -361,9 +351,7 @@
 
     //     data.results.forEach(item => {
     //         const div = document.createElement("div");
-    //         div.style.border = "1px solid #ccc";
-    //         div.style.marginBottom = "10px";
-    //         div.style.padding = "10px";
+
 
     //          // Заголовок текста
     //         const header = document.createElement("h3");
@@ -372,8 +360,6 @@
 
     //         // Метаданные
     //         const meta = document.createElement("div");
-    //         meta.style.color = "#666";
-    //         meta.style.marginBottom = "10px";
     //         meta.innerHTML = `
     //             Дата: ${item.createdate || "Не указано"} | 
     //             Тип текста: ${item.text_type} | 
@@ -389,25 +375,16 @@
                 
     //             item.matching_sentences.forEach(sentenceContext => {
     //                 const sentenceDiv = document.createElement("div");
-    //                 sentenceDiv.style.marginBottom = "15px";
-    //                 sentenceDiv.style.padding = "8px";
-    //                 sentenceDiv.style.backgroundColor = "#f9f9f9";
-    //                 sentenceDiv.style.borderLeft = "3px solid #007bff";
                     
     //                 // Предыдущее предложение
     //                 if (sentenceContext.previous) {
     //                     const prevSpan = document.createElement("div");
-    //                     prevSpan.style.color = "#666";
-    //                     prevSpan.style.fontStyle = "italic";
-    //                     prevSpan.style.marginBottom = "5px";
     //                     prevSpan.innerHTML = `${sentenceContext.previous.text}`;
     //                     sentenceDiv.appendChild(prevSpan);
     //                 }
                     
     //                 // Текущее предложение (с подсветкой)
     //                 const currentSpan = document.createElement("div");
-    //                 currentSpan.style.fontWeight = "bold";
-    //                 currentSpan.style.marginBottom = "5px";
     //                 if (sentenceContext.current.highlighted_text) {
     //                     currentSpan.innerHTML = sentenceContext.current.highlighted_text;
     //                 } else {
@@ -418,8 +395,6 @@
     //                 // Следующее предложение
     //                 if (sentenceContext.next) {
     //                     const nextSpan = document.createElement("div");
-    //                     nextSpan.style.color = "#666";
-    //                     nextSpan.style.fontStyle = "italic";
     //                     nextSpan.innerHTML = `${sentenceContext.next.text}`;
     //                     sentenceDiv.appendChild(nextSpan);
     //                 }
@@ -479,10 +454,14 @@
             if (data.page_obj && data.page_obj.num_pages > 1) {
                 displayPagination(data.page_obj);
             }
+
+            if (page > 1) {
+                scrollToResults();
+            }
             
         } catch (error) {
             console.error("Ошибка при поиске:", error);
-            alert("Произошла ошибка при поиске");
+            toastr.error('Произошла ошибка при поиске. Пожалуйста, попробуйте еще раз.');
         } finally {
             isLoading = false;
         }
@@ -494,15 +473,20 @@
 
         // Показываем количество результатов
         const countP = document.createElement("p");
-        countP.textContent = `Найдено: ${data.count}`;
+        countP.className = "results-count";
+        countP.innerHTML = `Найдено: <span class="count-number">${data.count}</span>`;
         resultsDiv.appendChild(countP);
 
         // Проверяем, есть ли результаты
         if (!data.results || data.results.length === 0) {
-            const noResults = document.createElement("p");
-            noResults.textContent = "Ничего не найдено";
-            noResults.style.color = "#666";
-            noResults.style.fontStyle = "italic";
+            const noResults = document.createElement("div");
+            noResults.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6C757D" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>По ващему запросу ничего не найдено.</p>
+            `;
+            noResults.className = "no-results";
             resultsDiv.appendChild(noResults);
             return;
         }
@@ -514,6 +498,7 @@
             div.className = "search-result-item";
 
             const header = document.createElement("h3");
+            header.className = "result-header";
             // header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
             if (isTeacher) {
                 header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
@@ -522,31 +507,23 @@
             }
             div.appendChild(header);
 
-            // const meta = document.createElement("div");
-            // meta.style.color = "#666";
-            // meta.style.marginBottom = "10px";
-            // meta.style.fontSize = "0.9em";
-            // meta.innerHTML = `
-            //     Дата: ${item.createdate || "Не указано"} | 
-            //     Тип текста: ${item.text_type} | 
-            //     Состояние: ${item.emotion}
-            // `;
-            // div.appendChild(meta);
+            const meta = document.createElement("div");
+            meta.className = "result-meta";
+            meta.innerHTML = `
+                Дата: ${item.createdate || "Не указано"} | 
+                Тип текста: ${item.text_type} | 
+                Эмоция: ${item.emotion}
+            `;
+            div.appendChild(meta);
 
             if (item.matching_sentences && item.matching_sentences.length > 0) {
                 // const sentencesTitle = document.createElement("h4");
                 // sentencesTitle.textContent = "Найденные фрагменты:";
-                // sentencesTitle.style.marginBottom = "10px";
                 // div.appendChild(sentencesTitle);
                 
                 item.matching_sentences.forEach(sentenceContext => {
                     const sentenceDiv = document.createElement("div");
                     sentenceDiv.className = "sentence-context";
-                    sentenceDiv.style.marginBottom = "15px";
-                    sentenceDiv.style.padding = "8px";
-                    sentenceDiv.style.backgroundColor = "#f9f9f9";
-                    sentenceDiv.style.borderLeft = "3px solid #007bff";
-                    sentenceDiv.style.borderRadius = "3px";
                     
                     if (sentenceContext.previous) {
                         const prevSpan = document.createElement("div");
@@ -592,12 +569,6 @@
 
         const paginationDiv = document.createElement("div");
         paginationDiv.className = "pagination";
-        paginationDiv.style.marginTop = "20px";
-        paginationDiv.style.textAlign = "center";
-        paginationDiv.style.display = "flex";
-        paginationDiv.style.justifyContent = "center";
-        paginationDiv.style.gap = "10px";
-        paginationDiv.style.flexWrap = "wrap";
 
         if (pageObj.has_previous) {
             const firstLink = document.createElement("span");
@@ -609,6 +580,7 @@
                 e.preventDefault();
                 if (!isLoading) {
                     doSearch(1);
+                    scrollToResults();
                 }
             };
             firstLink.appendChild(firstA);
@@ -625,6 +597,7 @@
                 e.preventDefault();
                 if (!isLoading) {
                     doSearch(pageObj.previous_page_number);
+                    scrollToResults();
                 }
             };
             prevLink.appendChild(prevA);
@@ -646,6 +619,7 @@
                 e.preventDefault();
                 if (!isLoading) {
                     doSearch(pageObj.next_page_number);
+                    scrollToResults();
                 }
             };
             nextLink.appendChild(nextA);
@@ -662,6 +636,7 @@
                 e.preventDefault();
                 if (!isLoading) {
                     doSearch(pageObj.num_pages);
+                    scrollToResults();
                 }
             };
             lastLink.appendChild(lastA);
@@ -678,7 +653,11 @@
     }
 
     document.getElementById("add-group-btn").addEventListener("click", addGroup);
-    document.getElementById("search-btn").addEventListener("click", () => doSearch(1));
+    // document.getElementById("search-btn").addEventListener("click", () => doSearch(1));
+    document.getElementById("search-btn").addEventListener("click", () => {
+        doSearch(1);
+        scrollToResults();
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         loadFilters();
