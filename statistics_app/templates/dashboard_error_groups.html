@@ -1,17 +1,10 @@
-{% load static %} 
-{%block plugins%}
-<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-<script src="{% static 'js/external/axios.min.js' %}"></script>
-<script src="{% static 'js/external/chart.umd.min.js' %}"></script>
-<script src="{% static 'js/external/xlsx.full.min.js' %}"></script>
-<script src="{% static 'js/external/bootstrap.bundle.min.js' %}"></script>
-<script src="{% static 'js/external/jquery.min.js' %}"></script>
-{%endblock plugins%} 
+{% extends "base.html" %}
+{% load static %}
+{% block extra_head %}
 
-{% block link %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/dashboards.css' %}" />
 <link rel="stylesheet" type="text/css" href="{% static 'css/external/bootstrap.min.css' %}" />
-{% endblock link %}
+{% endblock %}
 
 {% block content %}
 <main class="container-fluid mt-5 fs-5">
@@ -256,9 +249,17 @@
 		</div>
 	</div>
 </main>
-{% endblock content%} 
+{% endblock %} 
 
-{%block script%}
+{% block extra_scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+<script src="{% static 'js/external/axios.min.js' %}"></script>
+<script src="{% static 'js/external/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/external/xlsx.full.min.js' %}"></script>
+<script src="{% static 'js/external/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/external/jquery.min.js' %}"></script>
+
 <script type="text/javascript">
 var colors = [
     'rgba(255, 0, 0, 1)',
@@ -1179,4 +1180,4 @@ var groups_pie = new Vue({
 		document.getElementById("error_group").style.display = 'none'
 	})
 </script>
-{%endblock script%}
+{% endblock %}
