@@ -242,22 +242,21 @@ html {
     line-height: 1.6;
 }
 
-/* Тюнинг покраска */
 .highlight-wordform {
-    background-color: #9fd3ff;
+    background-color: var(--e-blue);
     border-radius: 3px;
     padding: 0 2px;
 }
 
 .highlight-pos {
-    background-color: #ffe88a;
+    background-color: var(--e-green);
     border-radius: 3px;
     padding: 0 2px;
 }
 
 .highlight-error {
     text-decoration: underline;
-    text-decoration-color: #d62828;
+    text-decoration-color: var(--red-color);
     text-decoration-thickness: 2px;
     text-underline-offset: 2px;
 }
