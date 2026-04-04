@@ -12,7 +12,6 @@
 <div class="corpus-search-container">
     <h1 class="highlighted-header">Поиск по корпусу</h1>
 
-    <!-- <button id="load-filters-btn">Загрузить фильтры</button> -->
     <div class="request-container">
         <div id="groups-container"></div>
         <div class="request-buttons-container">
@@ -21,6 +20,10 @@
                     <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round"/>
                 </svg> 
                 Добавить блок
+            </button>
+
+            <button id="reset-filters-btn" class="button grey-button search-button">
+                Сбросить
             </button>
 
             <button id="search-btn" class="button search-button">
@@ -38,12 +41,11 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script>
-
+<script>
     let currentPage = 1;
     let totalPages = 1;
     let pageSize = 10;
-    let isLoading = false; // Для предотвращения множественных запросов
+    let isLoading = false;
     let currentQuery = null;
 
     const groupsContainer = document.getElementById("groups-container");
@@ -93,17 +95,14 @@
         wrapper.className = "search-group";
         wrapper.dataset.groupIndex = groupIndex;
 
-        // Добавляем кнопку удаления (только для блоков, которые можно удалить)
-        if (groupIndex > 0) { // Первый блок не удаляем, чтобы всегда был хотя бы один
+        if (groupIndex > 0) {
             const deleteButton = document.createElement("button");
-            // deleteButton.textContent = "✕ Удалить блок";
             deleteButton.innerHTML = `
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                 </svg>
                 Удалить блок
             `;
-            //deleteButton.className = "delete-group-btn";
             deleteButton.className = "button grey-button delete-group-btn";
             deleteButton.onclick = function() {
                 deleteGroup(wrapper);
@@ -113,7 +112,7 @@
 
         if (groupIndex > 0) {
             const operatorDiv = document.createElement("div");
-            operatorDiv.className = "operator-select";            
+            operatorDiv.className = "operator-select";
 
             const operatorSelect = document.createElement("select");
             operatorSelect.dataset.operator = "true";
@@ -132,54 +131,8 @@
 
             wrapper.appendChild(document.createTextNode("Связь с предыдущим блоком: "));
             wrapper.appendChild(operatorSelect);
-            // wrapper.appendChild(document.createElement("br"));
-            // wrapper.appendChild(document.createElement("br"));
             wrapper.appendChild(operatorDiv);
         }
-
-        // function addTextInput(labelText, fieldName) {
-        //     const div = document.createElement("div");
-        //     div.className = "filter-row";
-
-        //     const label = document.createElement("label");
-        //     label.textContent = labelText + ": ";
-
-        //     const notCheckbox = document.createElement("input");
-        //     notCheckbox.type = "checkbox";
-        //     notCheckbox.dataset.notField = fieldName;
-
-        //     const input = document.createElement("input");
-        //     input.type = "text";
-        //     input.dataset.field = fieldName;
-
-        //     wrapper.appendChild(document.createTextNode("НЕ "));
-        //     wrapper.appendChild(notCheckbox);
-        //     wrapper.appendChild(label);
-        //     wrapper.appendChild(input);
-        //     // wrapper.appendChild(document.createElement("br"));
-        //     wrapper.appendChild(div);
-        // }
-
-        // function addSelectInput(labelText, fieldName, options, valueKey, textKey) {
-        //     const div = document.createElement("div");
-        //     div.className = "filter-row";
-
-        //     const label = document.createElement("label");
-        //     label.textContent = labelText + ": ";
-
-        //     const notCheckbox = document.createElement("input");
-        //     notCheckbox.type = "checkbox";
-        //     notCheckbox.dataset.notField = fieldName;
-
-        //     const select = makeSelect(options, valueKey, textKey, fieldName);
-
-        //     wrapper.appendChild(document.createTextNode("НЕ "));
-        //     wrapper.appendChild(notCheckbox);
-        //     wrapper.appendChild(label);
-        //     wrapper.appendChild(select);
-        //     // wrapper.appendChild(document.createElement("br"));
-        //     wrapper.appendChild(div);
-        // }
 
         function addTextInput(labelText, fieldName) {
             const div = document.createElement("div");
@@ -210,7 +163,6 @@
             div.appendChild(notLabel);
             div.appendChild(notCheckbox);
             
-            
             wrapper.appendChild(div);
         }
 
@@ -236,12 +188,10 @@
             select.id = `${fieldName}_${groupIndex}`;
             fieldLabel.htmlFor = select.id;
             
-
             div.appendChild(fieldLabel);
             div.appendChild(select);
             div.appendChild(notLabel);
             div.appendChild(notCheckbox);
-            
             
             wrapper.appendChild(div);
         }
@@ -260,23 +210,28 @@
     }
 
     function deleteGroup(groupElement) {
-        const groupIndex = parseInt(groupElement.dataset.groupIndex);
         groupElement.remove();
-        
-        // Обновляем индексы оставшихся блоков
+
         const remainingGroups = document.querySelectorAll("#groups-container > div");
         remainingGroups.forEach((group, idx) => {
             group.dataset.groupIndex = idx;
-            
-            // Обновляем текст в кнопках удаления (опционально)
-            // const deleteBtn = group.querySelector("button");
-            // if (deleteBtn && deleteBtn.textContent.includes("Удалить блок")) {
-            //     deleteBtn.textContent = `✕ Удалить блок ${idx + 1}`;
-            // }
         });
-        
-        //если удалили все блоки, добавляем один пустой
+
         if (remainingGroups.length === 0) {
+            groupIndex = 0;
+            addGroup();
+        }
+    }
+
+    function resetFilters() {
+        groupsContainer.innerHTML = "";
+        document.getElementById("results").innerHTML = "";
+        groupIndex = 0;
+        currentPage = 1;
+        totalPages = 1;
+        currentQuery = null;
+
+        if (filtersData) {
             addGroup();
         }
     }
@@ -330,93 +285,6 @@
         return { groups, operators };
     }
 
-    // async function doSearch() {
-    //     const payload = collectPayload();
-
-    //     const response = await fetch("/corpus/api/search/", {
-    //         method: "POST",
-    //         headers: {
-    //             "Content-Type": "application/json"
-    //         },
-    //         body: JSON.stringify(payload)
-    //     });
-
-    //     const data = await response.json();
-    //     const resultsDiv = document.getElementById("results");
-    //     resultsDiv.innerHTML = "";
-
-    //     const countP = document.createElement("p");
-    //     countP.textContent = "Найдено: " + data.count;
-    //     resultsDiv.appendChild(countP);
-
-    //     data.results.forEach(item => {
-    //         const div = document.createElement("div");
-
-
-    //          // Заголовок текста
-    //         const header = document.createElement("h3");
-    //         header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
-    //         div.appendChild(header);
-
-    //         // Метаданные
-    //         const meta = document.createElement("div");
-    //         meta.innerHTML = `
-    //             Дата: ${item.createdate || "Не указано"} | 
-    //             Тип текста: ${item.text_type} | 
-    //             Состояние: ${item.emotion}
-    //         `;
-    //         div.appendChild(meta);
-
-    //         // Найденные предложения
-    //         if (item.matching_sentences && item.matching_sentences.length > 0) {
-    //             const sentencesTitle = document.createElement("h4");
-    //             sentencesTitle.textContent = "Найденные фрагменты:";
-    //             div.appendChild(sentencesTitle);
-                
-    //             item.matching_sentences.forEach(sentenceContext => {
-    //                 const sentenceDiv = document.createElement("div");
-                    
-    //                 // Предыдущее предложение
-    //                 if (sentenceContext.previous) {
-    //                     const prevSpan = document.createElement("div");
-    //                     prevSpan.innerHTML = `${sentenceContext.previous.text}`;
-    //                     sentenceDiv.appendChild(prevSpan);
-    //                 }
-                    
-    //                 // Текущее предложение (с подсветкой)
-    //                 const currentSpan = document.createElement("div");
-    //                 if (sentenceContext.current.highlighted_text) {
-    //                     currentSpan.innerHTML = sentenceContext.current.highlighted_text;
-    //                 } else {
-    //                     currentSpan.textContent = sentenceContext.current.text;
-    //                 }
-    //                 sentenceDiv.appendChild(currentSpan);
-                    
-    //                 // Следующее предложение
-    //                 if (sentenceContext.next) {
-    //                     const nextSpan = document.createElement("div");
-    //                     nextSpan.innerHTML = `${sentenceContext.next.text}`;
-    //                     sentenceDiv.appendChild(nextSpan);
-    //                 }
-                    
-    //                 sentenceDiv.appendChild(document.createElement("hr"));
-    //                 sentenceDiv.appendChild(document.createElement("br"));
-                    
-    //                 div.appendChild(sentenceDiv);
-    //             });
-    //         }
-
-    //         // div.innerHTML = `
-    //         //     <a href="/corpus/text/${item.id}/"><strong>${item.header}</strong></a><br>
-    //         //     Дата: ${item.createdate || "Не указано"}<br>
-    //         //     Тип текста: ${item.text_type}<br>
-    //         //     Состояние: ${item.emotion}
-    //         // `;
-
-    //         resultsDiv.appendChild(div);
-    //     });
-    // }
-
     async function doSearch(page = 1) {
         if (isLoading) return;
         
@@ -424,8 +292,6 @@
         const payload = collectPayload();
         payload.page = page;
         payload.page_size = pageSize;
-        
-        // Сохраняем запрос для использования в ссылках пагинации
         currentQuery = payload;
 
         try {
@@ -438,19 +304,16 @@
             });
 
             const data = await response.json();
-            
-            // Проверяем, есть ли данные пагинации
+
             if (data.page_obj) {
                 currentPage = data.page_obj.number;
                 totalPages = data.page_obj.num_pages;
             } else {
-                // Если пагинация не пришла, показываем все результаты
                 totalPages = 1;
             }
-            
+
             displayResults(data);
-            
-            // Показываем пагинацию только если есть данные и страниц больше 1
+
             if (data.page_obj && data.page_obj.num_pages > 1) {
                 displayPagination(data.page_obj);
             }
@@ -458,7 +321,7 @@
             if (page > 1) {
                 scrollToResults();
             }
-            
+
         } catch (error) {
             console.error("Ошибка при поиске:", error);
             toastr.error('Произошла ошибка при поиске. Пожалуйста, попробуйте еще раз.');
@@ -471,20 +334,18 @@
         const resultsDiv = document.getElementById("results");
         resultsDiv.innerHTML = "";
 
-        // Показываем количество результатов
         const countP = document.createElement("p");
         countP.className = "results-count";
         countP.innerHTML = `Найдено: <span class="count-number">${data.count}</span>`;
         resultsDiv.appendChild(countP);
 
-        // Проверяем, есть ли результаты
         if (!data.results || data.results.length === 0) {
             const noResults = document.createElement("div");
             noResults.innerHTML = `
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6C757D" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            <p>По ващему запросу ничего не найдено.</p>
+            <p>По вашему запросу ничего не найдено.</p>
             `;
             noResults.className = "no-results";
             resultsDiv.appendChild(noResults);
@@ -499,7 +360,7 @@
 
             const header = document.createElement("h3");
             header.className = "result-header";
-            // header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
+
             if (isTeacher) {
                 header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
             } else {
@@ -517,21 +378,17 @@
             div.appendChild(meta);
 
             if (item.matching_sentences && item.matching_sentences.length > 0) {
-                // const sentencesTitle = document.createElement("h4");
-                // sentencesTitle.textContent = "Найденные фрагменты:";
-                // div.appendChild(sentencesTitle);
-                
                 item.matching_sentences.forEach(sentenceContext => {
                     const sentenceDiv = document.createElement("div");
                     sentenceDiv.className = "sentence-context";
-                    
+
                     if (sentenceContext.previous) {
                         const prevSpan = document.createElement("div");
                         prevSpan.className = "prev-sentence";
                         prevSpan.innerHTML = `${sentenceContext.previous.text}`;
                         sentenceDiv.appendChild(prevSpan);
                     }
-                    
+
                     const currentSpan = document.createElement("div");
                     currentSpan.className = "current-sentence";
                     if (sentenceContext.current.highlighted_text) {
@@ -540,14 +397,14 @@
                         currentSpan.textContent = sentenceContext.current.text;
                     }
                     sentenceDiv.appendChild(currentSpan);
-                    
+
                     if (sentenceContext.next) {
                         const nextSpan = document.createElement("div");
                         nextSpan.className = "next-sentence";
                         nextSpan.innerHTML = `${sentenceContext.next.text}`;
                         sentenceDiv.appendChild(nextSpan);
                     }
-                    
+
                     div.appendChild(sentenceDiv);
                 });
             }
@@ -558,13 +415,12 @@
 
     function displayPagination(pageObj) {
         const resultsDiv = document.getElementById("results");
-        
-        // Удаляем старую пагинацию, если есть
+
         const oldPagination = resultsDiv.querySelector(".pagination");
         if (oldPagination) {
             oldPagination.remove();
         }
-        
+
         if (totalPages <= 1) return;
 
         const paginationDiv = document.createElement("div");
@@ -603,12 +459,12 @@
             prevLink.appendChild(prevA);
             paginationDiv.appendChild(prevLink);
         }
-        
+
         const currentSpan = document.createElement("span");
         currentSpan.className = "current";
         currentSpan.innerHTML = `Страница <span class="current-number">${pageObj.number}</span> из ${pageObj.num_pages}`;
         paginationDiv.appendChild(currentSpan);
-        
+
         if (pageObj.has_next) {
             const nextLink = document.createElement("span");
             nextLink.className = "step-links";
@@ -642,18 +498,17 @@
             lastLink.appendChild(lastA);
             paginationDiv.appendChild(lastLink);
         }
-        
+
         resultsDiv.appendChild(paginationDiv);
     }
 
-    // Функция для прокрутки к результатам
     function scrollToResults() {
         const resultsDiv = document.getElementById("results");
         resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     document.getElementById("add-group-btn").addEventListener("click", addGroup);
-    // document.getElementById("search-btn").addEventListener("click", () => doSearch(1));
+    document.getElementById("reset-filters-btn").addEventListener("click", resetFilters);
     document.getElementById("search-btn").addEventListener("click", () => {
         doSearch(1);
         scrollToResults();
@@ -663,5 +518,4 @@
         loadFilters();
     });
 </script>
-
 {% endblock %}

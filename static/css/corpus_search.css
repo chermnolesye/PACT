@@ -1,4 +1,3 @@
-
 :root {
     --checkbox-width: 16px;
     --not-label-width: 100px;
@@ -20,12 +19,14 @@
     max-width: 1200px;
 }
 
-.request-buttons-container{
+.request-buttons-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .search-button {
@@ -43,9 +44,10 @@
     margin-bottom: 10px;
     position: relative;
     box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+    background: #fff;
 }
 
-.search-group label{
+.search-group label {
     color: var(--grey-color);
     margin: 0px 5px;
 }
@@ -117,7 +119,7 @@
 
 .filter-row .not-label {
     cursor: pointer;
-    flex-shrink: 0; 
+    flex-shrink: 0;
     width: var(--not-label-width);
     word-wrap: break-word;
     word-break: break-word;
@@ -139,7 +141,6 @@
     width: var(--input-width);
     box-sizing: border-box;
 }
-
 
 .filter-row input[type="checkbox"]:checked {
     filter: hue-rotate(0deg) brightness(0.9);
@@ -214,13 +215,6 @@ html {
     margin-bottom: 10px;
 }
 
-.search-result-item mark {
-    background-color: var(--secondary-color);
-    color: white;
-    font-weight: bold;
-    padding: 0 2px;
-}
-
 .sentence-context {
     display: flex;
     flex-direction: column;
@@ -240,12 +234,32 @@ html {
 .sentence-context .prev-sentence,
 .sentence-context .next-sentence {
     color: #666;
-
 }
 
 .sentence-context .current-sentence {
     font-weight: bold;
     margin: 5px 0;
+    line-height: 1.6;
+}
+
+/* Тюнинг покраска */
+.highlight-wordform {
+    background-color: #9fd3ff;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+.highlight-pos {
+    background-color: #ffe88a;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+.highlight-error {
+    text-decoration: underline;
+    text-decoration-color: #d62828;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
 }
 
 .pagination {
@@ -287,7 +301,7 @@ html {
     .filter-row .field-label {
         width: 100%;
     }
-    
+
     .filter-row input[type="text"],
     .filter-row select {
         width: 100%;
