@@ -279,7 +279,7 @@ a {
 
 .header {
     background-color: white;
-    padding: 10px 20px;
+    padding: 5px 10px;
     position: fixed;
     top: 0;
     left: 0;
@@ -299,7 +299,7 @@ a {
 .header__right {
     display: flex;
     align-items: center;
-    top: 8px;
+    top: 5px;
     position: absolute;
     right: 20px;
 }
@@ -307,6 +307,13 @@ a {
 .header__link {
     display: flex;
     align-items: center;
+    padding: 5px 10px;
+}
+
+.header__link:hover {
+    background-color: var(--secondary-color);
+    color: white;
+    border-radius: var(--border-radius);
 }
 
     .header__link svg {
@@ -380,11 +387,21 @@ nav {
 }
 
 .drop_down_list_item {
-    padding: 0px 15px 10px;
     cursor: pointer;
+    width: 100%;
+}
+
+.drop_down_list_item:hover {
+    background-color: var(--secondary-color);
+}
+
+.drop_down_list_item:hover .drop_down_link {
+    color: white;
 }
 
 .drop_down_link {
+    display: block;
+    padding: 8px 15px;
 }
 
 .header input[type="checkbox"] {
