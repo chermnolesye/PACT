@@ -1,15 +1,11 @@
 import json
-from functools import reduce
-from operator import and_, or_
+from collections import defaultdict
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET, require_POST
-
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
-import re
 
 from core_app.models import (
     Sentence,
@@ -24,23 +20,28 @@ from core_app.models import (
     Reason,
 )
 
+
+BATCH_SIZE = 100
+
+
 def corpus_search(request):
     if not request.user.is_authenticated:
-        base_template = 'guest_base.html'
+        base_template = "guest_base.html"
     else:
-        if hasattr(request.user, 'idrights'):
+        if hasattr(request.user, "idrights"):
             if request.user.idrights.idrights == 2:
-                base_template = 'base.html'
+                base_template = "base.html"
             elif request.user.idrights.idrights == 1:
-                base_template = 'student_base.html'
+                base_template = "student_base.html"
             elif request.user.idrights.idrights == 4:
-                base_template = 'admin_base.html'
+                base_template = "admin_base.html"
             else:
-                base_template = 'guest_base.html'
+                base_template = "guest_base.html"
         else:
-            base_template = 'guest_base.html'
+            base_template = "guest_base.html"
+
     context = {
-        'base_template': base_template
+        "base_template": base_template,
     }
     return render(request, "corpus_search.html", context)
 
@@ -58,7 +59,9 @@ def corpus_filters_api(request):
             PosTag.objects.values("idpostag", "tagtext", "tagtextabbrev").order_by("tagtext")
         ),
         "error_tags": list(
-            ErrorTag.objects.values("iderrortag", "tagtext", "tagtextabbrev", "tagtextrussian").order_by("tagtextrussian")
+            ErrorTag.objects.values(
+                "iderrortag", "tagtext", "tagtextabbrev", "tagtextrussian"
+            ).order_by("tagtextrussian")
         ),
         "error_levels": list(
             ErrorLevel.objects.values("iderrorlevel", "errorlevelname").order_by("errorlevelname")
@@ -70,9 +73,18 @@ def corpus_filters_api(request):
     return JsonResponse(data)
 
 
+def _group_has_any_filter(group_data: dict) -> bool:
+    for value in group_data.values():
+        if not isinstance(value, dict):
+            continue
+        if value.get("value") not in [None, "", []]:
+            return True
+    return False
+
+
 def _text_ids_by_wordform(value: str):
     return Token.objects.filter(
-        tokentext__icontains=value
+        tokentext__iexact=value
     ).values_list("idsentence__idtext_id", flat=True).distinct()
 
 
@@ -128,8 +140,8 @@ def _apply_one_filter(current_q: Q, field_payload: dict, get_ids_func) -> Q:
     if value in [None, "", []]:
         return current_q
 
-    matched_ids = list(get_ids_func(value))
-    condition = Q(idtext__in=matched_ids)
+    matched_ids_subquery = get_ids_func(value)
+    condition = Q(idtext__in=matched_ids_subquery)
 
     if is_not:
         condition = ~condition
@@ -152,6 +164,478 @@ def _build_group_q(group_data: dict) -> Q:
     return group_q
 
 
+def _text_matches_title(text_obj, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = str(value).lower() in (text_obj.header or "").lower()
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _text_matches_text_type(text_obj, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = text_obj.idtexttype_id == value
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _text_matches_emotion(text_obj, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = text_obj.idemotion_id == value
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _group_text_level_matches(text_obj, group_data: dict) -> bool:
+    return (
+        _text_matches_title(text_obj, group_data.get("title", {}))
+        and _text_matches_text_type(text_obj, group_data.get("text_type_id", {}))
+        and _text_matches_emotion(text_obj, group_data.get("emotion_id", {}))
+    )
+
+
+def _group_has_token_filters(group_data: dict) -> bool:
+    return any(
+        group_data.get(field_name, {}).get("value") not in [None, "", []]
+        for field_name in ["wordform", "pos_tag_id", "error_tag_id", "error_level_id", "reason_id"]
+    )
+
+
+def _token_matches_wordform(token, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = (token.tokentext or "").lower() == str(value).lower()
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _token_matches_pos(token, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = token.idpostag_id == value
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _token_matches_error_tag(token_meta_item: dict, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = value in token_meta_item["error_tag_ids"]
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _token_matches_error_level(token_meta_item: dict, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = value in token_meta_item["error_level_ids"]
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _token_matches_reason(token_meta_item: dict, payload: dict) -> bool:
+    value = payload.get("value")
+    if value in [None, "", []]:
+        return True
+
+    found = value in token_meta_item["reason_ids"]
+    if payload.get("not", False):
+        return not found
+    return found
+
+
+def _token_matches_group(token, token_meta_item: dict, group_data: dict) -> bool:
+    return (
+        _token_matches_wordform(token, group_data.get("wordform", {}))
+        and _token_matches_pos(token, group_data.get("pos_tag_id", {}))
+        and _token_matches_error_tag(token_meta_item, group_data.get("error_tag_id", {}))
+        and _token_matches_error_level(token_meta_item, group_data.get("error_level_id", {}))
+        and _token_matches_reason(token_meta_item, group_data.get("reason_id", {}))
+    )
+
+
+def _build_highlight_flags_for_matched_token(group_data: dict) -> dict:
+    flags = {
+        "wordform": False,
+        "pos": False,
+        "error": False,
+    }
+
+    wordform_payload = group_data.get("wordform", {})
+    if wordform_payload.get("value") not in [None, "", []] and not wordform_payload.get("not", False):
+        flags["wordform"] = True
+
+    pos_payload = group_data.get("pos_tag_id", {})
+    if pos_payload.get("value") not in [None, "", []] and not pos_payload.get("not", False):
+        flags["pos"] = True
+
+    for field_name in ["error_tag_id", "error_level_id", "reason_id"]:
+        payload = group_data.get(field_name, {})
+        if payload.get("value") not in [None, "", []] and not payload.get("not", False):
+            flags["error"] = True
+            break
+
+    return flags
+
+
+def _merge_highlight_flags(base_flags: dict, new_flags: dict) -> dict:
+    return {
+        "wordform": base_flags["wordform"] or new_flags["wordform"],
+        "pos": base_flags["pos"] or new_flags["pos"],
+        "error": base_flags["error"] or new_flags["error"],
+    }
+
+
+def _wrap_token_html(token_text: str, flags: dict) -> str:
+    text = token_text
+
+    if flags["wordform"] and not flags["pos"]:
+        text = f'<span class="highlight-wordform">{text}</span>'
+
+    if flags["pos"]:
+        text = f'<span class="highlight-pos">{text}</span>'
+
+    if flags["error"]:
+        text = f'<span class="highlight-error">{text}</span>'
+
+    return text
+
+
+def _render_sentence_with_highlights(tokens, token_flags_map: dict) -> str:
+    rendered_parts = []
+
+    for token in tokens:
+        flags = token_flags_map.get(
+            token.idtoken,
+            {"wordform": False, "pos": False, "error": False},
+        )
+        rendered_parts.append(_wrap_token_html(token.tokentext, flags))
+
+    return " ".join(rendered_parts)
+
+
+def _iter_batches(sequence, batch_size):
+    for start in range(0, len(sequence), batch_size):
+        yield sequence[start:start + batch_size]
+
+
+def _build_batch_runtime_cache(text_batch):
+    text_ids = [text.idtext for text in text_batch]
+    cache_by_text_id = {}
+
+    for text in text_batch:
+        cache_by_text_id[text.idtext] = {
+            "text": text,
+            "sentences": [],
+            "sentence_tokens": defaultdict(list),
+            "token_meta": {},
+        }
+
+    if not text_ids:
+        return cache_by_text_id
+
+    sentences = list(
+        Sentence.objects.filter(idtext_id__in=text_ids)
+        .select_related("idtext")
+        .order_by("idtext_id", "ordernumber")
+    )
+
+    sentence_ids = [sentence.idsentence for sentence in sentences]
+    sentence_to_text_id = {}
+
+    for sentence in sentences:
+        cache_by_text_id[sentence.idtext_id]["sentences"].append(sentence)
+        sentence_to_text_id[sentence.idsentence] = sentence.idtext_id
+
+    tokens = list(
+        Token.objects.filter(idsentence_id__in=sentence_ids)
+        .select_related("idpostag", "idsentence")
+        .order_by("idsentence__idtext_id", "idsentence__ordernumber", "tokenordernumber")
+    )
+
+    token_ids = []
+
+    for token in tokens:
+        text_id = sentence_to_text_id.get(token.idsentence_id)
+        if text_id is None:
+            continue
+
+        cache_by_text_id[text_id]["sentence_tokens"][token.idsentence_id].append(token)
+        cache_by_text_id[text_id]["token_meta"][token.idtoken] = {
+            "error_tag_ids": set(),
+            "error_level_ids": set(),
+            "reason_ids": set(),
+        }
+        token_ids.append(token.idtoken)
+
+    if token_ids:
+        error_links = list(
+            ErrorToken.objects.filter(idtoken_id__in=token_ids)
+            .select_related("iderror__iderrortag", "iderror__iderrorlevel", "iderror__idreason", "idtoken")
+        )
+
+        for error_link in error_links:
+            token_id = error_link.idtoken_id
+            sentence_id = error_link.idtoken.idsentence_id
+            text_id = sentence_to_text_id.get(sentence_id)
+
+            if text_id is None:
+                continue
+
+            token_meta = cache_by_text_id[text_id]["token_meta"].setdefault(
+                token_id,
+                {
+                    "error_tag_ids": set(),
+                    "error_level_ids": set(),
+                    "reason_ids": set(),
+                },
+            )
+
+            error_obj = error_link.iderror
+            if not error_obj:
+                continue
+
+            if error_obj.iderrortag_id:
+                token_meta["error_tag_ids"].add(error_obj.iderrortag_id)
+
+            if error_obj.iderrorlevel_id:
+                token_meta["error_level_ids"].add(error_obj.iderrorlevel_id)
+
+            if error_obj.idreason_id:
+                token_meta["reason_ids"].add(error_obj.idreason_id)
+
+    return cache_by_text_id
+
+
+def _sentence_matches_group(sentence, group_data: dict, cache: dict):
+    text_obj = sentence.idtext
+
+    if not _group_text_level_matches(text_obj, group_data):
+        return False, {}
+
+    tokens = cache["sentence_tokens"].get(sentence.idsentence, [])
+    token_meta = cache["token_meta"]
+    token_filters_present = _group_has_token_filters(group_data)
+
+    if not token_filters_present:
+        return True, {}
+
+    sentence_flags = {}
+
+    for token in tokens:
+        meta_item = token_meta.get(
+            token.idtoken,
+            {"error_tag_ids": set(), "error_level_ids": set(), "reason_ids": set()},
+        )
+
+        if _token_matches_group(token, meta_item, group_data):
+            sentence_flags[token.idtoken] = _build_highlight_flags_for_matched_token(group_data)
+
+    if not sentence_flags:
+        return False, {}
+
+    return True, sentence_flags
+
+
+def _find_group_matches_in_text(sentences, group_data: dict, cache: dict):
+    matches = []
+
+    for idx, sentence in enumerate(sentences):
+        matched, token_flags_map = _sentence_matches_group(sentence, group_data, cache)
+        if matched:
+            matches.append({
+                "index": idx,
+                "sentence": sentence,
+                "token_flags_map": token_flags_map,
+            })
+
+    return matches
+
+
+def _merge_sentence_match_items(existing_item: dict, new_item: dict) -> dict:
+    merged_flags = dict(existing_item["token_flags_map"])
+
+    for token_id, flags in new_item["token_flags_map"].items():
+        if token_id in merged_flags:
+            merged_flags[token_id] = _merge_highlight_flags(merged_flags[token_id], flags)
+        else:
+            merged_flags[token_id] = flags
+
+    return {
+        "index": existing_item["index"],
+        "sentence": existing_item["sentence"],
+        "token_flags_map": merged_flags,
+    }
+
+
+def _combine_group_matches(groups_matches, operators):
+    if not groups_matches:
+        return []
+
+    current_map = {item["index"]: item for item in groups_matches[0]}
+
+    for i in range(1, len(groups_matches)):
+        op = operators[i - 1] if i - 1 < len(operators) else "AND"
+        next_map = {item["index"]: item for item in groups_matches[i]}
+
+        if op == "OR":
+            combined = dict(current_map)
+
+            for idx, item in next_map.items():
+                if idx in combined:
+                    combined[idx] = _merge_sentence_match_items(combined[idx], item)
+                else:
+                    combined[idx] = item
+
+            current_map = combined
+        else:
+            if current_map and next_map:
+                combined = dict(current_map)
+
+                for idx, item in next_map.items():
+                    if idx in combined:
+                        combined[idx] = _merge_sentence_match_items(combined[idx], item)
+                    else:
+                        combined[idx] = item
+
+                current_map = combined
+            else:
+                current_map = {}
+
+    return [current_map[idx] for idx in sorted(current_map.keys())]
+
+def _groups_have_only_text_level_filters(groups: list[dict]) -> bool:
+    token_fields = ["wordform", "pos_tag_id", "error_tag_id", "error_level_id", "reason_id"]
+    text_fields = ["title", "text_type_id", "emotion_id"]
+
+    has_any_text_filter = False
+
+    for group in groups:
+        for field in token_fields:
+            if group.get(field, {}).get("value") not in [None, "", []]:
+                return False
+
+        for field in text_fields:
+            if group.get(field, {}).get("value") not in [None, "", []]:
+                has_any_text_filter = True
+
+    return has_any_text_filter
+
+def _build_matching_sentence_groups(sentences, groups, operators, cache: dict):
+    if not sentences:
+        return []
+
+    if _groups_have_only_text_level_filters(groups):
+        first_sentence = sentences[0]
+        next_sentence = sentences[1] if len(sentences) > 1 else None
+
+        return [{
+            "current": {
+                "text": first_sentence.sentensetext or "",
+                "highlighted_text": first_sentence.sentensetext or "",
+                "order": first_sentence.ordernumber,
+            },
+            "previous": None,
+            "next": {
+                "text": next_sentence.sentensetext,
+                "order": next_sentence.ordernumber,
+            } if next_sentence else None,
+        }]
+
+    groups_matches = []
+
+    for group in groups:
+        group_matches = _find_group_matches_in_text(sentences, group, cache)
+        groups_matches.append(group_matches)
+
+    combined_matches = _combine_group_matches(groups_matches, operators)
+
+    if not combined_matches:
+        return []
+
+    matched_indexes = [item["index"] for item in combined_matches]
+    grouped_ranges = []
+
+    start = matched_indexes[0]
+    end = matched_indexes[0]
+
+    for idx in matched_indexes[1:]:
+        if idx == end + 1:
+            end = idx
+        else:
+            grouped_ranges.append((start, end))
+            start = idx
+            end = idx
+
+    grouped_ranges.append((start, end))
+
+    combined_map = {item["index"]: item for item in combined_matches}
+    result = []
+
+    for start, end in grouped_ranges:
+        prev_sentence = sentences[start - 1] if start > 0 else None
+        next_sentence = sentences[end + 1] if end + 1 < len(sentences) else None
+
+        current_parts = []
+
+        for i in range(start, end + 1):
+            sentence = sentences[i]
+            match_item = combined_map.get(i)
+            tokens = cache["sentence_tokens"].get(sentence.idsentence, [])
+
+            if match_item:
+                highlighted_html = _render_sentence_with_highlights(tokens, match_item["token_flags_map"])
+            else:
+                highlighted_html = sentence.sentensetext or ""
+
+            current_parts.append(highlighted_html)
+
+        current_text_joined = "<br>".join(current_parts)
+
+        result.append({
+            "current": {
+                "text": " ".join(
+                    [(sentences[i].sentensetext or "") for i in range(start, end + 1)]
+                ),
+                "highlighted_text": current_text_joined,
+                "order": sentences[start].ordernumber,
+            },
+            "previous": {
+                "text": prev_sentence.sentensetext,
+                "order": prev_sentence.ordernumber,
+            } if prev_sentence else None,
+            "next": {
+                "text": next_sentence.sentensetext,
+                "order": next_sentence.ordernumber,
+            } if next_sentence else None,
+        })
+
+    return result
+
+
 @require_POST
 def corpus_search_api(request):
     try:
@@ -161,16 +645,30 @@ def corpus_search_api(request):
 
     groups = payload.get("groups", [])
     operators = payload.get("operators", [])
-    
-    # Пагинация
     page = payload.get("page", 1)
     page_size = payload.get("page_size", 10)
 
-    if not isinstance(groups, list) or not groups:
+    if not isinstance(groups, list):
         return JsonResponse({"results": [], "count": 0})
 
-    group_queries = [_build_group_q(group) for group in groups]
+    groups = [group for group in groups if _group_has_any_filter(group)]
 
+    if not groups:
+        return JsonResponse({
+            "results": [],
+            "count": 0,
+            "is_teacher": False,
+            "page_obj": {
+                "number": 1,
+                "num_pages": 1,
+                "has_previous": False,
+                "has_next": False,
+                "previous_page_number": None,
+                "next_page_number": None,
+            },
+        })
+
+    group_queries = [_build_group_q(group) for group in groups]
     final_q = group_queries[0]
 
     for i in range(1, len(group_queries)):
@@ -181,198 +679,74 @@ def corpus_search_api(request):
         else:
             final_q = final_q & group_queries[i]
 
-    texts = (
+    texts = list(
         Text.objects.select_related("idtexttype", "idemotion")
         .filter(final_q)
         .distinct()
         .order_by("-createdate", "-idtext")
     )
 
-    # Условия для поиска по словоформам, которые будем использовать для подсветки в результатах
-    wordform_conditions = []
-    for group in groups:
-        wordform = group.get("wordform", {})
-        if wordform.get("value"):
-            wordform_conditions.append({
-                "value": wordform["value"].lower(),
-                "not": wordform.get("not", False)
+    filtered_results = []
+
+    for text_batch in _iter_batches(texts, BATCH_SIZE):
+        batch_cache = _build_batch_runtime_cache(text_batch)
+
+        for text in text_batch:
+            cache = batch_cache.get(text.idtext)
+            if not cache:
+                continue
+
+            sentences = cache["sentences"]
+            if not sentences:
+                continue
+
+            matching_sentences = _build_matching_sentence_groups(
+                sentences=sentences,
+                groups=groups,
+                operators=operators,
+                cache=cache,
+            )
+
+            if not matching_sentences:
+                continue
+
+            filtered_results.append({
+                "id": text.idtext,
+                "header": text.header,
+                "createdate": text.createdate.strftime("%d.%m.%Y") if text.createdate else "",
+                "text_type": text.idtexttype.texttypename if text.idtexttype else "Не указано",
+                "emotion": text.idemotion.emotionname if text.idemotion else "Не указано",
+                "matching_sentences": matching_sentences,
             })
-    # 
 
-    paginator = Paginator(texts, page_size)
+    paginator = Paginator(filtered_results, page_size)
+
     try:
-        paginated_texts = paginator.page(page)
+        paginated_results = paginator.page(page)
     except PageNotAnInteger:
-        paginated_texts = paginator.page(1)
+        paginated_results = paginator.page(1)
     except EmptyPage:
-        paginated_texts = paginator.page(paginator.num_pages)
-
-    results = []
-    # for text in texts:
-    for text in paginated_texts:
-        sentences = list(Sentence.objects.filter(idtext=text).order_by("ordernumber"))
-        
-        matching_sentences = []
-        
-        # Проверяем, есть ли в запросе словоформы
-        has_wordforms = any(group.get("wordform", {}).get("value") for group in groups)
-        
-        if has_wordforms:
-            # Ищем предложения, соответствующие условиям по словоформам
-            for idx, sentence in enumerate(sentences):
-                matches, matched_word = _sentence_matches_wordform_conditions(sentence, groups, operators)
-                
-                if matches:
-                    # Получаем соседние предложения
-                    prev_sentence = sentences[idx - 1] if idx > 0 else None
-                    next_sentence = sentences[idx + 1] if idx + 1 < len(sentences) else None
-                    
-                    # Подсветка найденного слова
-                    highlighted_text = sentence.sentensetext
-                    if matched_word:
-                        highlighted_text = _highlight_word(sentence.sentensetext, matched_word)
-                        # import re
-                        # pattern = re.compile(re.escape(matched_word), re.IGNORECASE)
-                        # highlighted_text = pattern.sub(
-                        #     lambda m: f'<mark class="highlight">{m.group(0)}</mark>',
-                        #     sentence.sentensetext
-                        # )
-                    
-                    matching_sentences.append({
-                        "current": {
-                            "text": sentence.sentensetext,
-                            "highlighted_text": highlighted_text,
-                            "order": sentence.ordernumber
-                        },
-                        "previous": {
-                            "text": prev_sentence.sentensetext if prev_sentence else None,
-                            "order": prev_sentence.ordernumber if prev_sentence else None
-                        } if prev_sentence else None,
-                        "next": {
-                            "text": next_sentence.sentensetext if next_sentence else None,
-                            "order": next_sentence.ordernumber if next_sentence else None
-                        } if next_sentence else None,
-                        "matched_word": matched_word
-                    })
-        else:
-            # Если нет поиска по словоформам, показываем первое предложение как пример
-            first_sentence = sentences[0] if sentences else None
-            if first_sentence:
-                matching_sentences.append({
-                    "current": {
-                        "text": first_sentence.sentensetext,
-                        "highlighted_text": first_sentence.sentensetext,
-                        "order": first_sentence.ordernumber
-                    },
-                    "previous": None,
-                    "next": None
-                })
-
-        results.append({
-            "id": text.idtext,
-            "header": text.header,
-            "createdate": text.createdate.strftime("%d.%m.%Y") if text.createdate else "",
-            "text_type": text.idtexttype.texttypename if text.idtexttype else "Не указано",
-            "emotion": text.idemotion.emotionname if text.idemotion else "Не указано",
-            "matching_sentences": matching_sentences
-        })
-
-
-        # results.append({
-        #     "id": text.idtext,
-        #     "header": text.header,
-        #     "createdate": text.createdate.strftime("%d.%m.%Y") if text.createdate else "",
-        #     "text_type": text.idtexttype.texttypename if text.idtexttype else "Не указано",
-        #     "emotion": text.idemotion.emotionname if text.idemotion else "Не указано",
-        # })
+        safe_page = paginator.num_pages if paginator.num_pages > 0 else 1
+        paginated_results = paginator.page(safe_page)
 
     is_teacher = False
-    if request.user.is_authenticated:
-        if hasattr(request.user, 'idrights'):
-            if request.user.idrights.idrights == 2:
-                is_teacher = True
+    if request.user.is_authenticated and hasattr(request.user, "idrights"):
+        if request.user.idrights.idrights == 2:
+            is_teacher = True
 
     return JsonResponse({
-        # "count": len(results),
         "is_teacher": is_teacher,
-        "results": results,
+        "results": list(paginated_results),
         "count": paginator.count,
         "page_obj": {
-            "number": paginated_texts.number,
+            "number": paginated_results.number,
             "num_pages": paginator.num_pages,
-            "has_previous": paginated_texts.has_previous(),
-            "has_next": paginated_texts.has_next(),
-            "previous_page_number": paginated_texts.previous_page_number() if paginated_texts.has_previous() else None,
-            "next_page_number": paginated_texts.next_page_number() if paginated_texts.has_next() else None,
-        }
+            "has_previous": paginated_results.has_previous(),
+            "has_next": paginated_results.has_next(),
+            "previous_page_number": paginated_results.previous_page_number() if paginated_results.has_previous() else None,
+            "next_page_number": paginated_results.next_page_number() if paginated_results.has_next() else None,
+        },
     })
-
-def _highlight_word(text, word):
-    """Подсвечивает целое слово в тексте"""
-    if not word:
-        return text
-    
-    # регулярное выражение для поиска целого слова
-    # re.IGNORECASE - игнорируем регистр
-    # \b - граница слова
-    pattern = r'\b(' + re.escape(word) + r')\b'
-    
-    def replace_func(match):
-        return f'<mark class="highlight">{match.group(1)}</mark>'
-    
-    highlighted = re.sub(pattern, replace_func, text, flags=re.IGNORECASE)
-    return highlighted
-
-def _sentence_matches_wordform_conditions(sentence, groups, operators):
-    """Проверяет, соответствует ли предложение условиям по словоформам с учетом операторов между блоками"""
-    sentence_lower = sentence.sentensetext.lower()
-    block_results = []
-    
-    for group in groups:
-        wordform = group.get("wordform", {})
-        if not wordform.get("value"):
-            # Если в блоке нет словоформы, считаем что блок выполнен (не влияет)
-            block_results.append(True)
-            continue
-
-        search_word = wordform["value"].lower()
-        is_not = wordform.get("not", False)
-
-        pattern = r'\b' + re.escape(search_word) + r'\b'
-        found = bool(re.search(pattern, sentence_lower))
-        # found = search_word in sentence_lower
-        if is_not:
-            found = not found
-        
-        block_results.append(found)
-    
-    # Применяем операторы между блоками
-    if not block_results:
-        return False, None
-    
-    # Первый блок всегда учитываем
-    result = block_results[0]
-    matched_word = None
-    
-    # Применяем операторы
-    for i, op in enumerate(operators):
-        next_result = block_results[i + 1] if i + 1 < len(block_results) else False
-        
-        if op == "AND":
-            result = result and next_result
-        elif op == "OR":
-            result = result or next_result
-    
-    # Если результат True, находим слово для подсветки (первое попавшееся)
-    if result:
-        for group in groups:
-            wordform = group.get("wordform", {})
-            if wordform.get("value") and not wordform.get("not", False):
-                if wordform["value"].lower() in sentence_lower:
-                    matched_word = wordform["value"]
-                    break
-    
-    return result, matched_word
 
 
 @require_GET
@@ -428,7 +802,6 @@ def corpus_text_detail(request, text_id):
                             "error_comment": error.comment
                             if error.comment
                             else "Не указано",
-                            "all_errors": errors_list,
                             "error_reason": error.idreason.reasonname if error.idreason else "Не указано",
                         }
                     )
