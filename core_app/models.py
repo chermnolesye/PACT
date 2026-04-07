@@ -403,7 +403,7 @@ class ExerciseGrading(models.Model):
         db_table = 'tblexercisegrading'
 
     def __str__(self):
-        return f"{self.idexercise.idexercisetype.idexercisename} - {self.idtext.header}"
+        return f"{self.idexercise.idexercisetype.exercisename} - {self.idtext.header}"
 
 class ExerciseErrorToken(models.Model):
     idexerciseerrortoken = models.AutoField(primary_key=True)
