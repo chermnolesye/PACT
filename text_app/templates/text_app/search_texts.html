@@ -75,7 +75,7 @@
                         <label>Группировка по:</label>
                         <div class="grouping-options">
                             <label>
-                                <input type="radio" name="grouping" value="category" style="width:unset;" {% if selected_grouping == "category" %}checked{% endif %}>
+                                <input type="radio" checked name="grouping" value="category" style="width:unset;" {% if selected_grouping == "category" %}checked{% endif %}>
                                 Типам текстов
                             </label>
                             <label>
@@ -113,8 +113,7 @@
                 </svg>
                 <p>По вашему запросу ничего не найдено</p>
             </div>
-            {% endif %}
-
+            {% else %}
             <!-- Основной контент страницы -->
             {% if texts_of_type %}
             <div class="texts-of-type-container text-types-container">
@@ -213,6 +212,13 @@
                     Назад к списку типов
                 </a>
 
+                <div class="texts-header" style="gap:30px;">
+                    <span class="text-name" id="result-card-header">Название</span>
+                    <span class="small_column" id="result-card-header">Учебная группа</span>
+                    <span class="small_column" id="result-card-header">Оценка</span>
+                    <span class="small_column" id="result-card-header">Дата создания</span>
+                </div>
+
                 {% for group_pole, texts in grouped_texts.items %}
                 <div class="group-section">
                     <div class="text-type-header">
@@ -220,7 +226,7 @@
                     </div>
                     <div class="results">
                         {% for text in texts %}
-                        <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="result-card">
+                        <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="text-link text-card">
                             <span class="text-name">
                                 <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                     <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
@@ -228,8 +234,11 @@
                                 </svg>
                                 {{ text.header_text }}
                             </span>
-                            <span class="author">
-                                {{ text.author_lastname }} {{ text.author_firstname }}
+                            <span class="date">
+                                {{ text.group_display }}
+                            </span>
+                            <span class="date">
+                                {{ text.grade_status }}
                             </span>
                             <span class="date">
                                 {{ text.date_modificate|date:"d.m.Y" }}
@@ -257,10 +266,17 @@
                     </svg>
                     Назад к списку типов
                 </a>
-
+                <div class="texts-header" style="gap:30px;">
+                    <span class="text-name" id="result-card-header">Название</span>
+                    <span class="author" id="result-card-header">ФИО автора</span>
+                    <span class="small_column" id="result-card-header">Учебная группа</span>
+                    <span class="small_column" id="result-card-header">Оценка</span>
+                    <span class="small_column" id="result-card-header">Дата создания</span>
+                </div>
                 <div class="results">
                     {% for text in found_text_by_name %}
-                    <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="result-card">
+
+                    <a href="{% url 'annotate_text' %}?text_id={{ text.id }}" class="text-link text-card">
                         <span class="text-name">
                             <svg class="bi flex-shrink-0" xmlns="http://www.w3.org/2000/svg" height="1.6em" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                 <path stroke-width="1.5" d="m18.18 8.04.463-.464a1.966 1.966 0 1 1 2.781 2.78l-.463.464M18.18 8.04s.058.984.927 1.853 1.854.927 1.854.927M18.18 8.04l-4.26 4.26c-.29.288-.434.433-.558.592-.146.188-.271.39-.374.606-.087.182-.151.375-.28.762l-.413 1.24-.134.401m8.8-5.081-4.26 4.26c-.29.29-.434.434-.593.558-.188.146-.39.271-.606.374-.182.087-.375.151-.762.28l-1.24.413-.401.134m0 0-.401.134a.53.53 0 0 1-.67-.67l.133-.402m.938.938-.938-.938"></path>
@@ -272,6 +288,12 @@
                             {{ text.author_lastname }} {{ text.author_firstname }}
                         </span>
                         <span class="date">
+                            {{ text.group_display }}
+                        </span>
+                        <span class="date">
+                            {{ text.grade_status }}
+                        </span>
+                        <span class="date">
                             {{ text.date_modificate|date:"d.m.Y" }}
                         </span>
                     </a>
@@ -279,6 +301,7 @@
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
             {% endif %}
         </div>
         {% endif %}
