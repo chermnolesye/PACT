@@ -15,6 +15,7 @@ from .filters import StudentTextFilter
 from nltk.tokenize import sent_tokenize, word_tokenize
 from authorization_app.decorators import *
 from core_app.models import (
+    ExerciseGrading,
     Text,
     Token,
     Error,
@@ -948,16 +949,25 @@ def student_search_texts(request):
     )
 
     text_filter = StudentTextFilter(request.GET, queryset=texts_qs, request=request)
-    text_result = text_filter.qs.order_by('-modifieddate')
-    texts_exist = False
-    if len(text_result) > 0:
-        texts_exist = True
-    print(text_result)
-
+    text_results = text_filter.qs.order_by('-modifieddate')
+    
+    unfin_student_exercises = ExerciseGrading.objects.select_related(
+        'idexercise'
+    ).filter(
+        idexercise__idstudent__iduser=request.user,
+        idexercise__exercisestatus=False
+    ).values_list('idtext', flat=True)
+    
+    for text_result in text_results:
+        if text_result.idtext in unfin_student_exercises:
+            text_result.has_unfin_exercise = True
+        else:
+            text_result.has_unfin_exercise = False
+    
     context = {
         'filter': text_filter,
-        'texts': text_result,
-        'texts_exist': texts_exist,
+        'texts': text_results,
+        'texts_exist': True if len(text_results) > 0 else False,
         'fio': get_student_fio(request),
     }
     return render(request, 'student_search_texts.html', context)
