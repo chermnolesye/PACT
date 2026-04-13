@@ -128,4 +128,3 @@ def add_student(request):
     else:
         form = AddStudentForm()
     return render(request, 'add_student.html', {'form': form})
-

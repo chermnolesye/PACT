@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from authorization_app.decorators import *
 from core_app.models import (
     Group,
@@ -23,6 +24,7 @@ def show_groups(request):
     query = request.GET.get('q', '')
     course = request.GET.get('course')
     year_str = request.GET.get('year')
+    page_number = request.GET.get('page', 1)
 
     groups = (
         Group.objects
@@ -43,6 +45,8 @@ def show_groups(request):
             groups = groups.filter(idayear=year)
         except ValueError:
             year = None
+
+   
 
     # Курсы в фильтре зависят от выбранного года
     course_numbers_qs = Group.objects.all()
@@ -70,7 +74,19 @@ def show_groups(request):
 
     academic_years = academic_years_qs.distinct().order_by('-idayear')
 
+    paginator = Paginator(groups, 15)
+    page_obj = paginator.get_page(page_number)
+    
+    # try:
+    #     groups_page = paginator.page(page_number)
+    # except PageNotAnInteger:
+    #     groups_page = paginator.page(1)
+    # except EmptyPage:
+    #     groups_page = paginator.page(paginator.num_pages)
+
     return render(request, 'show_groups.html', {
+        # 'groups': groups_page,
+        'page_obj': page_obj,
         'groups': groups,
         'query': query,
         'selected_course': course,
@@ -159,4 +175,3 @@ def edit_group(request, group_id):
         'transfer_form': transfer_form,
         'same_course_groups': same_course_groups,
     })
-
