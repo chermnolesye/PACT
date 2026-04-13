@@ -59,6 +59,8 @@ html, body {
 }
 
 .no-highlight {
+    display: flex;
+    align-items: center;
     color: var(--grey-color);
 }
 
@@ -414,7 +416,40 @@ nav label {
     transition: 0.3s;
 }
 
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
 
+.pagination .step-links a {
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #007bff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.pagination .step-links a:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.pagination .current {
+    padding: 5px 10px;
+    color: #6c757d;
+}
+
+.pagination .current-number {
+    font-weight: bold;
+    color: #007bff;
+}
 
 @media screen and (max-width: 900px) {
     nav {
