@@ -42,6 +42,10 @@
 
 {% block extra_scripts %}
 <script>
+    const corpusFiltersUrl = "{% url 'corpus_filters_api' %}";
+    const corpusSearchUrl = "{% url 'corpus_search_api' %}";
+    const corpusTextDetailTemplate = "{% url 'corpus_text_detail' 0 %}";
+
     let currentPage = 1;
     let totalPages = 1;
     let pageSize = 10;
@@ -52,9 +56,13 @@
     let filtersData = null;
     let groupIndex = 0;
 
+    function buildTextDetailUrl(textId) {
+        return corpusTextDetailTemplate.replace(/0\/$/, `${textId}/`);
+    }
+
     async function loadFilters() {
         try {
-            const response = await fetch("/corpus/api/filters/");
+            const response = await fetch(corpusFiltersUrl);
             filtersData = await response.json();
 
             if (groupIndex === 0) {
@@ -295,7 +303,7 @@
         currentQuery = payload;
 
         try {
-            const response = await fetch("/corpus/api/search/", {
+            const response = await fetch(corpusSearchUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -362,7 +370,8 @@
             header.className = "result-header";
 
             if (isTeacher) {
-                header.innerHTML = `<a href="/corpus/text/${item.id}/">${item.header}</a>`;
+                const textUrl = buildTextDetailUrl(item.id);
+                header.innerHTML = `<a href="${textUrl}">${item.header}</a>`;
             } else {
                 header.textContent = item.header;
             }
