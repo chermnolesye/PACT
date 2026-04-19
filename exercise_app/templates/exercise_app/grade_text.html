@@ -81,7 +81,7 @@
         <!-- <span class="close-btn" id="close-popup">&#x2715;</span> -->
         <div class="popup-content-sidebyside">
             <div class="student-mark" id="errS" style="display:none;">
-                <h3 style="margin-bottom:5px">Аннотация студента отсутствует</h3>
+                <h3 style="margin-bottom:5px">Аннотация студента с этим тэгом ошибки отсутствует</h3>
             </div>
             <div class="student-mark" id="annS">
                 <h3 style="margin-bottom:5px">Аннотация студента</h3>
@@ -95,7 +95,7 @@
                 <p><strong>Комментарий:</strong> <span id="error-comment-s"></span></p>
             </div>
             <div class="teacher-mark" id="errT" style="display:none;">
-                <h3 style="margin-bottom:5px">Аннотация преподавателя отсутствует</h3>
+                <h3 style="margin-bottom:5px">Аннотация преподавателя с этим тэгом ошибки отсутствует</h3>
             </div>
             <div class="teacher-mark" id="annT">
                 <h3 style="margin-bottom:5px">Аннотация преподавателя</h3>
@@ -363,7 +363,7 @@
                     {% endif %}
 
                     {% if token.token == '-EMPTY-' %}
-                    <span class="word-grading">
+                    <span class="word-grading empty-word">
                         <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>
                     </span>
                     {% else %}
@@ -382,14 +382,80 @@
         const chosen = [];
         document.addEventListener('DOMContentLoaded', function () {
 
-            document.querySelectorAll(".student").forEach(tokenElement => {
-                tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
-                tokenElementsTeacher.forEach(el => {
-                    if (tokenElement.dataset.errorTag == el.dataset.errorTag) {
-                        tokenElement.style.background = "#8FFF73"
+            document.querySelectorAll(".empty-word").forEach(emptyWord => {
+                tokenElement = emptyWord.parentElement
+                if (tokenElement.getAttribute("id_token")!="None") {
+                    sibling_before = tokenElement.previousElementSibling;
+                    if (sibling_before.querySelectorAll(".empty-word").length != 0
+                        && sibling_before.querySelectorAll(".teacher").length == 0) {
+                        error = sibling_before.querySelector(".student");
+                        tokenElement.prepend(error);
+                        sibling_before.remove();
                     }
-                })
+                    else {
+                        sibling_next = tokenElement.nextElementSibling;
+                        if (sibling_next.querySelectorAll(".empty-word").length != 0
+                            && sibling_next.querySelectorAll(".teacher").length == 0) {
+                            error = sibling_next.querySelector(".student");
+                            tokenElement.prepend(error);
+                            sibling_next.remove();
+                        }
+                    }
+                }
             })
+
+            teacherErrors = {}
+            document.querySelectorAll(".teacher").forEach(error => {
+                tokenElement = error.parentElement;
+                error_id = error.getAttribute("data-error-id");
+                if (error_id in teacherErrors) {
+                    teacherErrors[error_id].push(tokenElement);
+                }
+                else {
+                    teacherErrors[error_id] = [tokenElement];
+                }
+            })
+
+            studentErrors = {}
+            document.querySelectorAll(".student").forEach(error => {
+                tokenElement = error.parentElement;
+                error_id = error.getAttribute("data-error-id");
+                if (error_id in studentErrors) {
+                    studentErrors[error_id].push(tokenElement);
+                }
+                else {
+                    studentErrors[error_id] = [tokenElement];
+                }
+            })
+
+            function areEqual(a, b) {
+                if (a === b) return true;
+                if (a == null || b == null) return false;
+                if (a.length !== b.length) return false;
+
+                a.sort();
+                b.sort();
+
+                for (var i = 0; i < a.length; ++i) {
+                    if (a[i] !== b[i] || a[i].querySelector(".teacher").dataset.errorTag != b[i].querySelector(".student").dataset.errorTag)
+                        return false;
+                }
+                return true;
+            }
+
+            foundRightErrors = 0
+            for (const [keyT, valueT] of Object.entries(teacherErrors)) {
+                for (const [keyS, valueS] of Object.entries(studentErrors)) {
+                    if (areEqual(valueT,valueS)) {
+                        valueS.forEach(token => {
+                            token.querySelector(".student").style.background = "#8FFF73"
+                        })
+                        delete studentErrors[keyS];
+                        delete teacherErrors[keyT];
+                        foundRightErrors++;
+                    }
+                }
+            }
 
             const languageRadios = document.querySelectorAll('input[name="language"]');
             const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
@@ -460,25 +526,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             const popup = document.getElementById('error-popup');
             const closePopupBtn = document.getElementById('close-popup');
-            let list_tags = {};
-
-
-
-            async function fetchDataAsync(url, let_tags) {
-                const response = await fetch(url);
-                list_tags = await response.json();
-                console.log(list_tags);
-            }
-
-            fetchDataAsync("{% url 'get_tags' %}", list_tags);
 
             // Функция для отображения всплывающего окна с информацией об ошибке
             function showPopup(tokenElement) {
+                tokenElementStudent = null
+                tokenElementTeacher = null
 
                 if (tokenElement.classList.contains("teacher")) {
                     tokenElementTeacher = tokenElement
                     tokenElementsStudent = tokenElement.parentElement.querySelectorAll(".student")
-                    tokenElementStudent = null
                     tokenElementsStudent.forEach(el => {
                         if (tokenElementTeacher.dataset.errorTag == el.dataset.errorTag) {
                             tokenElementStudent = el
@@ -488,15 +544,13 @@
                 else {
                     tokenElementStudent = tokenElement
                     tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
-                    tokenElementTeacher = null
                     tokenElementsTeacher.forEach(el => {
                         if (tokenElementStudent.dataset.errorTag == el.dataset.errorTag) {
                             tokenElementTeacher = el
                         }
                     })
                 }
-
-
+                
                 if (tokenElementTeacher) {
                     const errorTag_t = tokenElementTeacher.dataset.errorTag;
                     const errorTagAbbrev_t = tokenElementTeacher.dataset.errorTagAbbrev;
@@ -714,46 +768,9 @@
                     c.style.display = 'none';
                 });
                 modal.style.display = 'flex';
-                let FoundRightErr = 0
-                let FoundWrongErr = 0
-                let MissedErr = 0
-                document.querySelectorAll(".error-tag").forEach(tokenElement => {
-                    if (tokenElement.classList.contains("teacher")) {
-                        tokenElementTeacher = tokenElement
-                        tokenElementsStudent = tokenElement.parentElement.querySelectorAll(".student")
-                        tokenElementStudent = null
-                        tokenElementsStudent.forEach(el => {
-                            if (tokenElementTeacher.dataset.errorTag == el.dataset.errorTag) {
-                                tokenElementStudent = el
-                            }
-                        })
-                        if (!tokenElementStudent) {
-                            MissedErr = MissedErr + 1
-                        }
-                        else {
-                            FoundRightErr = FoundRightErr + 1
-                        }
-                    }
-                    else {
-                        tokenElementStudent = tokenElement
-                        tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
-                        tokenElementTeacher = null
-                        tokenElementsTeacher.forEach(el => {
-                            if (tokenElementStudent.dataset.errorTag == el.dataset.errorTag) {
-                                tokenElementTeacher = el
-                            }
-                        })
-                        if (!tokenElementTeacher) {
-                            FoundWrongErr = FoundWrongErr + 1
-                        }
-                        else {
-                            FoundRightErr = FoundRightErr + 1
-                        }
-                    }
-                    document.getElementById("FoundRightErr").innerHTML = FoundRightErr / 2
-                    document.getElementById("FoundWrongErr").innerHTML = FoundWrongErr
-                    document.getElementById("MissedErr").innerHTML = MissedErr
-                })
+                document.getElementById("FoundRightErr").innerHTML = foundRightErrors
+                document.getElementById("FoundWrongErr").innerHTML = Object.keys(studentErrors).length
+                document.getElementById("MissedErr").innerHTML = Object.keys(teacherErrors).length
             });
 
             closeModal.addEventListener('click', function () {

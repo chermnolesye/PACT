@@ -70,7 +70,7 @@
             <div class="group-year">Учебный год</div>
             <div class="group-settings">Настройки</div>
         </div>
-        {% for group in groups %}
+        {% for group in page_obj %}
         <div class="group-card">
             <div class="group-name">{{ group.groupname }}</div>
             <div class="group-course">{{ group.studycourse }}</div>
@@ -86,7 +86,59 @@
         {% empty %}
         <div class="no-results">Группа не найдена</div>
         {% endfor %}            
-    </div>       
+    </div>
+
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <span class="step-links">
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">
+                    &laquo; Первая
+                </a>
+            </span>
+            <span class="step-links">
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">
+                    &#8249; Назад
+                </a>
+            </span>
+        {% endif %}
+
+        <span class="current">
+            Страница <span class="current-number">{{ page_obj.number }}</span> из {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <span class="step-links">
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">
+                    Вперед &#8250;
+                </a>
+            </span>
+            <span class="step-links">
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">
+                    Последняя &raquo;
+                </a>
+            </span>
+        {% endif %}
+    </div>
+
+
+    <!-- <div class="pagination">
+        <div class="pagination-wrapper">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">&laquo; Первая</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">Предыдущая</a>
+            {% endif %}
+
+            <span class="current-page">
+                Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">Следующая</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if selected_year %}&year={{ selected_year }}{% endif %}" class="pagination-link">Последняя &raquo;</a>
+            {% endif %}
+        </div>
+    </div> -->
+
 
 </div>
 {% endblock %}

@@ -1,0 +1,557 @@
+{% extends base_template %}
+
+{% load static %}
+
+{% block title %}Поиск по корпусу{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/corpus_search.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="corpus-search-container">
+    <h1 class="highlighted-header">Поиск по корпусу</h1>
+
+    <div class="request-container">
+        <div id="groups-container"></div>
+        <div class="request-buttons-container">
+            <button id="add-group-btn" class="button search-button">
+                <svg width="24" height="24" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M34.5 27H27M27 27H19.5M27 27V19.5M27 27V34.5M14.5 5.34503C18.2988 3.14728 22.6113 1.99327 27 2.00003C40.8075 2.00003 52 13.1925 52 27C52 40.8075 40.8075 52 27 52C13.1925 52 2 40.8075 2 27C2 22.4475 3.2175 18.175 5.345 14.5" stroke="white" stroke-width="4" stroke-linecap="round"/>
+                </svg> 
+                Добавить блок
+            </button>
+
+            <button id="reset-filters-btn" class="button grey-button search-button">
+                Сбросить
+            </button>
+
+            <button id="search-btn" class="button search-button">
+                <svg width="20" height="20" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50.9583 50.9583L61.1666 61.1666M16.6875 6.53745C22.5094 3.17781 29.3541 2.04905 35.9465 3.36146C42.5389 4.67386 48.4294 8.33792 52.5208 13.6711C56.6122 19.0043 58.6254 25.6429 58.1854 32.3502C57.7455 39.0576 54.8823 45.3763 50.1293 50.1293C45.3763 54.8823 39.0576 57.7455 32.3502 58.1854C25.6429 58.6254 19.0043 56.6122 13.6711 52.5208C8.33792 48.4294 4.67386 42.5389 3.36146 35.9465C2.04905 29.3541 3.17781 22.5094 6.53745 16.6875" stroke="#FFFDFD" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+                Найти
+            </button>
+        </div>
+    </div>
+
+    <div id="loading-indicator" class="loading-indicator" style="display: none;">
+        <div class="spinner"></div>
+        <p>Выполняется поиск...</p>        
+    </div>
+    
+    <div id="results"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const corpusFiltersUrl = "{% url 'corpus_filters_api' %}";
+    const corpusSearchUrl = "{% url 'corpus_search_api' %}";
+    const corpusTextDetailTemplate = "{% url 'corpus_text_detail' 0 %}";
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let pageSize = 10;
+    let isLoading = false;
+    let currentQuery = null;
+
+    const groupsContainer = document.getElementById("groups-container");
+    let filtersData = null;
+    let groupIndex = 0;
+
+    function buildTextDetailUrl(textId) {
+        return corpusTextDetailTemplate.replace(/0\/$/, `${textId}/`);
+    }
+
+    async function loadFilters() {
+        try {
+            const response = await fetch(corpusFiltersUrl);
+            filtersData = await response.json();
+
+            if (groupIndex === 0) {
+                addGroup();
+            }
+        } catch (error) {
+            console.error("Ошибка загрузки фильтров:", error);
+            toastr.warning('Не удалось загрузить фильтры. Попробуйте обновить страницу.');
+        }
+    }
+
+    function makeSelect(options, valueKey, textKey, name) {
+        const select = document.createElement("select");
+        select.dataset.field = name;
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = "---";
+        select.appendChild(emptyOption);
+
+        options.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item[valueKey];
+            option.textContent = item[textKey];
+            select.appendChild(option);
+        });
+
+        return select;
+    }
+
+    function addGroup() {
+        if (!filtersData) {
+            toastr.warning('Фильтры еще не загружены. Пожалуйста, подождите.');
+            return;
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "search-group";
+        wrapper.dataset.groupIndex = groupIndex;
+
+        if (groupIndex > 0) {
+            const deleteButton = document.createElement("button");
+            deleteButton.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Удалить блок
+            `;
+            deleteButton.className = "button grey-button delete-group-btn";
+            deleteButton.onclick = function() {
+                deleteGroup(wrapper);
+            };
+            wrapper.appendChild(deleteButton);
+        }
+
+        if (groupIndex > 0) {
+            const operatorDiv = document.createElement("div");
+            operatorDiv.className = "operator-select";
+
+            const operatorSelect = document.createElement("select");
+            operatorSelect.dataset.operator = "true";
+            operatorSelect.id = `operator-select-${groupIndex}`;
+
+            const andOption = document.createElement("option");
+            andOption.value = "AND";
+            andOption.textContent = "И";
+
+            const orOption = document.createElement("option");
+            orOption.value = "OR";
+            orOption.textContent = "ИЛИ";
+
+            operatorSelect.appendChild(andOption);
+            operatorSelect.appendChild(orOption);
+
+            wrapper.appendChild(document.createTextNode("Связь с предыдущим блоком: "));
+            wrapper.appendChild(operatorSelect);
+            wrapper.appendChild(operatorDiv);
+        }
+
+        function addTextInput(labelText, fieldName) {
+            const div = document.createElement("div");
+            div.className = "filter-row";
+            
+            const notCheckbox = document.createElement("input");
+            notCheckbox.type = "checkbox";
+            notCheckbox.id = `${fieldName}_not_${groupIndex}`;
+            notCheckbox.dataset.notField = fieldName;
+            
+            const notLabel = document.createElement("label");
+            notLabel.htmlFor = notCheckbox.id;
+            notLabel.textContent = "Исключить";
+            notLabel.className = "not-label";
+            
+            const fieldLabel = document.createElement("label");
+            fieldLabel.textContent = labelText + ": ";
+            fieldLabel.className = "field-label";
+            
+            const input = document.createElement("input");
+            input.type = "text";
+            input.dataset.field = fieldName;
+            input.id = `${fieldName}_${groupIndex}`;
+            fieldLabel.htmlFor = input.id;
+            
+            div.appendChild(fieldLabel);
+            div.appendChild(input);
+            div.appendChild(notLabel);
+            div.appendChild(notCheckbox);
+            
+            wrapper.appendChild(div);
+        }
+
+        function addSelectInput(labelText, fieldName, options, valueKey, textKey) {
+            const div = document.createElement("div");
+            div.className = "filter-row";
+            
+            const notCheckbox = document.createElement("input");
+            notCheckbox.type = "checkbox";
+            notCheckbox.id = `${fieldName}_not_${groupIndex}`;
+            notCheckbox.dataset.notField = fieldName;
+            
+            const notLabel = document.createElement("label");
+            notLabel.htmlFor = notCheckbox.id;
+            notLabel.textContent = "Исключить";
+            notLabel.className = "not-label";
+            
+            const fieldLabel = document.createElement("label");
+            fieldLabel.textContent = labelText + ": ";
+            fieldLabel.className = "field-label";
+            
+            const select = makeSelect(options, valueKey, textKey, fieldName);
+            select.id = `${fieldName}_${groupIndex}`;
+            fieldLabel.htmlFor = select.id;
+            
+            div.appendChild(fieldLabel);
+            div.appendChild(select);
+            div.appendChild(notLabel);
+            div.appendChild(notCheckbox);
+            
+            wrapper.appendChild(div);
+        }
+
+        addTextInput("Словоформа", "wordform");
+        addSelectInput("Часть речи", "pos_tag_id", filtersData.pos_tags, "idpostag", "tagtext");
+        addSelectInput("Тег ошибки", "error_tag_id", filtersData.error_tags, "iderrortag", "tagtextrussian");
+        addSelectInput("Степень грубости", "error_level_id", filtersData.error_levels, "iderrorlevel", "errorlevelname");
+        addSelectInput("Причина ошибки", "reason_id", filtersData.reasons, "idreason", "reasonname");
+        addTextInput("Название текста", "title");
+        addSelectInput("Тип текста", "text_type_id", filtersData.text_types, "idtexttype", "texttypename");
+        addSelectInput("Эмоция", "emotion_id", filtersData.emotions, "idemotion", "emotionname");
+
+        groupsContainer.appendChild(wrapper);
+        groupIndex += 1;
+    }
+
+    function deleteGroup(groupElement) {
+        groupElement.remove();
+
+        const remainingGroups = document.querySelectorAll("#groups-container > div");
+        remainingGroups.forEach((group, idx) => {
+            group.dataset.groupIndex = idx;
+        });
+
+        if (remainingGroups.length === 0) {
+            groupIndex = 0;
+            addGroup();
+        }
+    }
+
+    function resetFilters() {
+        groupsContainer.innerHTML = "";
+        document.getElementById("results").innerHTML = "";
+        groupIndex = 0;
+        currentPage = 1;
+        totalPages = 1;
+        currentQuery = null;
+
+        if (filtersData) {
+            addGroup();
+        }
+    }
+
+    function collectPayload() {
+        const blocks = Array.from(groupsContainer.children);
+        const groups = [];
+        const operators = [];
+
+        blocks.forEach((block, index) => {
+            if (index > 0) {
+                const operatorSelect = block.querySelector("[data-operator='true']");
+                operators.push(operatorSelect ? operatorSelect.value : "AND");
+            }
+
+            const group = {};
+            const fields = [
+                "wordform",
+                "pos_tag_id",
+                "error_tag_id",
+                "error_level_id",
+                "reason_id",
+                "title",
+                "text_type_id",
+                "emotion_id"
+            ];
+
+            fields.forEach(fieldName => {
+                const fieldElement = block.querySelector(`[data-field='${fieldName}']`);
+                const notElement = block.querySelector(`[data-not-field='${fieldName}']`);
+
+                let value = null;
+                if (fieldElement) {
+                    value = fieldElement.value;
+                    if (value === "") {
+                        value = null;
+                    } else if (fieldName.endsWith("_id")) {
+                        value = Number(value);
+                    }
+                }
+
+                group[fieldName] = {
+                    value: value,
+                    not: notElement ? notElement.checked : false
+                };
+            });
+
+            groups.push(group);
+        });
+
+        return { groups, operators };
+    }
+
+    async function doSearch(page = 1) {
+        if (isLoading) return;
+        
+        isLoading = true;
+
+        const loadingIndicator = document.getElementById("loading-indicator");
+        const resultsDiv = document.getElementById("results");
+        
+        if (loadingIndicator) {
+            loadingIndicator.style.display = "block";
+        }
+
+        const oldResults = resultsDiv.innerHTML;
+        
+        // Очищаем и показываем индикатор загрузки вместо результатов
+        resultsDiv.innerHTML = "";
+        
+        // Добавляем небольшой класс для плавного исчезновения (опционально)
+        resultsDiv.classList.add("results-fade-out");
+
+        const payload = collectPayload();
+        payload.page = page;
+        payload.page_size = pageSize;
+        currentQuery = payload;
+
+        try {
+            const response = await fetch(corpusSearchUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (data.page_obj) {
+                currentPage = data.page_obj.number;
+                totalPages = data.page_obj.num_pages;
+            } else {
+                totalPages = 1;
+            }
+
+            resultsDiv.classList.remove("results-fade-out");
+
+            displayResults(data);
+
+            if (data.page_obj && data.page_obj.num_pages > 1) {
+                displayPagination(data.page_obj);
+            }
+
+            if (page > 1) {
+                scrollToResults();
+            }
+
+        } catch (error) {
+            console.error("Ошибка при поиске:", error);
+            resultsDiv.innerHTML = oldResults;
+            toastr.error('Произошла ошибка при поиске. Пожалуйста, попробуйте еще раз.');
+        } finally {
+            isLoading = false;
+            if (loadingIndicator) {
+                loadingIndicator.style.display = "none";
+            }
+        }
+    }
+
+    function displayResults(data) {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+
+        const countP = document.createElement("p");
+        countP.className = "results-count";
+        countP.innerHTML = `Найдено: <span class="count-number">${data.count}</span>`;
+        resultsDiv.appendChild(countP);
+
+        if (!data.results || data.results.length === 0) {
+            const noResults = document.createElement("div");
+            noResults.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 8V12M12 16H12.01M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" stroke="#6C757D" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>По вашему запросу ничего не найдено.</p>
+            `;
+            noResults.className = "no-results";
+            resultsDiv.appendChild(noResults);
+            return;
+        }
+
+        const isTeacher = data.is_teacher;
+
+        data.results.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "search-result-item";
+
+            const header = document.createElement("h3");
+            header.className = "result-header";
+
+            if (isTeacher) {
+                const textUrl = buildTextDetailUrl(item.id);
+                header.innerHTML = `<a href="${textUrl}">${item.header}</a>`;
+            } else {
+                header.textContent = item.header;
+            }
+            div.appendChild(header);
+
+            const meta = document.createElement("div");
+            meta.className = "result-meta";
+            meta.innerHTML = `
+                Дата: ${item.createdate || "Не указано"} | 
+                Тип текста: ${item.text_type} | 
+                Эмоция: ${item.emotion}
+            `;
+            div.appendChild(meta);
+
+            if (item.matching_sentences && item.matching_sentences.length > 0) {
+                item.matching_sentences.forEach(sentenceContext => {
+                    const sentenceDiv = document.createElement("div");
+                    sentenceDiv.className = "sentence-context";
+
+                    if (sentenceContext.previous) {
+                        const prevSpan = document.createElement("div");
+                        prevSpan.className = "prev-sentence";
+                        prevSpan.innerHTML = `${sentenceContext.previous.text}`;
+                        sentenceDiv.appendChild(prevSpan);
+                    }
+
+                    const currentSpan = document.createElement("div");
+                    currentSpan.className = "current-sentence";
+                    if (sentenceContext.current.highlighted_text) {
+                        currentSpan.innerHTML = sentenceContext.current.highlighted_text;
+                    } else {
+                        currentSpan.textContent = sentenceContext.current.text;
+                    }
+                    sentenceDiv.appendChild(currentSpan);
+
+                    if (sentenceContext.next) {
+                        const nextSpan = document.createElement("div");
+                        nextSpan.className = "next-sentence";
+                        nextSpan.innerHTML = `${sentenceContext.next.text}`;
+                        sentenceDiv.appendChild(nextSpan);
+                    }
+
+                    div.appendChild(sentenceDiv);
+                });
+            }
+
+            resultsDiv.appendChild(div);
+        });
+    }
+
+    function displayPagination(pageObj) {
+        const resultsDiv = document.getElementById("results");
+
+        const oldPagination = resultsDiv.querySelector(".pagination");
+        if (oldPagination) {
+            oldPagination.remove();
+        }
+
+        if (totalPages <= 1) return;
+
+        const paginationDiv = document.createElement("div");
+        paginationDiv.className = "pagination";
+
+        if (pageObj.has_previous) {
+            const firstLink = document.createElement("span");
+            firstLink.className = "step-links";
+            const firstA = document.createElement("a");
+            firstA.href = "#";
+            firstA.innerHTML = "&laquo; Первая";
+            firstA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(1);
+                    scrollToResults();
+                }
+            };
+            firstLink.appendChild(firstA);
+            paginationDiv.appendChild(firstLink);
+        }
+
+        if (pageObj.has_previous) {
+            const prevLink = document.createElement("span");
+            prevLink.className = "step-links";
+            const prevA = document.createElement("a");
+            prevA.href = "#";
+            prevA.innerHTML = "&#8249; Назад";
+            prevA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(pageObj.previous_page_number);
+                    scrollToResults();
+                }
+            };
+            prevLink.appendChild(prevA);
+            paginationDiv.appendChild(prevLink);
+        }
+
+        const currentSpan = document.createElement("span");
+        currentSpan.className = "current";
+        currentSpan.innerHTML = `Страница <span class="current-number">${pageObj.number}</span> из ${pageObj.num_pages}`;
+        paginationDiv.appendChild(currentSpan);
+
+        if (pageObj.has_next) {
+            const nextLink = document.createElement("span");
+            nextLink.className = "step-links";
+            const nextA = document.createElement("a");
+            nextA.href = "#";
+            nextA.innerHTML = "Вперед &#8250;";
+            nextA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(pageObj.next_page_number);
+                    scrollToResults();
+                }
+            };
+            nextLink.appendChild(nextA);
+            paginationDiv.appendChild(nextLink);
+        }
+
+        if (pageObj.has_next) {
+            const lastLink = document.createElement("span");
+            lastLink.className = "step-links";
+            const lastA = document.createElement("a");
+            lastA.href = "#";
+            lastA.innerHTML = "Последняя &raquo;";
+            lastA.onclick = (e) => {
+                e.preventDefault();
+                if (!isLoading) {
+                    doSearch(pageObj.num_pages);
+                    scrollToResults();
+                }
+            };
+            lastLink.appendChild(lastA);
+            paginationDiv.appendChild(lastLink);
+        }
+
+        resultsDiv.appendChild(paginationDiv);
+    }
+
+    function scrollToResults() {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    document.getElementById("add-group-btn").addEventListener("click", addGroup);
+    document.getElementById("reset-filters-btn").addEventListener("click", resetFilters);
+    document.getElementById("search-btn").addEventListener("click", () => {
+        doSearch(1);
+        scrollToResults();
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        loadFilters();
+    });
+</script>
+{% endblock %}
