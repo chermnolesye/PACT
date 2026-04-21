@@ -56,9 +56,35 @@
             {% for tag in child_tags %}
             <tr style="background-color: {{ tag.color }};">
               <td style="padding-left: 20px" class="nametag">{{ tag.nametag }}</td>
-              <td>{{ tag.level1 }}</td>
-              <td>{{ tag.level2 }}</td>
-              <td>{{ tag.level3 }}</td>
+              <td>
+                {% if tag.level1 > 0 %}
+                  <a href="{% url 'corpus_search' %}?error_tag_id={{ tag.id }}&error_level_id=1" class="error-link">
+                    {{ tag.level1 }}
+                  </a>
+                {% else %}
+                  {{ tag.level1 }}
+                {% endif %}
+              </td>
+
+              <td>
+                {% if tag.level2 > 0 %}
+                  <a href="{% url 'corpus_search' %}?error_tag_id={{ tag.id }}&error_level_id=2" class="error-link">
+                    {{ tag.level2 }}
+                  </a>
+                {% else %}
+                  {{ tag.level2 }}
+                {% endif %}
+              </td>
+
+              <td>
+                {% if tag.level3 > 0 %}
+                  <a href="{% url 'corpus_search' %}?error_tag_id={{ tag.id }}&error_level_id=3" class="error-link">
+                    {{ tag.level3 }}
+                  </a>
+                {% else %}
+                  {{ tag.level3 }}
+                {% endif %}
+              </td>
             </tr>
             {% endfor %} {% empty %}
             <tr>
