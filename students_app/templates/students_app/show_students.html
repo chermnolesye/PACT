@@ -24,12 +24,23 @@
                 <input type="text" name="q" placeholder="Поиск студента" value="{{ query }}">
                 
                 <div class="divider"></div>
+
+                <select name="year" id="year" onchange="this.form.submit()">
+                    <option value="">Все года</option>
+                    {% for y in academic_years %}
+                        <option value="{{ y.idayear }}" {% if y.idayear == selected_year %}selected{% endif %}>
+                            {{ y.title }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div class="divider"></div>
                 
                 <select name="group" onchange="this.form.submit()">
                     <option value="">Все группы</option>
                     {% for group in groups %}
-                        <option value="{{ group.idgroup }}" {% if group_id|add:'' == group.idgroup|stringformat:"s" %}selected{% endif %}>
-                            {{ group }}
+                        <option value="{{ group.idgroup }}" {% if selected_group|add:"0" == group.idgroup %}selected{% endif %}>
+                            {{ group.groupname }}
                         </option>
                     {% endfor %}
                 </select>
@@ -73,10 +84,10 @@
         <div class="pagination">            
             {% if page_obj.has_previous %}
             <span class="step-links">
-                <a href="?page=1&q={{ query }}&group={{ group_id }}">&laquo; Первая</a>
+                <a href="?page=1&q={{ query }}&year={{ selected_year }}&group={{ selected_group }}">&laquo; Первая</a>
             </span>
             <span class="step-links">
-                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&group={{ group_id }}">&#8249; Назад</a>
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&year={{ selected_year }}&group={{ selected_group }}">&#8249; Назад</a>
             </span>
             {% endif %}
 
@@ -86,10 +97,10 @@
 
             {% if page_obj.has_next %}
             <span class="step-links">
-                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&group={{ group_id }}">Вперед &#8250;</a>
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&year={{ selected_year }}&group={{ selected_group }}">Вперед &#8250;</a>
             </span>
             <span class="step-links">
-                <a href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}&group={{ group_id }}">Последняя &raquo;</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}&year={{ selected_year }}&group={{ selected_group }}">Последняя &raquo;</a>
             </span>
             {% endif %}
         </div>

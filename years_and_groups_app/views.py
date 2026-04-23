@@ -9,7 +9,6 @@ from core_app.models import (
     Group,
     AcademicYear,
     Student,
-    User,
     Text
 )
 from .forms import (
@@ -26,7 +25,7 @@ def show_groups(request):
     year_str = request.GET.get('year')
     page_number = request.GET.get('page', 1)
 
-    groups = (
+    groups = ( 
         Group.objects
         .select_related('idayear')
         .order_by('-idayear', '-studycourse', 'groupname')
@@ -45,8 +44,6 @@ def show_groups(request):
             groups = groups.filter(idayear=year)
         except ValueError:
             year = None
-
-   
 
     # Курсы в фильтре зависят от выбранного года
     course_numbers_qs = Group.objects.all()
@@ -76,13 +73,6 @@ def show_groups(request):
 
     paginator = Paginator(groups, 15)
     page_obj = paginator.get_page(page_number)
-    
-    # try:
-    #     groups_page = paginator.page(page_number)
-    # except PageNotAnInteger:
-    #     groups_page = paginator.page(1)
-    # except EmptyPage:
-    #     groups_page = paginator.page(paginator.num_pages)
 
     return render(request, 'show_groups.html', {
         # 'groups': groups_page,
