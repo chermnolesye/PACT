@@ -4,26 +4,46 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Count, Q, F
 from .forms import EditStudentForm, AddStudentForm
 from django.core.paginator import Paginator
+from django.db.models import OuterRef, Subquery
 from authorization_app.decorators import *
 from core_app.models import (
     Student,
     Text,
     Group,
+    AcademicYear,
     Student,
     User,
 )
 
-
 @teacher_required
 def show_students(request):
     query = request.GET.get('q', '').strip()
+    year_str = request.GET.get('year')
     group_id = request.GET.get('group', '').strip()
     page_number = request.GET.get('page')
+    
+    # Получаем все учебные годы, которые имеют группы
+    academic_years = AcademicYear.objects.filter(group__isnull=False).distinct().order_by('-idayear')
+    
+    # Базовый queryset для групп
+    groups_qs = Group.objects.select_related('idayear').all().order_by('-idayear__title', 'groupname')
+    
+    # Фильтруем группы по выбранному году
+    selected_year = None
+    available_groups = groups_qs  # По умолчанию все группы
+    
+    if year_str and year_str.isdigit():
+        selected_year = int(year_str)
+        available_groups = groups_qs.filter(idayear=selected_year)
+    else:
+        pass
 
-    students_qs = Student.objects.select_related('iduser', 'idgroup')
+    students_qs = Student.objects.select_related('iduser', 'idgroup', 'idgroup__idayear')
 
-    if group_id.isdigit():
+    if group_id and group_id.isdigit():
         students_qs = students_qs.filter(idgroup__idgroup=int(group_id))
+    elif selected_year:
+        students_qs = students_qs.filter(idgroup__idayear=selected_year)
 
     if query:
         students_qs = students_qs.filter(
@@ -33,33 +53,18 @@ def show_students(request):
             Q(iduser__login__icontains=query)
         )
 
-    unique_users = students_qs.values('iduser').distinct()
-
-    from django.db.models import OuterRef, Subquery
-
-    first_student = Student.objects.filter(iduser=OuterRef('pk')).order_by('pk')
-    users = User.objects.filter(iduser__in=[u['iduser'] for u in unique_users])
-    users = users.annotate(student_id=Subquery(first_student.values('idstudent')[:1]))
-
-    # students = Student.objects.select_related('iduser', 'idgroup').filter(idstudent__in=[u.student_id for u in users])
-    students = Student.objects.select_related('iduser', 'idgroup').filter(
-        idstudent__in=[u.student_id for u in users]
-    ).order_by('iduser__lastname')
-
-    # groups = Group.objects.all().order_by('idayear__title')
-    groups = Group.objects.select_related('idayear').all().order_by('-idayear__title', 'groupname')
-
-    paginator = Paginator(students, 15)
+    paginator = Paginator(students_qs, 15)
     page_obj = paginator.get_page(page_number)
-
+    
     context = {
         'page_obj': page_obj,
-        # 'students': students,
         'query': query,
-        'group_id': group_id,
-        'groups': groups,
+        'selected_year': selected_year,
+        'selected_group': group_id,
+        'academic_years': academic_years,
+        'groups': available_groups,  # ВАЖНО: передаем отфильтрованные группы
     }
-
+    
     return render(request, "show_students.html", context)
 
 @teacher_required
