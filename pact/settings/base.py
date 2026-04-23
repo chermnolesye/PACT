@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     "exercise_app",
     "admin_app",
     "corpus_search_app",
+    "corpus_info_app",
+    "corsheaders"
 ]
 
 AUTH_USER_MODEL = "core_app.User"
@@ -40,6 +42,7 @@ AUTHENTICATION_BACKENDS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     # "django.middleware.csrf.CsrfViewMiddleware",
@@ -109,7 +112,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "ru"
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
+
 
 USE_I18N = True
 USE_L10N = True
@@ -148,3 +152,19 @@ try:
     download_nltk_resources()
 except Exception:
     pass
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8001",
+]
+
+CORPUS_INFO_URLS = {
+    "german": {
+        "api": "http://127.0.0.1:8000/api/corpus-size/",
+        "login": "http://127.0.0.1:8000/login/",
+    },
+    "french": {
+        "api": "http://127.0.0.1:8001/api/corpus-size/",
+        "login": "http://127.0.0.1:8001/login/",
+    },
+}
