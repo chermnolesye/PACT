@@ -899,8 +899,9 @@ def grade_text(request, idexercise=2):
     if request.method == "POST" and "mark-form" in request.POST:
          mark_form = AddMarkForm(request.POST, instance=exercise)
          if mark_form.is_valid():
+             exercise_grading.allow_error_view=mark_form.cleaned_data.get('allow_error_view')
+             exercise_grading.save()
              mark_form.save()
-             
              #return redirect(request.path + f"?idexercise={exercise.idexercise}")
              url = reverse('grade_text')
              params = f"{exercise.idexercise}/?idexercise={exercise.idexercise}"
@@ -960,6 +961,29 @@ def student_grade_text(request, idexercise=2):
             pos_tag_russian = token.idpostag.tagtextrussian if token.idpostag else None
             pos_tag_abbrev = token.idpostag.tagtextabbrev if token.idpostag else None
             pos_tag_color = token.idpostag.tagcolor if token.idpostag else None
+
+            errors_list = []
+            if (exercise_grading.allow_error_view):
+                error_tokens = token.errortoken_set.select_related(
+                    "iderror__iderrortag", "iderror__iderrorlevel", "iderror__idreason", "iderror"
+                ).all()
+                for et in error_tokens:
+                    error = et.iderror
+                    if error and error.iderrortag:
+                        errors_list.append({
+                            "error_tag_id": error.iderrortag,
+                            "error_id": error.iderror,
+                            "error_tag": error.iderrortag.tagtext,
+                            "error_tag_russian": error.iderrortag.tagtextrussian,
+                            "error_tag_abbrev": error.iderrortag.tagtextabbrev,
+                            "error_color": error.iderrortag.tagcolor,
+                            "error_level": error.iderrorlevel.errorlevelname if error.iderrorlevel else "Не указано",
+                            "error_level_russian": error.iderrorlevel.errorlevelrussian,
+                            "error_correct": error.correct or "Не указано",
+                            "error_comment": error.comment or "Не указано",
+                            "error_reason": error.idreason.reasonname if error.idreason else "Не указано",
+                            "idtagparent": error.iderrortag.idtagparent,
+                        })
 
             empty_next_error_tokens = token.next_token.select_related(
                 "idexerciseerror__iderrortag", "idexerciseerror__iderrorlevel", "idexerciseerror__idreason", "idexerciseerror"
@@ -1030,6 +1054,7 @@ def student_grade_text(request, idexercise=2):
                 "pos_tag_color": pos_tag_color,
                 "token_order_number": token.tokenordernumber,
                 "exercise_errors": exercise_errors_list,
+                "errors": errors_list,
             })
 
             empty_prev_error_tokens = token.prev_token.select_related(
