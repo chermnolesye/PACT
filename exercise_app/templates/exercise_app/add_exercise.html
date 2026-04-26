@@ -74,39 +74,40 @@
                 <div id="grading-fields" style="display:none;">
                     <div class="card" id="exercise_card">
                         <div class="card-body">
-                            <div class="row">
-                                <div class="grading-field">
-                                    <label for="grading_header">Название текста:</label>
-                                    <input type="text" id="grading_header" class="form-control"
-                                           placeholder="Поиск по названию...">
-                                </div>
-                                <div class="grading-field">
-                                    <label for="grading_academic_year">Учебный год:</label>
-                                    <select id="grading_academic_year" class="form-control">
-                                        <option value="">Все годы</option>
-                                        {% for year in academic_years %}
-                                        <option value="{{ year.idayear }}">{{ year.title }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                            <div class="grading-field">
+                                <label for="grading_header">Название текста:</label>
+                                <input type="text" id="grading_header" class="form-control"
+                                       placeholder="Поиск по названию...">
                             </div>
-
-                            <div class="row ">
-                                <div class="grading-field">
-                                    <label for="grading_group">Учебная группа:</label>
-                                    <select id="grading_group" class="form-control">
-                                        <option value="">Все группы</option>
-                                    </select>
-                                </div>
-                                <div class="grading-field">
-                                    <label for="grading_text_type">Тип текста:</label>
-                                    <select id="grading_text_type" class="form-control">
-                                        <option value="">Все типы</option>
-                                        {% for text_type in text_types %}
-                                        <option value="{{ text_type.idtexttype }}">{{ text_type.texttypename }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                            <div class="grading-field">
+                                <label for="grading_academic_year">Учебный год:</label>
+                                <select id="grading_academic_year" class="form-control">
+                                    <option value="">Все годы</option>
+                                    {% for year in academic_years %}
+                                    <option value="{{ year.idayear }}">{{ year.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="grading-field">
+                                <label for="grading_group">Учебная группа:</label>
+                                <select id="grading_group" class="form-control">
+                                    <option value="">Все группы</option>
+                                </select>
+                            </div>
+                            <div class="grading-field">
+                                <label for="grading_fio">Автор текста:</label>
+                                <select id="grading_fio" class="form-control">
+                                    <option value="">Все студенты</option>
+                                </select>
+                            </div>
+                            <div class="grading-field">
+                                <label for="grading_text_type">Тип текста:</label>
+                                <select id="grading_text_type" class="form-control">
+                                    <option value="">Все типы</option>
+                                    {% for text_type in text_types %}
+                                    <option value="{{ text_type.idtexttype }}">{{ text_type.texttypename }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
                             <button type="button" id="apply_grading_filters" class="button btn-primary" style="display:inline-block">
                                 Применить фильтры
@@ -133,7 +134,6 @@
                                 </svg>
                                 Примените фильтры для загрузки текстов!
                             </p>
-
                             <div class="card-header">
                                 <label id="text-grading-label" style="width:100%; margin-top:10px; display:none;">
                                     Показаны только тексты с оценкой.
@@ -451,6 +451,7 @@
                 'header': document.getElementById('grading_header')?.value || '',
                 'academic_year': document.getElementById('grading_academic_year')?.value || '',
                 'group': document.getElementById('grading_group')?.value || '',
+                'fio': document.getElementById('grading_fio')?.value || '',
                 'text_type': document.getElementById('grading_text_type')?.value || ''
             });
 
@@ -471,14 +472,17 @@
                 })
                 .then(texts => {
                     console.log('Получено текстов для оценивания:', texts.length);
-                    document.querySelector(".visually-hidden").innerHTML = "Загрузка..."
                     document.getElementById("apply_grading_filters").style.background = "#0d6efd"
                     document.getElementById("apply_grading_filters").style.cursor = "pointer"
                     if (texts.length === 0) {
                         // gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
                         showInfo('Тексты не найдены');
-                        document.querySelector(".visually-hidden").innerHTML = "Тексты не найдены";
+                        document.querySelector(".visually-hidden").remove()
+                        document.getElementById("text-grading-label").innerHTML ="Тексты не найдены."
                         return;
+                    }
+                    else {
+                        document.getElementById("text-grading-label").innerHTML = "Показаны только тексты с оценкой."
                     }
 
                     gradingTextsList.innerHTML = '';
@@ -594,7 +598,7 @@
         document.getElementById('grading_academic_year')?.addEventListener('change', function () {
             const yearId = this.value;
             const groupSelect = document.getElementById('grading_group');
-
+            document.getElementById('grading_fio').innerHTML = '<option value="">Все студенты</option>';
             if (!yearId) {
                 groupSelect.innerHTML = '<option value="">Все группы</option>';
                 return;
@@ -614,8 +618,32 @@
                 });
         });
 
+        // Загрузка студентов для фильтра Grading
+        document.getElementById('grading_group')?.addEventListener('change', function () {
+            const groupId = this.value;
+            const fioSelect = document.getElementById('grading_fio');
+
+            if (!groupId) {
+                fioSelect.innerHTML = '<option value="">Все студенты</option>';
+                return;
+            }
+
+            fetch("{% url 'load_students' %}?group_id=" + groupId)
+                .then(response => response.json())
+                .then(data => {
+                    fioSelect.innerHTML = '<option value="">Выберите студента</option>';
+                    data.students.forEach(student => {
+                        const option = document.createElement("option");
+                        option.value = student.id;
+                        option.textContent = student.name;
+                        fioSelect.appendChild(option);
+                    });
+                });
+        });
+
         // Обработчики кнопок фильтров
         document.getElementById('apply_grading_filters')?.addEventListener('click', function () {
+            console.log("aaaaaaaa")
             if (!document.querySelector(".visually-hidden")) {
                 loadGradingTexts();
                 if (!document.getElementById("alert-warning")) {
@@ -631,6 +659,7 @@
             document.getElementById('grading_header').value = '';
             document.getElementById('grading_academic_year').value = '';
             document.getElementById('grading_group').value = '';
+            document.getElementById('grading_fio').value = '';
             document.getElementById('grading_text_type').value = '';
 
             /*selectedGradingTextId = null;
