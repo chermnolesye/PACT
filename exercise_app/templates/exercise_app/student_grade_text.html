@@ -514,9 +514,9 @@
     <div class="unmarked_text" style="display:none;">{{unmarked_text}}</div>
     {% endblock %}
 
-    <!-- СКРИПТЫ СТРАНИЦЫ: ВСЕ JavaScript КОД ПОМЕЩАТЬ СЮДА, НЕ В BLOCK CONTENT! -->
     {% block extra_scripts %}
     <script>
+
         const chosen = [];
         const chosen_ids = [];
 
@@ -573,6 +573,62 @@
                     }
                 }
             })
+
+            teacherErrors = {}
+            document.querySelectorAll(".teacher").forEach(error => {
+                tokenElement = error.parentElement;
+                error_id = error.getAttribute("data-error-id");
+                if (error_id in teacherErrors) {
+                    teacherErrors[error_id].push(tokenElement);
+                }
+                else {
+                    teacherErrors[error_id] = [tokenElement];
+                }
+            })
+
+            studentErrors = {}
+            document.querySelectorAll(".student").forEach(error => {
+                tokenElement = error.parentElement;
+                error_id = error.getAttribute("data-error-id");
+                if (error_id in studentErrors) {
+                    studentErrors[error_id].push(tokenElement);
+                }
+                else {
+                    studentErrors[error_id] = [tokenElement];
+                }
+            })
+
+            function areEqual(a, b) {
+                if (a === b) return true;
+                if (a == null || b == null) return false;
+                if (a.length !== b.length) return false;
+
+                a.sort();
+                b.sort();
+
+                for (var i = 0; i < a.length; ++i) {
+                    if (a[i] !== b[i] || a[i].querySelector(".teacher").dataset.errorTag != b[i].querySelector(".student").dataset.errorTag)
+                        return false;
+                }
+                return true;
+            }
+
+            for (const [keyT, valueT] of Object.entries(teacherErrors)) {
+                for (const [keyS, valueS] of Object.entries(studentErrors)) {
+                    if (areEqual(valueT, valueS)) {
+                        valueS.forEach(token => {
+                            token.querySelector(".student").style.background = "#8FFF73"
+                        })
+                        delete studentErrors[keyS];
+                        delete teacherErrors[keyT];
+                    }
+                    else {
+                        valueS.forEach(token => {
+                            token.querySelector(".student").style.background = "#FF7373"
+                        })
+                    }
+                }
+            }
 
             const languageRadios = document.querySelectorAll('input[name="language"]');
             const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
