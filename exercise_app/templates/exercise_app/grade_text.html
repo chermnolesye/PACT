@@ -206,6 +206,14 @@
             <p>Комментарий:</p>
             <p class="p-dark"> {{ exercise.exercisemarkcomment }} </p>
         </div>
+        <div class="menu-content-data" style="max-width: 300px; flex-wrap: wrap;">
+            <p>Разрешен ли студенту просмотр аннотаций преподавателя?</p>
+            <p class="p-dark" id="allow_error_view_value" value="{{exercise_grading.allow_error_view}}">
+                {% if exercise_grading.allow_error_view %} да
+                {% else %} нет
+                {% endif %}
+            </p>
+        </div>
     </div>
 
     <div class="text-header-grad">
@@ -244,6 +252,12 @@
                         {{ mark_form.exercisemarkcomment.label }}
                     </label>
                     {{ mark_form.exercisemarkcomment }}
+                    <div style="display:flex;">
+                        <label class="no-highlight">
+                            Разрешить студенту просмотр аннотаций преподавателя?
+                        </label>
+                        {{ mark_form.allow_error_view }}
+                    </div>
                 </div>
 
                 <div class="grade-buttons">
@@ -383,7 +397,10 @@
     <script>
         const chosen = [];
         document.addEventListener('DOMContentLoaded', function () {
-
+            if (document.getElementById("allow_error_view_value").getAttribute("value") == "True") {
+                document.getElementById('id_allow_error_view').checked = true;
+            }
+            
             document.querySelectorAll(".empty-word").forEach(emptyWord => {
                 tokenElement = emptyWord.parentElement
                 if (tokenElement.getAttribute("id_token")!="None") {
@@ -769,6 +786,13 @@
             const modal = document.getElementById('modal');
             const closeModal = document.querySelector('.close-modal');
             const backButton = document.querySelector('.grey-button');
+
+            /*const form = document.getElementById('mark-form-grading');
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                //form.submit()
+                
+            });*/
 
             // Обработчики для модального окна
             if (backButton) {

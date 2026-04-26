@@ -753,6 +753,12 @@ position: relative;
     min-height:200px;
 }
 
+#id_allow_error_view {
+    width: 30%;
+    height: 20px;
+    align-self: center;
+}
+
 @media (max-width: 1010px) {
     .return_btn svg {
         display: none;
