@@ -296,7 +296,7 @@ def load_groups(request):
         return JsonResponse({'groups': groups_data})    
     return JsonResponse({'groups': []})
 
-def load_text(request):
+def load_text_grading(request):
     text_id = request.GET.get('textId')
     if text_id:
         text = get_object_or_404(Text, idtext=text_id)
@@ -306,6 +306,17 @@ def load_text(request):
     return JsonResponse({
         'header':text.header,
         'text': unmarked_text
+        })
+
+def load_text_review(request):
+    text_id = request.GET.get('textId')
+    if text_id:
+        text = get_object_or_404(ExerciseText, idexercisetext=text_id)
+    else:
+        text = ExerciseText.objects.first()
+    return JsonResponse({
+        'header':text.exercisetextname,
+        'text': text.exercisetext
         })
 
 '''

@@ -5,7 +5,8 @@ urlpatterns = [
     path('teacher_exercises/delete/<int:exercise_id>/', views.delete_exercise_ajax, name='delete_exercise'),
     path('load_students/', views.load_students, name='load_students'),
     path('load_groups/', views.load_groups, name='load_groups'),
-    path('load_text/', views.load_text, name='load_text'),
+    path('load_text_grading/', views.load_text_grading, name='load_text_grading'),
+    path('load_text_review/', views.load_text_review, name='load_text_review'),
 
     path('add_exercise/', views.add_exercise, name='add_exercise'),
     path('load_exercise_data/', views.load_exercise_data, name='load_exercise_data'),

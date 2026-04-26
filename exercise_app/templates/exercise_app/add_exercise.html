@@ -516,7 +516,7 @@
                         textItem.querySelector("#show_text").addEventListener('click', function () {
                             const modal = document.getElementById("viewtextModal")
                             modal.style.display = "flex";
-                            fetch("{% url 'load_text' %}?textId=" + text.id)
+                            fetch("{% url 'load_text_grading' %}?textId=" + text.id)
                                 .then(response => {
                                     if (!response.ok) {
                                         throw new Error('Ошибка загрузки заданий');
@@ -698,13 +698,14 @@
                         textItem.dataset.textId = text.id;
                         textItem.innerHTML = `
                         <div class="review_text_header"><p>${text.name}</p></div>
-                        <div>
+                        <div class="review-text-info">
                             <div class="text-meta">
                                 Автор: ${text.author}
                             </div>
                             <div class="text-meta">
                                 Дата: ${text.load_date}
                             </div>
+                            <a id="show_text_review">Показать текст</a>
                             <div class="review-group" id="tasks-section" style="display: none;">
                                 <label>Выберите задание:</label>
                                 <ul class="tasks-list" id="tasks-list">
@@ -735,6 +736,22 @@
                             //selectedTextName.textContent = text.name;
                             //selectionInfo.style.display = 'block';
                         });
+
+                        textItem.querySelector("#show_text_review").addEventListener('click', function () {
+                            const modal = document.getElementById("viewtextModal")
+                            modal.style.display = "flex";
+                            fetch("{% url 'load_text_review' %}?textId=" + text.id)
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('Ошибка загрузки заданий');
+                                    }
+                                    return response.json();
+                                })
+                                .then(text => {
+                                    document.getElementById("text_header").innerHTML = text.header
+                                    document.getElementById("display_text").innerHTML = text.text
+                                })
+                        })
                     });
                 })
                 .catch(error => {
