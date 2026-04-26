@@ -14,6 +14,8 @@ from .forms import TeacherLoadTextForm, AddTextAnnotationForm, AddErrorAnnotatio
 from .filters import StudentTextFilter
 from nltk.tokenize import sent_tokenize, word_tokenize
 from authorization_app.decorators import *
+import sys
+import os
 from core_app.models import (
     ExerciseGrading,
     Text,
@@ -708,12 +710,6 @@ def search_texts(request):
         "fio": get_teacher_fio(request),
     }
     return render(request, "search_texts.html", context)
-
-
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-import sys
-import os
 
 @require_POST
 @teacher_required

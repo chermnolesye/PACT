@@ -1,110 +1,18 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>ПАКТ</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 40px;
-            background: #f5f7fb;
-            color: #222;
-        }
+{% extends base_template %}
 
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
+{% load static %}
 
-        h1 {
-            margin-bottom: 12px;
-        }
+{% block title %}ПАКТ{% endblock %}
 
-        .description,
-        .footer-info {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/home.css' %}" />
+{% endblock %}
 
-        .cards {
-            display: flex;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
+{% block content %}
 
-        .card {
-            flex: 1 1 320px;
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            text-decoration: none;
-            color: inherit;
-            display: block;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-        }
-
-        .card h2 {
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-
-        .section-title {
-            font-weight: bold;
-            margin-top: 18px;
-            margin-bottom: 8px;
-        }
-
-        .metric-line {
-            font-size: 20px;
-            font-weight: bold;
-            margin: 12px 0 18px 0;
-        }
-
-        .metric-value {
-            font-weight: bold;
-        }
-
-        ul {
-            margin: 8px 0 0 20px;
-            padding: 0;
-        }
-
-        li {
-            margin-bottom: 6px;
-        }
-
-        .status {
-            margin-top: 18px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .error {
-            color: #b3261e;
-            margin-top: 18px;
-            font-size: 14px;
-        }
-
-        .email {
-            color: #0b57d0;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
 <div class="container">
     <div class="description">
-        <h1>Петрозаводский аннотированный корпус текстов (ПАКТ)</h1>
+        <h1 class="highlighted-header">Петрозаводский аннотированный корпус текстов (ПАКТ)</h1>
         <p>
             Петрозаводский аннотированный корпус текстов (ПАКТ) — корпус аннотированных студенческих текстов
             на немецком и французском языках.
@@ -116,7 +24,7 @@
 
     <div class="cards">
         <a class="card" href="{{ german_login_url }}">
-            <h2>Немецкий корпус</h2>
+            <h2 class="card-title highlighted-header">Немецкий корпус</h2>
 
             <div class="metric-line">
                 Размер корпуса в токенах:
@@ -137,7 +45,7 @@
         </a>
 
         <a class="card" href="{{ french_login_url }}">
-            <h2>Французский корпус</h2>
+            <h2 class="card-title highlighted-header">Французский корпус</h2>
 
             <div class="metric-line">
                 Размер корпуса в токенах:
@@ -172,7 +80,9 @@
         </p>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
     let lastUpdatedSet = false;
 
@@ -215,5 +125,4 @@
         "french-error-tags"
     );
 </script>
-</body>
-</html>
+{% endblock %}

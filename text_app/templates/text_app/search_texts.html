@@ -305,75 +305,75 @@
             {% endif %}
         </div>
         {% endif %}
+    </div>
+</div>
+{% endblock %}
 
-        {% endblock %}
-        </div>
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        function toggleFilterBlock() {
+            const filterBlock = document.querySelector(".filter-block");
+            filterBlock.classList.toggle("hidden");
+        }
+        const filterButton = document.querySelector('.filter');
+        const filterBlock = document.querySelector('.filter-block');
 
-        {% block extra_scripts %}
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                function toggleFilterBlock() {
-                    const filterBlock = document.querySelector(".filter-block");
-                    filterBlock.classList.toggle("hidden");
+        filterButton.addEventListener('click', function () {
+            filterBlock.classList.toggle('visible');
+        });
+
+        // Обработчик для кнопки "сбросить фильтры"
+        const resetButton = document.querySelector('.btn-link');
+        const yearSelect = document.getElementById('year-select');
+        const groupSelect = document.getElementById('group-select');
+
+        if (yearSelect && groupSelect) {
+            yearSelect.addEventListener('change', function () {
+                const yearId = this.value;
+
+                groupSelect.innerHTML = '<option value="">Все группы</option>';
+
+                if (!yearId) {
+                    return;
                 }
-                const filterButton = document.querySelector('.filter');
-                const filterBlock = document.querySelector('.filter-block');
 
-                filterButton.addEventListener('click', function () {
-                    filterBlock.classList.toggle('visible');
-                });
-
-                // Обработчик для кнопки "сбросить фильтры"
-                const resetButton = document.querySelector('.btn-link');
-                const yearSelect = document.getElementById('year-select');
-                const groupSelect = document.getElementById('group-select');
-
-                if (yearSelect && groupSelect) {
-                    yearSelect.addEventListener('change', function () {
-                        const yearId = this.value;
-
-                        groupSelect.innerHTML = '<option value="">Все группы</option>';
-
-                        if (!yearId) {
-                            return;
-                        }
-
-                        fetch("{% url 'load_groups' %}?yearId=" + yearId)
-                            .then(response => response.json())
-                            .then(data => {
-                                data.groups.forEach(group => {
-                                    const option = document.createElement('option');
-                                    option.value = group.id;
-                                    option.textContent = group.groupname;
-                                    groupSelect.appendChild(option);
-                                });
-                            })
-                            .catch(error => {
-                                console.error('Ошибка загрузки групп:', error);
-                            });
-                    });
-                }
-                if (resetButton) {
-                    resetButton.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        const filterBlock = document.querySelector('.filter-block');
-                        const elements = filterBlock.querySelectorAll('input, select');
-                        elements.forEach(function (element) {
-                            if (element.tagName.toLowerCase() === 'select') {
-                                element.selectedIndex = 0;
-                            } else if (element.type === 'radio' || element.type === 'checkbox') {
-                                element.checked = false;
-                            } else {
-                                element.value = '';
-                            }
+                fetch("{% url 'load_groups' %}?yearId=" + yearId)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.groups.forEach(group => {
+                            const option = document.createElement('option');
+                            option.value = group.id;
+                            option.textContent = group.groupname;
+                            groupSelect.appendChild(option);
                         });
+                    })
+                    .catch(error => {
+                        console.error('Ошибка загрузки групп:', error);
                     });
-                }
             });
+        }
+        if (resetButton) {
+            resetButton.addEventListener('click', function (e) {
+                e.preventDefault();
+                const filterBlock = document.querySelector('.filter-block');
+                const elements = filterBlock.querySelectorAll('input, select');
+                elements.forEach(function (element) {
+                    if (element.tagName.toLowerCase() === 'select') {
+                        element.selectedIndex = 0;
+                    } else if (element.type === 'radio' || element.type === 'checkbox') {
+                        element.checked = false;
+                    } else {
+                        element.value = '';
+                    }
+                });
+            });
+        }
+    });
 
-            function toggleFilterBlock() {
-                const filterBlock = document.querySelector(".filter-block");
-                filterBlock.classList.toggle("hidden");
-            }
-        </script>
-        {% endblock %}
+    function toggleFilterBlock() {
+        const filterBlock = document.querySelector(".filter-block");
+        filterBlock.classList.toggle("hidden");
+    }
+</script>
+{% endblock %}
