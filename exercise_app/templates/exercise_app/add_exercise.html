@@ -44,9 +44,9 @@
                 </div>
 
                 {% if form.deadline.errors %}
-                    <div class="error-message" style="color: red;">
-                        {{ form.deadline.errors }}
-                    </div>
+                <div class="error-message" style="color: red;">
+                    {{ form.deadline.errors }}
+                </div>
                 {% endif %}
 
                 <div class="grouping-wrapper">
@@ -165,11 +165,11 @@
                     </div>
 
                     <!--<div class="review-group" id="tasks-section" style="display: none;">
-                <label>Выберите задание:</label>
-                <div class="tasks-list" id="tasks-list">
-                </div>
-                <div id="tasks-error" class="error-message" style="display: none;"></div>
-            </div>-->
+                        <label>Выберите задание:</label>
+                        <div class="tasks-list" id="tasks-list">
+                        </div>
+                        <div id="tasks-error" class="error-message" style="display: none;"></div>
+                    </div>-->
                 </div>
 
                 <div class="hidden-fields">
@@ -236,12 +236,32 @@
             <button type="submit" class="button" id="submit_button">Создать упражнение</button>
         </div>
     </div>
+
+    <div class="modal-overlay" id="viewtextModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-head">
+                <p id="text_header">Название текста</p>
+                <button class="close-modal">
+                    <svg width="30" height="30" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M27.101 17.0606L17.0606 27.101M17.0606 17.0606L27.101 27.101M12.0404 4.68683C15.0917 2.92153 18.5556 1.99459 22.0808 2.00002C33.1714 2.00002 42.1616 10.9902 42.1616 22.0808C42.1616 33.1714 33.1714 42.1616 22.0808 42.1616C10.9902 42.1616 2 33.1714 2 22.0808C2 18.4241 2.97794 14.9923 4.68681 12.0404" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <div style="padding:10px; width:100%;">
+                 <textarea id="display_text">текст</textarea>
+            </div>
+        </div>
 </div>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll(".close-modal").forEach(btn => {
+            btn.addEventListener('click', function () {
+                btn.parentElement.parentElement.parentElement.style.display = "none";
+            })
+        })
 
         document.getElementById('toggle').addEventListener('click', function () {
             document.getElementById("toggle").style.display = "none"
@@ -451,12 +471,13 @@
                 })
                 .then(texts => {
                     console.log('Получено текстов для оценивания:', texts.length);
-
+                    document.querySelector(".visually-hidden").innerHTML = "Загрузка..."
                     document.getElementById("apply_grading_filters").style.background = "#0d6efd"
                     document.getElementById("apply_grading_filters").style.cursor = "pointer"
                     if (texts.length === 0) {
                         // gradingTextsList.innerHTML = '<div class="alert alert-info">Тексты не найдены</div>';
                         showInfo('Тексты не найдены');
+                        document.querySelector(".visually-hidden").innerHTML = "Тексты не найдены";
                         return;
                     }
 
@@ -473,11 +494,11 @@
                             <p><span class="grading_text_header">Тип текста:</span> ${text.text_type}</p>
                             <p><span class="grading_text_header">Дата написания:</span> ${text.created_date}</p>
                             <p><span class="grading_text_header">Оценка:</span> ${text.grade}</p>
+                            <a id="show_text">Показать текст</a>
                         </div>
                     `;
 
-
-                        textItem.addEventListener('click', function () {
+                        textItem.getElementsByClassName('header-text')[0].addEventListener('click', function () {
                             document.querySelectorAll('.grading-text-item').forEach(item => {
                                 item.getElementsByClassName('header-text')[0].classList.remove('selected');
                             });
@@ -492,6 +513,21 @@
                             
                         });
 
+                        textItem.querySelector("#show_text").addEventListener('click', function () {
+                            const modal = document.getElementById("viewtextModal")
+                            modal.style.display = "flex";
+                            fetch("{% url 'load_text' %}?textId=" + text.id)
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error('Ошибка загрузки заданий');
+                                    }
+                                    return response.json();
+                                })
+                                .then(text => {
+                                    document.getElementById("text_header").innerHTML=text.header
+                                    document.getElementById("display_text").innerHTML=text.text
+                                })
+                        })
                         gradingTextsList.appendChild(textItem);
                     });
                 })

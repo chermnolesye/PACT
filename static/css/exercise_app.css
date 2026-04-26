@@ -728,6 +728,24 @@
         border: none;
     }
 
+.grading-text-item-info {
+    position: relative;
+}
+
+#show_text {
+    position: absolute;
+    right: 10px;
+    bottom: 0px;
+    cursor:default;
+}
+
+#display_text {
+    width: 100%;
+    max-height: 450px;
+    border:none;
+    min-height:200px;
+}
+
 @media (max-width: 1010px) {
     .return_btn svg {
         display: none;
