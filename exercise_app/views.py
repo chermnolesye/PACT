@@ -226,8 +226,8 @@ def get_grading_texts(request):
                 'student': text.idstudent.get_full_name(),
                 'group': str(text.idstudent.idgroup),
                 'academic_year': str(text.idstudent.idgroup.idayear),
-                'text_type': str(text.idtexttype) if text.idtexttype else '',
-                'created_date': text.createdate.strftime('%d.%m.%Y') if text.createdate else '',
+                'text_type': str(text.idtexttype) if text.idtexttype else 'Не указано',
+                'created_date': text.createdate.strftime('%d.%m.%Y') if text.createdate else 'Не указано',
                 'grade': text.get_textgrade_display(),
             }
             for text in texts
@@ -295,6 +295,29 @@ def load_groups(request):
             })
         return JsonResponse({'groups': groups_data})    
     return JsonResponse({'groups': []})
+
+def load_text_grading(request):
+    text_id = request.GET.get('textId')
+    if text_id:
+        text = get_object_or_404(Text, idtext=text_id)
+    else:
+        text = Text.objects.first()
+    unmarked_text = (text.text).replace("-EMPTY-","")
+    return JsonResponse({
+        'header':text.header,
+        'text': unmarked_text
+        })
+
+def load_text_review(request):
+    text_id = request.GET.get('textId')
+    if text_id:
+        text = get_object_or_404(ExerciseText, idexercisetext=text_id)
+    else:
+        text = ExerciseText.objects.first()
+    return JsonResponse({
+        'header':text.exercisetextname,
+        'text': text.exercisetext
+        })
 
 '''
     БЕК КАТИ

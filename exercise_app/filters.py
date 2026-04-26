@@ -1,5 +1,5 @@
 import django_filters
-from core_app.models import Exercise, ExerciseType, ExerciseTextType, ExerciseText, Text, TextType, Group, AcademicYear
+from core_app.models import Exercise, ExerciseType, ExerciseTextType, ExerciseText, Student, Text, TextType, Group, AcademicYear
 from django import forms
 from django.db.models import Q
 
@@ -148,6 +148,12 @@ class GradingTextFilter(django_filters.FilterSet):
         label='Учебная группа'
     )
     
+    fio = django_filters.ModelChoiceFilter(
+        field_name='idstudent',
+        queryset=Student.objects.all(),
+        label='Автор текста'
+    )
+    
     text_type = django_filters.ModelChoiceFilter(
         field_name='idtexttype',
         queryset=TextType.objects.all(),
@@ -156,4 +162,4 @@ class GradingTextFilter(django_filters.FilterSet):
         
     class Meta:
         model = Text
-        fields = ['header', 'academic_year', 'group', 'text_type']
+        fields = ['header', 'academic_year', 'group', 'fio', 'text_type']
