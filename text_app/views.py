@@ -202,6 +202,7 @@ def annotate_text(request, text_id=2379):
                         "error_tag_abbrev": error.iderrortag.tagtextabbrev,
                         "error_color": error.iderrortag.tagcolor,
                         "error_level": error.iderrorlevel.errorlevelname if error.iderrorlevel else "Не указано",
+                        "error_level_russian": error.iderrorlevel.errorlevelrussian,
                         "error_correct": error.correct or "Не указано",
                         "error_comment": error.comment or "Не указано",
                         "error_reason": error.idreason.reasonname if error.idreason else "Не указано",

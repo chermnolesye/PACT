@@ -370,6 +370,7 @@
                           data-error-tag-russian="{{ error.error_tag_russian }}"
                           data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
                           data-error-level="{{ error.error_level }}"
+                          data-error-level-russian="{{ error.error_level_russian }}"
                           data-error-correct="{{ error.error_correct }}"
                           data-error-comment="{{ error.error_comment }}"
                           data-error-reason="{{ error.error_reason }}">
@@ -740,6 +741,7 @@
                 const errorTag = tokenElement.dataset.errorTag;
                 const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
                 const errorLevel = tokenElement.dataset.errorLevel;
+                const errorLevelRussian = tokenElement.dataset.errorLevelRussian;
                 const errorReason = tokenElement.dataset.errorReason;
                 const errorCorrect = tokenElement.dataset.errorCorrect;
                 const errorComment = tokenElement.dataset.errorComment;
@@ -750,10 +752,16 @@
 
                 document.getElementById('error-tag').textContent = errorTag || 'Не указано';
                 document.getElementById('error-tag-abbrev').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
-                document.getElementById('error-level').textContent = errorLevel || 'Не указано';
                 document.getElementById('error-reason').textContent = errorReason || 'Не указано';
                 document.getElementById('error-correct').textContent = errorCorrect || 'Не указано';
                 document.getElementById('error-comment').textContent = errorComment || 'Не указано';
+
+                if (document.querySelector('input[name="language"]:checked').value === 'russian') {
+                    document.getElementById('error-level').textContent = errorLevelRussian || 'Не указано';
+                }
+                else {
+                    document.getElementById('error-level').textContent = errorLevel || 'Не указано';
+                }
 
                 const rect = tokenElement.getBoundingClientRect();
                 const offsetLeft = rect.left + window.scrollX;
