@@ -5,13 +5,14 @@ from django.conf.urls.static import static
 from authorization_app.views import user_login
 
 urlpatterns = [
+    path("", include("corpus_info_app.urls")),
+    path("login/", user_login, name="user_login"),
     path('admin/', admin.site.urls),
     path('auth/', include('authorization_app.urls')),
     path('text/', include('text_app.urls')),
     path('students/', include('students_app.urls')),
     path('years_groups/', include('years_and_groups_app.urls')),
     path('statistics/', include('statistics_app.urls')),
-    path('', user_login, name='user_login'),
     path('exercise/', include('exercise_app.urls')),
     path('admin-panel/', include("admin_app.urls")),
     path('corpus/', include("corpus_search_app.urls"))

@@ -54,7 +54,7 @@ def export_group_error_stats(request):
             Error.objects
             .filter(errortoken__idtoken__idsentence__idtext__in=text_ids)
             .values("iderrortag")
-            .annotate(count=Count("iderror"))
+            .annotate(count=Count("iderror", distinct=True))
         )
 
         if not error_counts_raw:
@@ -225,7 +225,7 @@ def chart_types_errors(request):
                 Q(iderror__iderrortag__isnull=False) &
                 Q(idtoken__idsentence__idtext__errorcheckflag=True)
             )
-            .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+            .annotate(count_data=Count("iderror", distinct=True))
         )
 
         data_on_tokens = dashboards.get_data_on_tokens(
@@ -441,7 +441,7 @@ def chart_types_errors(request):
                     "iderror__iderrortag__tagtextrussian",
                     "idtoken__idsentence__idtext",
                 )
-                .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+                .annotate(count_data=Count("iderror", distinct=True))
             )
 
             data_on_tokens = dashboards.get_data_on_tokens(
@@ -790,7 +790,7 @@ def chart_types_grade_errors(request):
                 Q(iderror__iderrortag__isnull=False) &
                 Q(idtoken__idsentence__idtext__errorcheckflag=True)
             )
-            .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+            .annotate(count_data=Count("iderror", distinct=True))
         )
 
         data_on_tokens = dashboards.get_data_on_tokens(
@@ -953,7 +953,7 @@ def chart_types_grade_errors(request):
                     "iderror__iderrortag__tagtextrussian",
                     "idtoken__idsentence__idtext",
                 )
-                .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+                .annotate(count_data=Count("iderror", distinct=True))
             )
 
             print(f"Grade {grade['errorlevelname']}: {len(data_count_errors)} errors")
@@ -1015,7 +1015,7 @@ def chart_student_dynamics(request):
                 error_query.values(
                     'errortoken__idtoken__idsentence__idtext__createdate'
                 ).annotate(
-                    count_data=Count('errortoken__idtoken__idsentence__idtext__createdate'),
+                    count_data=Count('iderror', distinct=True),
                     text_id=F('errortoken__idtoken__idsentence__idtext__idtext')
                 ).order_by('errortoken__idtoken__idsentence__idtext__createdate')
             )
@@ -1109,7 +1109,7 @@ def chart_groups_errors(request):
                     idayear__title=F('errortoken__idtoken__idsentence__idtext__idstudent__idgroup__idayear__title')
                 )
                 .annotate(
-                    count_data=Count('iderror')
+                    count_data=Count('iderror', distinct=True)
                 )
                 .order_by('-count_data')
             )
@@ -1217,7 +1217,7 @@ def chart_emotions_errors(request):
                 Q(idtoken__idsentence__idtext__errorcheckflag=True) &
                 Q(idtoken__idsentence__idtext__idemotion__isnull=False)
             )
-            .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+            .annotate(count_data=Count("iderror", distinct=True))
         )
 
         data_on_tokens = dashboards.get_data_on_tokens(
@@ -1359,7 +1359,7 @@ def chart_emotions_errors(request):
                     "iderror__iderrortag__tagtextrussian",
                     "idtoken__idsentence__idtext",
                 )
-                .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+                .annotate(count_data=Count("iderror", distinct=True))
             )
 
             print(f"Filtered data_count_errors length: {len(data_count_errors)}")
@@ -1437,7 +1437,7 @@ def chart_self_rating_errors(request):
                 Q(idtoken__idsentence__idtext__errorcheckflag=True) &
                 Q(idtoken__idsentence__idtext__selfrating__isnull=False)
             )
-            .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+            .annotate(count_data=Count("iderror", distinct=True))
         )
 
         data_on_tokens = dashboards.get_data_on_tokens(
@@ -1568,7 +1568,7 @@ def chart_self_rating_errors(request):
                     "iderror__iderrortag__tagtextrussian",
                     "idtoken__idsentence__idtext",
                 )
-                .annotate(count_data=Count("iderror__iderrortag__iderrortag"))
+                .annotate(count_data=Count("iderror", distinct=True))
             )
 
             print(f"Filtered data_count_errors length: {len(data_count_errors)}")

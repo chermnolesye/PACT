@@ -73,6 +73,8 @@
             if (groupIndex === 0) {
                 addGroup();
             }
+
+            applyPresetFiltersFromUrl();
         } catch (error) {
             console.error("Ошибка загрузки фильтров:", error);
             toastr.warning('Не удалось загрузить фильтры. Попробуйте обновить страницу.');
@@ -296,6 +298,39 @@
         });
 
         return { groups, operators };
+    }
+
+    function applyPresetFiltersFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+
+        const errorTagId = params.get("error_tag_id");
+        const errorLevelId = params.get("error_level_id");
+
+        if (!errorTagId && !errorLevelId) {
+            return;
+        }
+
+        const firstGroup = groupsContainer.querySelector(".search-group");
+        if (!firstGroup) {
+            return;
+        }
+
+        if (errorTagId) {
+            const errorTagSelect = firstGroup.querySelector('[data-field="error_tag_id"]');
+            if (errorTagSelect) {
+                errorTagSelect.value = errorTagId;
+            }
+        }
+
+        if (errorLevelId) {
+            const errorLevelSelect = firstGroup.querySelector('[data-field="error_level_id"]');
+            if (errorLevelSelect) {
+                errorLevelSelect.value = errorLevelId;
+            }
+        }
+
+        doSearch(1);
+        scrollToResults();
     }
 
     async function doSearch(page = 1) {

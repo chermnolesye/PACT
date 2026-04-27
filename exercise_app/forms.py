@@ -472,6 +472,11 @@ class AddMarkForm(forms.ModelForm):
         widget=forms.Textarea()
     )
 
+    allow_error_view = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput()
+    )
+
     class Meta:
         model = Exercise
         fields = [

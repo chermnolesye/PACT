@@ -120,6 +120,39 @@
         <p><strong>Комментарий:</strong> <span id="error-comment"></span></p>
     </div>
 
+    <div class="error-popup popup-sidebyside" id="error-popup-compare">
+        <div class="popup-content-sidebyside">
+            <div class="student-mark" id="errS" style="display:none;">
+                <h3 style="margin-bottom:5px">Ваша аннотация с этим тэгом ошибки отсутствует</h3>
+            </div>
+            <div class="student-mark" id="annS">
+                <h3 style="margin-bottom:5px">Ваша аннотация</h3>
+                <h3>
+                    <span id="error-tag-s"></span>
+                    <span id="error-tag-abbrev-s"></span>
+                </h3>
+                <p><strong>Степень грубости:</strong> <span id="error-level-s"></span></p>
+                <p><strong>Причина ошибки:</strong> <span id="error-reason-s"></span></p>
+                <p><strong>Исправление:</strong> <span id="error-correct-s"></span></p>
+                <p><strong>Комментарий:</strong> <span id="error-comment-s"></span></p>
+            </div>
+            <div class="teacher-mark" id="errT" style="display:none;">
+                <h3 style="margin-bottom:5px">Аннотация преподавателя с этим тэгом ошибки отсутствует</h3>
+            </div>
+            <div class="teacher-mark" id="annT">
+                <h3 style="margin-bottom:5px">Аннотация преподавателя</h3>
+                <h3>
+                    <span id="error-tag-t"></span>
+                    <span id="error-tag-abbrev-t"></span>
+                </h3>
+                <p><strong>Степень грубости:</strong> <span id="error-level-t"></span></p>
+                <p><strong>Причина ошибки:</strong> <span id="error-reason-t"></span></p>
+                <p><strong>Исправление:</strong> <span id="error-correct-t"></span></p>
+                <p><strong>Комментарий:</strong> <span id="error-comment-t"></span></p>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Контентные блоки -->
     <div class="menu-content" id="view-content">
@@ -218,6 +251,14 @@
         <div class="menu-content-data">
             <p>Комментарий:</p>
             <p class="p-dark"> {{ exercise.exercisemarkcomment }} </p>
+        </div>
+        <div class="menu-content-data" style="max-width: 300px; flex-wrap: wrap;">
+            <p>Разрешен просмотр аннотаций преподавателя?</p>
+            <p class="p-dark" id="allow_error_view_value" value="{{exercise_grading.allow_error_view}}">
+                {% if exercise_grading.allow_error_view %} да
+                {% else %} нет
+                {% endif %}
+            </p>
         </div>
     </div>
 
@@ -362,7 +403,7 @@
 
                     {% if token.exercise_errors %}
                     {% for error in token.exercise_errors %}
-                    <span class="error-tag"
+                    <span class="error-tag student"
                           style="background-color: {{ error.error_color }}; display: none;"
                           data-error-id="{{ error.error_id }}"
                           data-error-tag="{{ error.error_tag }}"
@@ -370,6 +411,26 @@
                           data-error-tag-russian="{{ error.error_tag_russian }}"
                           data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
                           data-error-level="{{ error.error_level }}"
+                          data-error-level-russian="{{ error.error_level_russian }}"
+                          data-error-correct="{{ error.error_correct }}"
+                          data-error-comment="{{ error.error_comment }}"
+                          data-error-reason="{{ error.error_reason }}">
+                        {{ error.error_tag }}
+                    </span>
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if token.errors %}
+                    {% for error in token.errors %}
+                    <span class="error-tag teacher"
+                          style="background-color: #6C757D; display: none; color: white;"
+                          data-error-id="{{ error.error_id }}"
+                          data-error-tag="{{ error.error_tag }}"
+                          tag_id="{{ error.error_tag_id }}"
+                          data-error-tag-russian="{{ error.error_tag_russian }}"
+                          data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
+                          data-error-level="{{ error.error_level }}"
+                          data-error-level-russian="{{ error.error_level_russian }}"
                           data-error-correct="{{ error.error_correct }}"
                           data-error-comment="{{ error.error_comment }}"
                           data-error-reason="{{ error.error_reason }}">
@@ -389,7 +450,7 @@
                     {% endif %}
 
                     {% if token.token == '-EMPTY-' %}
-                    <span class="word old-empty-token">
+                    <span class="word old-empty-token word-grading empty-word">
                         <svg xmlns="http://www.w3.org/2000/svg" class="bi" height="1em" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.5" d="m14.36 4.079.927-.927a3.932 3.932 0 0 1 5.561 5.561l-.927.927m-5.56-5.561s.115 1.97 1.853 3.707C17.952 9.524 19.92 9.64 19.92 9.64m-5.56-5.561L12 6.439m7.921 3.2-5.26 5.262L11.56 18l-.16.161c-.578.577-.867.866-1.185 1.114a6.554 6.554 0 0 1-1.211.749c-.364.173-.751.302-1.526.56l-3.281 1.094m0 0-.802.268a1.06 1.06 0 0 1-1.342-1.342l.268-.802m1.876 1.876-1.876-1.876m0 0 1.094-3.281c.258-.775.387-1.162.56-1.526.205-.43.456-.836.749-1.211.248-.318.537-.607 1.114-1.184L8.5 9.939"></path></svg>
                     </span>
                     {% else %}
@@ -451,11 +512,11 @@
     </div>
 
     <div class="unmarked_text" style="display:none;">{{unmarked_text}}</div>
-{% endblock %}
+    {% endblock %}
 
-<!-- СКРИПТЫ СТРАНИЦЫ: ВСЕ JavaScript КОД ПОМЕЩАТЬ СЮДА, НЕ В BLOCK CONTENT! -->
-{% block extra_scripts %}
+    {% block extra_scripts %}
     <script>
+
         const chosen = [];
         const chosen_ids = [];
 
@@ -490,6 +551,85 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+
+            document.querySelectorAll(".empty-word").forEach(emptyWord => {
+                tokenElement = emptyWord.parentElement
+                if (tokenElement.getAttribute("id_token") != "None") {
+                    sibling_before = tokenElement.previousElementSibling;
+                    if (sibling_before.querySelectorAll(".empty-word").length != 0
+                        && sibling_before.querySelectorAll(".teacher").length == 0) {
+                        error = sibling_before.querySelector(".student");
+                        tokenElement.prepend(error);
+                        sibling_before.remove();
+                    }
+                    else {
+                        sibling_next = tokenElement.nextElementSibling;
+                        if (sibling_next.querySelectorAll(".empty-word").length != 0
+                            && sibling_next.querySelectorAll(".teacher").length == 0) {
+                            error = sibling_next.querySelector(".student");
+                            tokenElement.prepend(error);
+                            sibling_next.remove();
+                        }
+                    }
+                }
+            })
+
+            teacherErrors = {}
+            document.querySelectorAll(".teacher").forEach(error => {
+                tokenElement = error.parentElement;
+                error_id = error.getAttribute("data-error-id");
+                if (error_id in teacherErrors) {
+                    teacherErrors[error_id].push(tokenElement);
+                }
+                else {
+                    teacherErrors[error_id] = [tokenElement];
+                }
+            })
+
+            studentErrors = {}
+            document.querySelectorAll(".student").forEach(error => {
+                tokenElement = error.parentElement;
+                error_id = error.getAttribute("data-error-id");
+                if (error_id in studentErrors) {
+                    studentErrors[error_id].push(tokenElement);
+                }
+                else {
+                    studentErrors[error_id] = [tokenElement];
+                }
+            })
+
+            function areEqual(a, b) {
+                if (a === b) return true;
+                if (a == null || b == null) return false;
+                if (a.length !== b.length) return false;
+
+                a.sort();
+                b.sort();
+
+                for (var i = 0; i < a.length; ++i) {
+                    if (a[i] !== b[i] || a[i].querySelector(".teacher").dataset.errorTag != b[i].querySelector(".student").dataset.errorTag)
+                        return false;
+                }
+                return true;
+            }
+
+            for (const [keyT, valueT] of Object.entries(teacherErrors)) {
+                for (const [keyS, valueS] of Object.entries(studentErrors)) {
+                    if (areEqual(valueT, valueS)) {
+                        valueS.forEach(token => {
+                            token.querySelector(".student").style.background = "#8FFF73"
+                        })
+                        delete studentErrors[keyS];
+                        delete teacherErrors[keyT];
+                    }
+                    else {
+                        valueS.forEach(token => {
+                            token.querySelector(".student").style.background = "#FF7373"
+                        })
+                    }
+                }
+            }
+
             const languageRadios = document.querySelectorAll('input[name="language"]');
             const compactViewCheckbox = document.querySelector('.option-group:nth-child(2) input[type="checkbox"]');
             const errorsCheckbox = document.querySelector('.option-group:nth-child(3) input[type="checkbox"]');
@@ -737,30 +877,113 @@
 
             // Функция для отображения всплывающего окна с информацией об ошибке
             function showPopup(tokenElement) {
-                const errorTag = tokenElement.dataset.errorTag;
-                const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
-                const errorLevel = tokenElement.dataset.errorLevel;
-                const errorReason = tokenElement.dataset.errorReason;
-                const errorCorrect = tokenElement.dataset.errorCorrect;
-                const errorComment = tokenElement.dataset.errorComment;
+                var popup = document.getElementById('error-popup');
+                if (document.getElementById("allow_error_view_value").getAttribute("value") == "True") {
+                    popup = document.getElementById('error-popup-compare');
+                    tokenElementStudent = null
+                    tokenElementTeacher = null
 
-                if (!errorTag) {
-                    return;
+                    if (tokenElement.classList.contains("teacher")) {
+                        tokenElementTeacher = tokenElement
+                        tokenElementsStudent = tokenElement.parentElement.querySelectorAll(".student")
+                        tokenElementsStudent.forEach(el => {
+                            if (tokenElementTeacher.dataset.errorTag == el.dataset.errorTag) {
+                                tokenElementStudent = el
+                            }
+                        })
+                    }
+                    else {
+                        tokenElementStudent = tokenElement
+                        tokenElementsTeacher = tokenElement.parentElement.querySelectorAll(".teacher")
+                        tokenElementsTeacher.forEach(el => {
+                            if (tokenElementStudent.dataset.errorTag == el.dataset.errorTag) {
+                                tokenElementTeacher = el
+                            }
+                        })
+                    }
+
+                    if (tokenElementTeacher) {
+                        const errorTag_t = tokenElementTeacher.dataset.errorTag;
+                        const errorTagAbbrev_t = tokenElementTeacher.dataset.errorTagAbbrev;
+                        const errorLevel_t = tokenElementTeacher.dataset.errorLevel;
+                        const errorLevelRussian_t = tokenElementTeacher.dataset.errorLevelRussian;
+                        const errorReason_t = tokenElementTeacher.dataset.errorReason;
+                        const errorCorrect_t = tokenElementTeacher.dataset.errorCorrect;
+                        const errorComment_t = tokenElementTeacher.dataset.errorComment;
+
+                        document.getElementById('error-tag-t').textContent = errorTag_t || 'Не указано';
+                        document.getElementById('error-tag-abbrev-t').textContent = errorTagAbbrev_t ? `(${errorTagAbbrev_t})` : '';
+                        document.getElementById('error-reason-t').textContent = errorReason_t || 'Не указано';
+                        document.getElementById('error-correct-t').textContent = errorCorrect_t || 'Не указано';
+                        document.getElementById('error-comment-t').textContent = errorComment_t || 'Не указано';
+                        document.getElementById('errT').style.display = "none"
+                        document.getElementById('annT').style.display = "inline"
+
+                        if (document.querySelector('input[name="language"]:checked').value === 'russian') {
+                            document.getElementById('error-level-t').textContent = errorLevelRussian_t || 'Не указано';
+                        }
+                        else {
+                            document.getElementById('error-level-t').textContent = errorLevel_t || 'Не указано';
+                        }
+                    }
+
+                    if (tokenElementStudent) {
+                        const errorTag_s = tokenElementStudent.dataset.errorTag;
+                        const errorTagAbbrev_s = tokenElementStudent.dataset.errorTagAbbrev;
+                        const errorLevel_s = tokenElementStudent.dataset.errorLevel;
+                        const errorLevelRussian_s = tokenElementStudent.dataset.errorLevelRussian;
+                        const errorReason_s = tokenElementStudent.dataset.errorReason;
+                        const errorCorrect_s = tokenElementStudent.dataset.errorCorrect;
+                        const errorComment_s = tokenElementStudent.dataset.errorComment;
+
+                        document.getElementById('error-tag-s').textContent = errorTag_s || 'Не указано';
+                        document.getElementById('error-tag-abbrev-s').textContent = errorTagAbbrev_s ? `(${errorTagAbbrev_s})` : '';
+                        document.getElementById('error-reason-s').textContent = errorReason_s || 'Не указано';
+                        document.getElementById('error-correct-s').textContent = errorCorrect_s || 'Не указано';
+                        document.getElementById('error-comment-s').textContent = errorComment_s || 'Не указано';
+
+                        if (document.querySelector('input[name="language"]:checked').value === 'russian') {
+                            document.getElementById('error-level-s').textContent = errorLevelRussian_s || 'Не указано';
+                        }
+                        else {
+                            document.getElementById('error-level-s').textContent = errorLevel_s || 'Не указано';
+                        }
+
+                        document.getElementById('errS').style.display = "none"
+                        document.getElementById('annS').style.display = "inline"
+                    }
                 }
+                else {
+                    const errorTag = tokenElement.dataset.errorTag;
+                    if (!errorTag) {
+                        return;
+                    }
+                    const errorTagAbbrev = tokenElement.dataset.errorTagAbbrev;
+                    const errorLevel = tokenElement.dataset.errorLevel;
+                    const errorLevelRussian = tokenElement.dataset.errorLevelRussian;
+                    const errorReason = tokenElement.dataset.errorReason;
+                    const errorCorrect = tokenElement.dataset.errorCorrect;
+                    const errorComment = tokenElement.dataset.errorComment;
 
-                document.getElementById('error-tag').textContent = errorTag || 'Не указано';
-                document.getElementById('error-tag-abbrev').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
-                document.getElementById('error-level').textContent = errorLevel || 'Не указано';
-                document.getElementById('error-reason').textContent = errorReason || 'Не указано';
-                document.getElementById('error-correct').textContent = errorCorrect || 'Не указано';
-                document.getElementById('error-comment').textContent = errorComment || 'Не указано';
+                    document.getElementById('error-tag').textContent = errorTag || 'Не указано';
+                    document.getElementById('error-tag-abbrev').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
+                    document.getElementById('error-reason').textContent = errorReason || 'Не указано';
+                    document.getElementById('error-correct').textContent = errorCorrect || 'Не указано';
+                    document.getElementById('error-comment').textContent = errorComment || 'Не указано';
+
+                    if (document.querySelector('input[name="language"]:checked').value === 'russian') {
+                        document.getElementById('error-level').textContent = errorLevelRussian || 'Не указано';
+                    }
+                    else {
+                        document.getElementById('error-level').textContent = errorLevel || 'Не указано';
+                    }
+                }
 
                 const rect = tokenElement.getBoundingClientRect();
                 const offsetLeft = rect.left + window.scrollX;
                 const offsetTop = rect.top + window.scrollY;
                 const height = rect.height;
 
-                const popup = document.getElementById('error-popup');
                 popup.style.display = 'block'; // Нужно, чтобы offsetHeight был доступен
                 popup.classList.add('show');
 
@@ -985,7 +1208,14 @@
                     showPopup(this);
                 });
                 errorTagElement.addEventListener('mouseleave', function (e) {
-                    const popup = document.getElementById('error-popup');
+                    document.getElementById('errS').style.display = "inline"
+                    document.getElementById('errT').style.display = "inline"
+                    document.getElementById('annS').style.display = "none"
+                    document.getElementById('annT').style.display = "none"
+                    var popup = document.getElementById('error-popup');
+                    if (document.getElementById("allow_error_view_value").getAttribute("value") == "True") {
+                        popup = document.getElementById('error-popup-compare');
+                    }
                     popup.classList.remove('show'); // Убираем класс для анимации исчезновения
                     setTimeout(() => {
                         popup.style.display = 'none'; // Скрываем окно после анимации

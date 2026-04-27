@@ -206,6 +206,14 @@
             <p>Комментарий:</p>
             <p class="p-dark"> {{ exercise.exercisemarkcomment }} </p>
         </div>
+        <div class="menu-content-data" style="max-width: 300px; flex-wrap: wrap;">
+            <p>Разрешен ли студенту просмотр аннотаций преподавателя?</p>
+            <p class="p-dark" id="allow_error_view_value" value="{{exercise_grading.allow_error_view}}">
+                {% if exercise_grading.allow_error_view %} да
+                {% else %} нет
+                {% endif %}
+            </p>
+        </div>
     </div>
 
     <div class="text-header-grad">
@@ -244,6 +252,12 @@
                         {{ mark_form.exercisemarkcomment.label }}
                     </label>
                     {{ mark_form.exercisemarkcomment }}
+                    <div style="display:flex;">
+                        <label class="no-highlight">
+                            Разрешить студенту просмотр аннотаций преподавателя?
+                        </label>
+                        {{ mark_form.allow_error_view }}
+                    </div>
                 </div>
 
                 <div class="grade-buttons">
@@ -326,6 +340,7 @@
                           data-error-tag-russian="{{ error.error_tag_russian }}"
                           data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
                           data-error-level="{{ error.error_level }}"
+                          data-error-level-russian="{{ error.error_level_russian }}"
                           data-error-correct="{{ error.error_correct }}"
                           data-error-comment="{{ error.error_comment }}"
                           data-error-reason="{{ error.error_reason }}">
@@ -344,6 +359,7 @@
                           data-error-tag-russian="{{ error.error_tag_russian }}"
                           data-error-tag-abbrev="{{ error.error_tag_abbrev }}"
                           data-error-level="{{ error.error_level }}"
+                          data-error-level-russian="{{ error.error_level_russian }}"
                           data-error-correct="{{ error.error_correct }}"
                           data-error-comment="{{ error.error_comment }}"
                           data-error-reason="{{ error.error_reason }}">
@@ -381,7 +397,10 @@
     <script>
         const chosen = [];
         document.addEventListener('DOMContentLoaded', function () {
-
+            if (document.getElementById("allow_error_view_value").getAttribute("value") == "True") {
+                document.getElementById('id_allow_error_view').checked = true;
+            }
+            
             document.querySelectorAll(".empty-word").forEach(emptyWord => {
                 tokenElement = emptyWord.parentElement
                 if (tokenElement.getAttribute("id_token")!="None") {
@@ -555,34 +574,48 @@
                     const errorTag_t = tokenElementTeacher.dataset.errorTag;
                     const errorTagAbbrev_t = tokenElementTeacher.dataset.errorTagAbbrev;
                     const errorLevel_t = tokenElementTeacher.dataset.errorLevel;
+                    const errorLevelRussian_t = tokenElementTeacher.dataset.errorLevelRussian;
                     const errorReason_t = tokenElementTeacher.dataset.errorReason;
                     const errorCorrect_t = tokenElementTeacher.dataset.errorCorrect;
                     const errorComment_t = tokenElementTeacher.dataset.errorComment;
 
                     document.getElementById('error-tag-t').textContent = errorTag_t || 'Не указано';
                     document.getElementById('error-tag-abbrev-t').textContent = errorTagAbbrev_t ? `(${errorTagAbbrev_t})` : '';
-                    document.getElementById('error-level-t').textContent = errorLevel_t || 'Не указано';
                     document.getElementById('error-reason-t').textContent = errorReason_t || 'Не указано';
                     document.getElementById('error-correct-t').textContent = errorCorrect_t || 'Не указано';
                     document.getElementById('error-comment-t').textContent = errorComment_t || 'Не указано';
                     document.getElementById('errT').style.display = "none"
                     document.getElementById('annT').style.display = "inline"
+
+                    if (document.querySelector('input[name="language"]:checked').value === 'russian') {
+                        document.getElementById('error-level-t').textContent = errorLevelRussian_t || 'Не указано';
+                    }
+                    else {
+                        document.getElementById('error-level-t').textContent = errorLevel_t || 'Не указано';
+                    }
                 }
 
                 if (tokenElementStudent) {
                     const errorTag_s = tokenElementStudent.dataset.errorTag;
                     const errorTagAbbrev_s = tokenElementStudent.dataset.errorTagAbbrev;
                     const errorLevel_s = tokenElementStudent.dataset.errorLevel;
+                    const errorLevelRussian_s = tokenElementStudent.dataset.errorLevelRussian;
                     const errorReason_s = tokenElementStudent.dataset.errorReason;
                     const errorCorrect_s = tokenElementStudent.dataset.errorCorrect;
                     const errorComment_s = tokenElementStudent.dataset.errorComment;
 
                     document.getElementById('error-tag-s').textContent = errorTag_s || 'Не указано';
                     document.getElementById('error-tag-abbrev-s').textContent = errorTagAbbrev_s ? `(${errorTagAbbrev_s})` : '';
-                    document.getElementById('error-level-s').textContent = errorLevel_s || 'Не указано';
                     document.getElementById('error-reason-s').textContent = errorReason_s || 'Не указано';
                     document.getElementById('error-correct-s').textContent = errorCorrect_s || 'Не указано';
                     document.getElementById('error-comment-s').textContent = errorComment_s || 'Не указано';
+
+                    if (document.querySelector('input[name="language"]:checked').value === 'russian') {
+                        document.getElementById('error-level-s').textContent = errorLevelRussian_s || 'Не указано';
+                    }
+                    else {
+                        document.getElementById('error-level-s').textContent = errorLevel_s || 'Не указано';
+                    }
 
                     document.getElementById('errS').style.display = "none"
                     document.getElementById('annS').style.display = "inline"
@@ -753,6 +786,13 @@
             const modal = document.getElementById('modal');
             const closeModal = document.querySelector('.close-modal');
             const backButton = document.querySelector('.grey-button');
+
+            /*const form = document.getElementById('mark-form-grading');
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                //form.submit()
+                
+            });*/
 
             // Обработчики для модального окна
             if (backButton) {

@@ -48,6 +48,19 @@ def corpus_search(request):
 
 @require_GET
 def corpus_filters_api(request):
+    error_tags = list(
+        ErrorTag.objects.values(
+            "iderrortag", "tagtext", "tagtextabbrev", "tagtextrussian"
+        ).order_by("tagtextrussian")
+    )
+
+    error_tags.insert(0, {
+        "iderrortag": -1,
+        "tagtext": "Все",
+        "tagtextabbrev": "Все",
+        "tagtextrussian": "Все",
+    })
+
     data = {
         "text_types": list(
             TextType.objects.values("idtexttype", "texttypename").order_by("texttypename")
@@ -58,11 +71,7 @@ def corpus_filters_api(request):
         "pos_tags": list(
             PosTag.objects.values("idpostag", "tagtext", "tagtextabbrev").order_by("tagtext")
         ),
-        "error_tags": list(
-            ErrorTag.objects.values(
-                "iderrortag", "tagtext", "tagtextabbrev", "tagtextrussian"
-            ).order_by("tagtextrussian")
-        ),
+        "error_tags": error_tags,
         "error_levels": list(
             ErrorLevel.objects.values("iderrorlevel", "errorlevelname").order_by("errorlevelname")
         ),
@@ -95,9 +104,12 @@ def _text_ids_by_pos_tag(pos_tag_id: int):
 
 
 def _text_ids_by_error_tag(error_tag_id: int):
-    return ErrorToken.objects.filter(
-        iderror__iderrortag_id=error_tag_id
-    ).values_list("idtoken__idsentence__idtext_id", flat=True).distinct()
+    qs = ErrorToken.objects.all()
+
+    if error_tag_id != -1:
+        qs = qs.filter(iderror__iderrortag_id=error_tag_id)
+
+    return qs.values_list("idtoken__idsentence__idtext_id", flat=True).distinct()
 
 
 def _text_ids_by_error_level(error_level_id: int):
@@ -130,7 +142,7 @@ def _text_ids_by_emotion(emotion_id: int):
     ).values_list("idtext", flat=True).distinct()
 
 
-def _apply_one_filter(current_q: Q, field_payload: dict, get_ids_func) -> Q:
+def _apply_one_filter(current_q: Q, field_payload: dict, get_ids_func, allow_not=True) -> Q:
     if not field_payload:
         return current_q
 
@@ -138,6 +150,9 @@ def _apply_one_filter(current_q: Q, field_payload: dict, get_ids_func) -> Q:
     is_not = field_payload.get("not", False)
 
     if value in [None, "", []]:
+        return current_q
+
+    if is_not and not allow_not:
         return current_q
 
     matched_ids_subquery = get_ids_func(value)
@@ -152,14 +167,55 @@ def _apply_one_filter(current_q: Q, field_payload: dict, get_ids_func) -> Q:
 def _build_group_q(group_data: dict) -> Q:
     group_q = Q()
 
-    group_q = _apply_one_filter(group_q, group_data.get("wordform"), _text_ids_by_wordform)
-    group_q = _apply_one_filter(group_q, group_data.get("pos_tag_id"), _text_ids_by_pos_tag)
-    group_q = _apply_one_filter(group_q, group_data.get("error_tag_id"), _text_ids_by_error_tag)
-    group_q = _apply_one_filter(group_q, group_data.get("error_level_id"), _text_ids_by_error_level)
-    group_q = _apply_one_filter(group_q, group_data.get("reason_id"), _text_ids_by_reason)
-    group_q = _apply_one_filter(group_q, group_data.get("title"), _text_ids_by_title)
-    group_q = _apply_one_filter(group_q, group_data.get("text_type_id"), _text_ids_by_text_type)
-    group_q = _apply_one_filter(group_q, group_data.get("emotion_id"), _text_ids_by_emotion)
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("wordform"),
+        _text_ids_by_wordform,
+        allow_not=False,
+    )
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("pos_tag_id"),
+        _text_ids_by_pos_tag,
+        allow_not=False,
+    )
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("error_tag_id"),
+        _text_ids_by_error_tag,
+        allow_not=False,
+    )
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("error_level_id"),
+        _text_ids_by_error_level,
+        allow_not=False,
+    )
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("reason_id"),
+        _text_ids_by_reason,
+        allow_not=False,
+    )
+
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("title"),
+        _text_ids_by_title,
+        allow_not=True,
+    )
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("text_type_id"),
+        _text_ids_by_text_type,
+        allow_not=True,
+    )
+    group_q = _apply_one_filter(
+        group_q,
+        group_data.get("emotion_id"),
+        _text_ids_by_emotion,
+        allow_not=True,
+    )
 
     return group_q
 
@@ -239,7 +295,11 @@ def _token_matches_error_tag(token_meta_item: dict, payload: dict) -> bool:
     if value in [None, "", []]:
         return True
 
-    found = value in token_meta_item["error_tag_ids"]
+    if value == -1:
+        found = bool(token_meta_item["error_tag_ids"])
+    else:
+        found = value in token_meta_item["error_tag_ids"]
+
     if payload.get("not", False):
         return not found
     return found
@@ -561,15 +621,23 @@ def _build_matching_sentence_groups(sentences, groups, operators, cache: dict):
         first_sentence = sentences[0]
         next_sentence = sentences[1] if len(sentences) > 1 else None
 
+        first_tokens = cache["sentence_tokens"].get(first_sentence.idsentence, [])
+        current_text = _render_sentence_with_highlights(first_tokens, {})
+
+        next_text = None
+        if next_sentence:
+            next_tokens = cache["sentence_tokens"].get(next_sentence.idsentence, [])
+            next_text = _render_sentence_with_highlights(next_tokens, {})
+
         return [{
             "current": {
                 "text": first_sentence.sentensetext or "",
-                "highlighted_text": first_sentence.sentensetext or "",
+                "highlighted_text": current_text,
                 "order": first_sentence.ordernumber,
             },
             "previous": None,
             "next": {
-                "text": next_sentence.sentensetext,
+                "text": next_text,
                 "order": next_sentence.ordernumber,
             } if next_sentence else None,
         }]
@@ -616,13 +684,26 @@ def _build_matching_sentence_groups(sentences, groups, operators, cache: dict):
             tokens = cache["sentence_tokens"].get(sentence.idsentence, [])
 
             if match_item:
-                highlighted_html = _render_sentence_with_highlights(tokens, match_item["token_flags_map"])
+                highlighted_html = _render_sentence_with_highlights(
+                    tokens,
+                    match_item["token_flags_map"]
+                )
             else:
-                highlighted_html = sentence.sentensetext or ""
+                highlighted_html = _render_sentence_with_highlights(tokens, {})
 
             current_parts.append(highlighted_html)
 
         current_text_joined = "<br>".join(current_parts)
+
+        previous_text = None
+        if prev_sentence:
+            prev_tokens = cache["sentence_tokens"].get(prev_sentence.idsentence, [])
+            previous_text = _render_sentence_with_highlights(prev_tokens, {})
+
+        next_text = None
+        if next_sentence:
+            next_tokens = cache["sentence_tokens"].get(next_sentence.idsentence, [])
+            next_text = _render_sentence_with_highlights(next_tokens, {})
 
         result.append({
             "current": {
@@ -633,11 +714,11 @@ def _build_matching_sentence_groups(sentences, groups, operators, cache: dict):
                 "order": sentences[start].ordernumber,
             },
             "previous": {
-                "text": prev_sentence.sentensetext,
+                "text": previous_text,
                 "order": prev_sentence.ordernumber,
             } if prev_sentence else None,
             "next": {
-                "text": next_sentence.sentensetext,
+                "text": next_text,
                 "order": next_sentence.ordernumber,
             } if next_sentence else None,
         })

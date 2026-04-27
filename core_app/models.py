@@ -398,6 +398,7 @@ class ExerciseGrading(models.Model):
     completeness = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
     structure = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
     coherence = models.IntegerField(null=True, blank=True, choices=TASK_RATES)
+    allow_error_view = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'tblexercisegrading'

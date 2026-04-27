@@ -182,7 +182,7 @@ def get_data_errors_dfs(v, level, level_input, h, flags_levels, data):
     """DFS для суммирования ошибок по иерархии тегов"""
     h[v] = 1
     current_level = level + 1
-    
+
     total_count = data[v]["count_data"]
     total_tokens = data[v]["count_data_on_tokens"]
 
@@ -194,10 +194,11 @@ def get_data_errors_dfs(v, level, level_input, h, flags_levels, data):
             total_count += child_count
             total_tokens += child_tokens
 
-    if current_level <= level_input:
+    data[v]["count_data"] = total_count
+    data[v]["count_data_on_tokens"] = total_tokens
+
+    if current_level == level_input:
         flags_levels[v] = True
-        data[v]["count_data"] = total_count
-        data[v]["count_data_on_tokens"] = total_tokens
     else:
         flags_levels[v] = False
 
