@@ -5,7 +5,6 @@ from django.conf.urls.static import static
 from authorization_app.views import user_login
 
 urlpatterns = [
-    path("", include("corpus_info_app.urls")),
     path("login/", user_login, name="user_login"),
     path('admin/', admin.site.urls),
     path('auth/', include('authorization_app.urls')),

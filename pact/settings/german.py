@@ -1,4 +1,4 @@
-"""
+﻿"""
 German settings for pact project.
 """
 
@@ -11,6 +11,7 @@ RFTAGGER_LANGUAGE = "german"
 PACT_LANGUAGE_NAME = "Deutsche"
 NLTK_LANGUAGE = "german"
 PROJECT_LANGUAGE_CODE = "de"
+DISPLAY_LANGUAGE_RUS = "немецкий"
 
 POS_TAGGER_BACKEND = "rftagger"
 

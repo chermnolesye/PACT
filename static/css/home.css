@@ -60,12 +60,12 @@ h1 {
     font-weight: bold;
 }
 
-ul {
+.card ul {
     margin: 8px 0 0 20px;
     padding: 0;
 }
 
-li {
+.card li {
     margin-bottom: 6px;
 }
 

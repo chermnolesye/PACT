@@ -1,6 +1,6 @@
 import json
 from collections import defaultdict
-
+from django.conf import settings
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseBadRequest
@@ -40,8 +40,10 @@ def corpus_search(request):
         else:
             base_template = "guest_base.html"
 
+    language_name = getattr(settings, "DISPLAY_LANGUAGE_RUS", "")[:-2]+"ому"
     context = {
         "base_template": base_template,
+        "language_name": language_name,
     }
     return render(request, "corpus_search.html", context)
 
