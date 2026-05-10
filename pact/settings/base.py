@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     "exercise_app",
     "admin_app",
     "corpus_search_app",
-    "corpus_info_app",
     "corsheaders"
 ]
 
