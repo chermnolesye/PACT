@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import F
 import json
+from django.conf import settings
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
@@ -693,7 +694,7 @@ def search_texts(request):
     for t in base_queryset:
         cat = t.idtexttype.texttypename if t.idtexttype else "Не указано"
         texts_by_types_for_folders.setdefault(cat, []).append(serialize_text(t))
-
+    language_name = getattr(settings, "DISPLAY_LANGUAGE_RUS", "").capitalize
     context = {
         "groups": group_data,
         "years": years_data,
@@ -708,6 +709,7 @@ def search_texts(request):
         "selected_text_type": text_type_id or post_text_type_id,
         "selected_grouping": grouping,
         "fio": get_teacher_fio(request),
+        "language_name":language_name,
     }
     return render(request, "search_texts.html", context)
 

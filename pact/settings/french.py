@@ -3,6 +3,7 @@ from .base import *
 PACT_LANGUAGE_NAME = "Français"
 NLTK_LANGUAGE = "french"
 PROJECT_LANGUAGE_CODE = "fr"
+DISPLAY_LANGUAGE_RUS = "французский"
 
 POS_TAGGER_BACKEND = "corenlp"
 POS_TAGSET = "treebank"
