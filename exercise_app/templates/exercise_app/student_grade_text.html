@@ -114,6 +114,7 @@
             <span id="error-tag"></span>
             <span id="error-tag-abbrev"></span>
         </h3>
+        <p><strong>Фрагмент:</strong> <span id="error-fragment"></span></p>
         <p><strong>Степень грубости:</strong> <span id="error-level"></span></p>
         <p><strong>Причина ошибки:</strong> <span id="error-reason"></span></p>
         <p><strong>Исправление:</strong> <span id="error-correct"></span></p>
@@ -131,6 +132,7 @@
                     <span id="error-tag-s"></span>
                     <span id="error-tag-abbrev-s"></span>
                 </h3>
+                <p><strong>Фрагмент:</strong> <span id="error-fragment-s"></span></p>
                 <p><strong>Степень грубости:</strong> <span id="error-level-s"></span></p>
                 <p><strong>Причина ошибки:</strong> <span id="error-reason-s"></span></p>
                 <p><strong>Исправление:</strong> <span id="error-correct-s"></span></p>
@@ -145,6 +147,7 @@
                     <span id="error-tag-t"></span>
                     <span id="error-tag-abbrev-t"></span>
                 </h3>
+                <p><strong>Фрагмент:</strong> <span id="error-fragment-t"></span></p>
                 <p><strong>Степень грубости:</strong> <span id="error-level-t"></span></p>
                 <p><strong>Причина ошибки:</strong> <span id="error-reason-t"></span></p>
                 <p><strong>Исправление:</strong> <span id="error-correct-t"></span></p>
@@ -911,6 +914,18 @@
                         const errorCorrect_t = tokenElementTeacher.dataset.errorCorrect;
                         const errorComment_t = tokenElementTeacher.dataset.errorComment;
 
+                        let iderror = tokenElementTeacher?.dataset.errorId || null;
+                        const thisErrorElements = document.querySelectorAll('.error-tag');
+                        var error_str = "";
+
+                        for (const tokenElement of thisErrorElements) {
+                            const attributeValue = tokenElement?.dataset.errorId;
+                            if (attributeValue == iderror) {
+                                error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
+                            }
+                        }
+                        document.getElementById('error-fragment-t').innerHTML = error_str
+
                         document.getElementById('error-tag-t').textContent = errorTag_t || 'Не указано';
                         document.getElementById('error-tag-abbrev-t').textContent = errorTagAbbrev_t ? `(${errorTagAbbrev_t})` : '';
                         document.getElementById('error-reason-t').textContent = errorReason_t || 'Не указано';
@@ -936,6 +951,18 @@
                         const errorCorrect_s = tokenElementStudent.dataset.errorCorrect;
                         const errorComment_s = tokenElementStudent.dataset.errorComment;
 
+                        let iderror = tokenElementStudent?.dataset.errorId || null;
+                        const thisErrorElements = document.querySelectorAll('.error-tag');
+                        var error_str = "";
+
+                        for (const tokenElement of thisErrorElements) {
+                            const attributeValue = tokenElement?.dataset.errorId;
+                            if (attributeValue == iderror) {
+                                error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
+                            }
+                        }
+                        document.getElementById('error-fragment-s').innerHTML = error_str
+
                         document.getElementById('error-tag-s').textContent = errorTag_s || 'Не указано';
                         document.getElementById('error-tag-abbrev-s').textContent = errorTagAbbrev_s ? `(${errorTagAbbrev_s})` : '';
                         document.getElementById('error-reason-s').textContent = errorReason_s || 'Не указано';
@@ -954,6 +981,18 @@
                     }
                 }
                 else {
+                    let iderror = tokenElement?.dataset.errorId || null;
+                    const thisErrorElements = document.querySelectorAll('.error-tag');
+                    var error_str = "";
+
+                    for (const tokenElement of thisErrorElements) {
+                        const attributeValue = tokenElement?.dataset.errorId;
+                        if (attributeValue == iderror) {
+                            error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
+                        }
+                    }
+                    document.getElementById('error-fragment').innerHTML = error_str
+
                     const errorTag = tokenElement.dataset.errorTag;
                     if (!errorTag) {
                         return;
