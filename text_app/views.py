@@ -77,6 +77,7 @@ def show_text_markup(request, text_id=None):
                 if error and error.iderrortag:
                     errors_list.append(
                         {
+                            "error_id": error.iderror,
                             "error_tag": error.iderrortag.tagtext,
                             "error_tag_russian": error.iderrortag.tagtextrussian,
                             "error_tag_abbrev": error.iderrortag.tagtextabbrev,

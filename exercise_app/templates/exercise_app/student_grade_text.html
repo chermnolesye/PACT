@@ -123,10 +123,10 @@
 
     <div class="error-popup popup-sidebyside" id="error-popup-compare">
         <div class="popup-content-sidebyside">
-            <div class="student-mark" id="errS" style="display:none;">
+            <div class="student-mark" id="errS">
                 <h3 style="margin-bottom:5px">Ваша аннотация с этим тэгом ошибки отсутствует</h3>
             </div>
-            <div class="student-mark" id="annS">
+            <div class="student-mark" id="annS" style="display:none;">
                 <h3 style="margin-bottom:5px">Ваша аннотация</h3>
                 <h3>
                     <span id="error-tag-s"></span>
@@ -138,10 +138,10 @@
                 <p><strong>Исправление:</strong> <span id="error-correct-s"></span></p>
                 <p><strong>Комментарий:</strong> <span id="error-comment-s"></span></p>
             </div>
-            <div class="teacher-mark" id="errT" style="display:none;">
+            <div class="teacher-mark" id="errT">
                 <h3 style="margin-bottom:5px">Аннотация преподавателя с этим тэгом ошибки отсутствует</h3>
             </div>
-            <div class="teacher-mark" id="annT">
+            <div class="teacher-mark" id="annT" style="display:none;">
                 <h3 style="margin-bottom:5px">Аннотация преподавателя</h3>
                 <h3>
                     <span id="error-tag-t"></span>
@@ -917,7 +917,6 @@
                         let iderror = tokenElementTeacher?.dataset.errorId || null;
                         const thisErrorElements = document.querySelectorAll('.error-tag');
                         var error_str = "";
-
                         for (const tokenElement of thisErrorElements) {
                             const attributeValue = tokenElement?.dataset.errorId;
                             if (attributeValue == iderror) {

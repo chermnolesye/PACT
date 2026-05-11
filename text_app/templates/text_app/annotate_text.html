@@ -65,6 +65,7 @@
             <span id="error-tag"></span>
             <span id="error-tag-abbrev"></span>
         </h3>
+        <p><strong>Фрагмент:</strong> <span id="error-fragment"></span></p>
         <p><strong>Степень грубости:</strong> <span id="error-level"></span></p>
         <p><strong>Причина ошибки:</strong> <span id="error-reason"></span></p>
         <p><strong>Исправление:</strong> <span id="error-correct"></span></p>
@@ -804,6 +805,17 @@
                     return;
                 }
 
+                let iderror = tokenElement?.dataset.errorId || null;
+                const thisErrorElements = document.querySelectorAll('.error-tag');
+                var error_str = "";
+
+                for (const tokenElement of thisErrorElements) {
+                    const attributeValue = tokenElement?.dataset.errorId;
+                    if (attributeValue == iderror) {
+                        error_str += tokenElement.parentElement.querySelector(".word").innerHTML + " ";
+                    }
+                }
+                document.getElementById('error-fragment').innerHTML = error_str
                 document.getElementById('error-tag').textContent = errorTag || 'Не указано';
                 document.getElementById('error-tag-abbrev').textContent = errorTagAbbrev ? `(${errorTagAbbrev})` : '';
                 document.getElementById('error-reason').textContent = errorReason || 'Не указано';
