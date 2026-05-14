@@ -30,7 +30,7 @@ def show_students(request):
     
     # Фильтруем группы по выбранному году
     selected_year = None
-    available_groups = groups_qs  # По умолчанию все группы
+    available_groups = groups_qs.none()  # По умолчанию нет групп, если год не выбран
     
     if year_str and year_str.isdigit():
         selected_year = int(year_str)

@@ -604,16 +604,11 @@ def get_default_text_type():
 
 @teacher_required
 def search_texts(request):
-    group_data = [
-        {
-            "id": g["idgroup"],
-            "name": g["groupname"],
-            "year": g["idayear__title"]
-        }
-        for g in Group.objects.select_related("idayear")
-            .order_by("-idayear__title", "groupname")
-            .values("idgroup", "groupname", "idayear__title")
-    ]
+    text_name = request.POST.get("text", "") or request.GET.get("text", "")
+    year_id = request.POST.get("year", "") or request.GET.get("year", "")
+    group_id = request.POST.get("group", "") or request.GET.get("group", "")
+    post_text_type_id = request.POST.get("text_type", "") or request.GET.get("text_type", "")
+    grouping = request.POST.get("grouping", "") or request.GET.get("grouping", "")
 
     years_data = [
         {
@@ -621,6 +616,26 @@ def search_texts(request):
             "name": y["title"]
         }
         for y in AcademicYear.objects.order_by("-title").values("idayear", "title")
+    ]
+
+    groups_qs = Group.objects.select_related("idayear").order_by("-idayear__title", "groupname")
+    
+    # Если выбран год - показываем только группы этого года
+    if year_id and year_id.isdigit():
+        groups_qs = groups_qs.filter(idayear=year_id)
+    else:
+        pass
+
+    group_data = [
+        {
+            "id": g["idgroup"],
+            "name": g["groupname"],
+            "year": g["idayear__title"]
+        }
+        for g in groups_qs.values("idgroup", "groupname", "idayear__title")
+        # for g in Group.objects.select_related("idayear")
+        #     .order_by("-idayear__title", "groupname")
+        #     .values("idgroup", "groupname", "idayear__title")
     ]
 
     text_type_data = [
@@ -659,11 +674,11 @@ def search_texts(request):
         texts = base_queryset.filter(idtexttype_id=text_type_id)
         texts_of_type = [serialize_text(t) for t in texts]
 
-    text_name = request.POST.get("text", "")
-    year_id = request.POST.get("year", "")
-    group_id = request.POST.get("group", "")
-    post_text_type_id = request.POST.get("text_type", "")
-    grouping = request.POST.get("grouping", "")
+    # text_name = request.POST.get("text", "")
+    # year_id = request.POST.get("year", "")
+    # group_id = request.POST.get("group", "")
+    # post_text_type_id = request.POST.get("text_type", "")
+    # grouping = request.POST.get("grouping", "")
 
     if request.method == "POST":
         search_qs = base_queryset
