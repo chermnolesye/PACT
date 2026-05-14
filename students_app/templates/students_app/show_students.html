@@ -37,7 +37,7 @@
                 <div class="divider"></div>
                 
                 <select name="group" onchange="this.form.submit()">
-                    <option value="">Все группы</option>
+                    <option value="">{% if not selected_year %}Выберите год{% else %}Все группы{% endif %}</option>
                     {% for group in groups %}
                         <option value="{{ group.idgroup }}" {% if selected_group|add:"0" == group.idgroup %}selected{% endif %}>
                             {{ group.groupname }}
