@@ -16,6 +16,7 @@ from core_app.models import (
     User,
 )
 
+from django.conf import settings
 from collections import defaultdict
 from statistics_app import dashboards
 from django.shortcuts import render
@@ -114,8 +115,12 @@ def statistics_view(request):
     ]
 
     group_id = ""
-
-    context = {"groups": group_data, "selected_group": group_id}
+    language_name = getattr(settings, "DISPLAY_LANGUAGE_RUS", "")[:-2]+"ого"
+    context = {
+        "groups": group_data, 
+        "selected_group": group_id,
+        "language_name":language_name,
+    }
 
     return render(request, "statistics.html", context)
 

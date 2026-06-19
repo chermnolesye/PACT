@@ -39,7 +39,7 @@
 
 body {
     font-size: 16px;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Roboto', sans-serif !important;
     display: flex;
     justify-content: center;
     align-items: baseline;
@@ -291,6 +291,7 @@ a {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
+    height:54px;
 }
 
 .header__left {
@@ -341,6 +342,7 @@ nav {
 
     nav > ul {
         padding: 0;
+        margin-bottom:0 !important;
     }
 
     nav li {
@@ -451,9 +453,12 @@ nav label {
     color: #007bff;
 }
 
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 1170px) {
     nav {
         text-align: left;
+        min-width:425px;
+        position:absolute;
+        top:10px;
     }
 
         nav label {

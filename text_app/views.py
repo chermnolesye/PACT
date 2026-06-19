@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import F
 import json
+from django.conf import settings
 from django.http import JsonResponse
 from django.db import transaction
 from django.http import JsonResponse
@@ -76,6 +77,7 @@ def show_text_markup(request, text_id=None):
                 if error and error.iderrortag:
                     errors_list.append(
                         {
+                            "error_id": error.iderror,
                             "error_tag": error.iderrortag.tagtext,
                             "error_tag_russian": error.iderrortag.tagtextrussian,
                             "error_tag_abbrev": error.iderrortag.tagtextabbrev,
@@ -602,16 +604,11 @@ def get_default_text_type():
 
 @teacher_required
 def search_texts(request):
-    group_data = [
-        {
-            "id": g["idgroup"],
-            "name": g["groupname"],
-            "year": g["idayear__title"]
-        }
-        for g in Group.objects.select_related("idayear")
-            .order_by("-idayear__title", "groupname")
-            .values("idgroup", "groupname", "idayear__title")
-    ]
+    text_name = request.POST.get("text", "") or request.GET.get("text", "")
+    year_id = request.POST.get("year", "") or request.GET.get("year", "")
+    group_id = request.POST.get("group", "") or request.GET.get("group", "")
+    post_text_type_id = request.POST.get("text_type", "") or request.GET.get("text_type", "")
+    grouping = request.POST.get("grouping", "") or request.GET.get("grouping", "")
 
     years_data = [
         {
@@ -619,6 +616,26 @@ def search_texts(request):
             "name": y["title"]
         }
         for y in AcademicYear.objects.order_by("-title").values("idayear", "title")
+    ]
+
+    groups_qs = Group.objects.select_related("idayear").order_by("-idayear__title", "groupname")
+    
+    # Если выбран год - показываем только группы этого года
+    if year_id and year_id.isdigit():
+        groups_qs = groups_qs.filter(idayear=year_id)
+    else:
+        pass
+
+    group_data = [
+        {
+            "id": g["idgroup"],
+            "name": g["groupname"],
+            "year": g["idayear__title"]
+        }
+        for g in groups_qs.values("idgroup", "groupname", "idayear__title")
+        # for g in Group.objects.select_related("idayear")
+        #     .order_by("-idayear__title", "groupname")
+        #     .values("idgroup", "groupname", "idayear__title")
     ]
 
     text_type_data = [
@@ -657,11 +674,11 @@ def search_texts(request):
         texts = base_queryset.filter(idtexttype_id=text_type_id)
         texts_of_type = [serialize_text(t) for t in texts]
 
-    text_name = request.POST.get("text", "")
-    year_id = request.POST.get("year", "")
-    group_id = request.POST.get("group", "")
-    post_text_type_id = request.POST.get("text_type", "")
-    grouping = request.POST.get("grouping", "")
+    # text_name = request.POST.get("text", "")
+    # year_id = request.POST.get("year", "")
+    # group_id = request.POST.get("group", "")
+    # post_text_type_id = request.POST.get("text_type", "")
+    # grouping = request.POST.get("grouping", "")
 
     if request.method == "POST":
         search_qs = base_queryset
@@ -693,7 +710,7 @@ def search_texts(request):
     for t in base_queryset:
         cat = t.idtexttype.texttypename if t.idtexttype else "Не указано"
         texts_by_types_for_folders.setdefault(cat, []).append(serialize_text(t))
-
+    language_name = getattr(settings, "DISPLAY_LANGUAGE_RUS", "").capitalize
     context = {
         "groups": group_data,
         "years": years_data,
@@ -708,6 +725,7 @@ def search_texts(request):
         "selected_text_type": text_type_id or post_text_type_id,
         "selected_grouping": grouping,
         "fio": get_teacher_fio(request),
+        "language_name":language_name,
     }
     return render(request, "search_texts.html", context)
 
