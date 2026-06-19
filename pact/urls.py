@@ -14,5 +14,6 @@ urlpatterns = [
     path('statistics/', include('statistics_app.urls')),
     path('exercise/', include('exercise_app.urls')),
     path('admin-panel/', include("admin_app.urls")),
+    path("", include("corpus_info_app.urls")),
     path('corpus/', include("corpus_search_app.urls"))
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "statistics_app",
     "exercise_app",
     "admin_app",
+    "corpus_info_app",
     "corpus_search_app",
     "corsheaders"
 ]
