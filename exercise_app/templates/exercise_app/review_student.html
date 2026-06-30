@@ -572,7 +572,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ===== ФУНКЦИИ СОХРАНЕНИЯ/УДАЛЕНИЯ =====
-    
+    const SAVE_REVIEW_URL = "{% url 'save_student_review' exercise.idexercise %}";
     function saveReview() {
         const review = reviewInput.value.trim();
         
@@ -599,7 +599,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         } else {
             // Режим создания
-            url = `/exercise/save-review/{{ exercise.idexercise }}/`;
+            // url = `/exercise/save-review/{{ exercise.idexercise }}/`;
+            url = SAVE_REVIEW_URL;
             method = 'POST';
             body = JSON.stringify({
                 review: review,
@@ -1285,49 +1286,6 @@ document.addEventListener('DOMContentLoaded', function() {
             isSelecting = false;
         }
     });
-
-    
-    // Обработчик выделения текста
-    // reviewText.addEventListener('mouseup', function(e) {
-    //     // Небольшая задержка, чтобы выделение успело завершиться
-    //     setTimeout(() => {
-    //         const selection = window.getSelection();
-            
-    //         if (!validateSelection(selection)) {
-    //             hideButton();
-    //             return;
-    //         }
-            
-    //         const selectedText = selection.toString().trim();
-    //         if (!selectedText) {
-    //             hideButton();
-    //             return;
-    //         }
-            
-    //         const range = selection.getRangeAt(0);
-            
-    //         const startOffset = getAbsoluteOffset(range.startContainer, range.startOffset);
-    //         const endOffset = getAbsoluteOffset(range.endContainer, range.endOffset);
-            
-    //         if (startOffset >= endOffset) {
-    //             hideButton();
-    //             return;
-    //         }
-            
-    //         const selectionInfo = {
-    //             text: selectedText,
-    //             startOffset: startOffset,
-    //             endOffset: endOffset,
-    //             range: range.cloneRange(),
-    //             length: endOffset - startOffset
-    //         };
-            
-    //         console.log('Выделение:', selectionInfo);
-            
-    //         showButton(selectionInfo);
-            
-    //     }, 50);
-    // });
     
     // Скрываем кнопку при клике вне
     document.addEventListener('mousedown', function(e) {
@@ -1337,13 +1295,6 @@ document.addEventListener('DOMContentLoaded', function() {
             hideButton();
         }
     });
-    
-    // Скрываем при скролле
-    // window.addEventListener('scroll', function() {
-    //     if (addButton.style.display === 'block') {
-    //         hideButton();
-    //     }
-    // });
 
     // Вместо того чтоб скрывать кнопку она будет перерисовываться
     window.addEventListener('scroll', function() {
@@ -1392,227 +1343,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-
-<!-- СКРИПТ НА ВЫДЕЛЕНИЕ РЕЦЕНЗИЙ -->
-<!-- <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Статус упражнения из шаблона
-    const exerciseStatus = {{ exercise.exercisestatus|yesno:"true,false" }};
-    
-    console.log('Статус упражнения:', exerciseStatus ? 'Сдано' : 'Не сдано');
-    
-    if (exerciseStatus) {
-        console.log('Упражнение не сдано, рецензирование недоступно');
-        return;
-    }
-    
-    const reviewText = document.querySelector('.review-text');
-    const addButton = document.getElementById('reviewAddBtn');
-    
-    if (!reviewText) {
-        console.error('Элемент .review-text не найден');
-        return;
-    }
-    
-    if (!addButton) {
-        console.error('Кнопка #reviewAddBtn не найдена');
-        return;
-    }
-    
-    let currentSelection = null;
-    let isSelecting = false;
-    
-    // ===== УПРОЩЕННАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ ПОЗИЦИИ =====
-    // Просто считаем символы от начала до нужной позиции
-    function getAbsoluteOffset(node, offset) {
-        try {
-            const range = document.createRange();
-            range.setStart(reviewText, 0);
-            range.setEnd(node, offset);
-            
-            // toString() дает чистый текст без HTML-тегов!
-            const cleanText = range.toString();
-            console.log('getAbsoluteOffset result:', cleanText.length);
-            
-            return cleanText.length;
-        } catch (e) {
-            console.error('Error in getAbsoluteOffset:', e);
-            return 0;
-        }
-    }
-    
-    // Функция для расчета позиции кнопки
-    function calculateButtonPosition(rect) {
-        const buttonHeight = 40;
-        const spacing = 10;
-        const viewportHeight = window.innerHeight;
-        
-        const spaceBelow = viewportHeight - rect.bottom;
-        const spaceAbove = rect.top;
-        
-        if (spaceBelow >= buttonHeight + spacing) {
-            return rect.bottom + spacing;
-        } else if (spaceAbove >= buttonHeight + spacing) {
-            return rect.top - buttonHeight - spacing;
-        } else {
-            return rect.top - buttonHeight / 2;
-        }
-    }
-    
-    // Показать кнопку
-    function showButton(selectionInfo) {
-        try {
-            const rect = selectionInfo.range.getBoundingClientRect();
-            const scrollY = window.scrollY;
-            const buttonTop = calculateButtonPosition(rect);
-            
-            addButton.style.display = 'block';
-            addButton.style.top = (buttonTop + scrollY) + 'px';
-            addButton.style.left = (rect.left + rect.width / 2) + 'px';
-            addButton.style.transform = 'translateX(-50%)';
-            
-            window.currentSelection = selectionInfo;
-            console.log('Кнопка показана');
-        } catch (e) {
-            console.error('Error in showButton:', e);
-        }
-    }
-    
-    // Скрыть кнопку
-    function hideButton() {
-        addButton.style.display = 'none';
-        window.currentSelection = null;
-        console.log('Кнопка скрыта');
-    }
-    
-    // Проверка выделения
-    function validateSelection(selection) {
-        if (!selection.rangeCount) return false;
-        
-        const range = selection.getRangeAt(0);
-        if (range.collapsed) return false;
-        
-        let container = range.commonAncestorContainer;
-        while (container && container !== document.body) {
-            if (container.classList && container.classList.contains('review-text')) {
-                return true;
-            }
-            container = container.parentNode;
-        }
-        
-        return false;
-    }
-    
-    // Отслеживаем начало выделения
-    reviewText.addEventListener('mousedown', function(e) {
-        isSelecting = true;
-    });
-    
-    // Обработчик выделения текста
-    document.addEventListener('mouseup', function(e) {
-        if (!isSelecting) return;
-        
-        setTimeout(() => {
-            const selection = window.getSelection();
-            
-            if (!validateSelection(selection)) {
-                hideButton();
-                isSelecting = false;
-                return;
-            }
-            
-            const selectedText = selection.toString().trim();
-            if (!selectedText) {
-                hideButton();
-                isSelecting = false;
-                return;
-            }
-            
-            const range = selection.getRangeAt(0);
-            
-            // Используем упрощенную функцию
-            const startOffset = getAbsoluteOffset(range.startContainer, range.startOffset);
-            const endOffset = getAbsoluteOffset(range.endContainer, range.endOffset);
-            
-            if (startOffset >= endOffset) {
-                hideButton();
-                isSelecting = false;
-                return;
-            }
-            
-            const selectionInfo = {
-                text: selectedText,
-                startOffset: startOffset,
-                endOffset: endOffset,
-                range: range.cloneRange(),
-                length: endOffset - startOffset
-            };
-            
-            console.log('Выделение:', selectionInfo);
-            
-            showButton(selectionInfo);
-            isSelecting = false;
-            
-        }, 50);
-    });
-    
-    // Сбрасываем флаг при клике вне review-text
-    document.addEventListener('mousedown', function(e) {
-        if (!reviewText.contains(e.target)) {
-            isSelecting = false;
-        }
-    });
-    
-    // Обновляем позицию кнопки при скролле
-    window.addEventListener('scroll', function() {
-        if (addButton.style.display === 'block' && window.currentSelection) {
-            try {
-                const rect = window.currentSelection.range.getBoundingClientRect();
-                const scrollY = window.scrollY;
-                const buttonTop = calculateButtonPosition(rect);
-                
-                addButton.style.top = (buttonTop + scrollY) + 'px';
-                addButton.style.left = (rect.left + rect.width / 2) + 'px';
-            } catch (e) {
-                hideButton();
-            }
-        }
-    });
-    
-    window.addEventListener('resize', function() {
-        if (addButton.style.display === 'block' && window.currentSelection) {
-            try {
-                const rect = window.currentSelection.range.getBoundingClientRect();
-                const scrollY = window.scrollY;
-                const buttonTop = calculateButtonPosition(rect);
-                
-                addButton.style.top = (buttonTop + scrollY) + 'px';
-                addButton.style.left = (rect.left + rect.width / 2) + 'px';
-            } catch (e) {
-                hideButton();
-            }
-        }
-    });
-    
-    // Скрываем кнопку при клике вне
-    document.addEventListener('mousedown', function(e) {
-        if (addButton.style.display === 'block' && 
-            !addButton.contains(e.target) && 
-            !reviewText.contains(e.target)) {
-            hideButton();
-        }
-    });
-    
-    // Скрываем при Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && addButton.style.display === 'block') {
-            hideButton();
-        }
-    });
-
-    console.log('Второй скрипт инициализирован');
-});
-</script> -->
 
 {% endblock %}

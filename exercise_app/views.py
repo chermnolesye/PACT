@@ -14,6 +14,7 @@ from .filters import ExerciseFilter, ReviewTextFilter, GradingTextFilter
 import datetime
 from django.urls import reverse
 from django.utils.html import escape
+from django.db.models import Exists, OuterRef
 from authorization_app.decorators import *
 from core_app.models import (
     ExerciseTextType,
@@ -50,10 +51,6 @@ from .forms import (
     TeacherCommentForm,
     StudentReviewForm
 )
-
-'''
-    ОБЩИЙ БЕК
-'''
 
 def get_teacher_fio(request):
     return request.session.get("teacher_fio", "")
@@ -210,13 +207,13 @@ def add_exercise(request):
 def get_grading_texts(request):
     try:
         queryset = Text.objects.filter(textgrade__isnull=False)
-        '''exclude_student_id = request.GET.get('exclude_student')
-        if exclude_student_id:
-            try:
-                # ВОЗМОЖНО, на курсы ниже тоже нужно исключать тексты
-                queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
-            except (ValueError, TypeError):
-                pass'''
+        # exclude_student_id = request.GET.get('exclude_student')
+        # if exclude_student_id:
+        #     try:
+        #         # ВОЗМОЖНО, на курсы ниже тоже нужно исключать тексты
+        #         queryset = queryset.exclude(idstudent_id=int(exclude_student_id))
+        #     except (ValueError, TypeError):
+        #         pass
         filtered_texts = GradingTextFilter(request.GET, queryset=queryset)
         texts = filtered_texts.qs.order_by('-createdate')
         texts_data = [
@@ -716,9 +713,6 @@ def get_count_end(count):
     else:
         return 'ях'
 
-'''
-    БЕК ДАШИ
-'''
 @teacher_required
 def grade_text(request, idexercise=2):
     exercise = get_object_or_404(Exercise, idexercise=idexercise)

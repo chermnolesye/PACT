@@ -144,7 +144,7 @@ class AddErrorAnnotationForm(forms.ModelForm):
         queryset=Reason.objects.all(),
         label="Причина ошибки",
         widget=forms.Select(attrs={'class': 'form-control'}),
-        required=True
+        required=False
     )
 
     iderrorlevel = forms.ModelChoiceField(

@@ -40,121 +40,6 @@ class AddExerciseTextForm(forms.Form):
         widget=forms.Textarea()
     )
 
-# class AddExerciseForm(forms.Form):
-#     idexercisetype = forms.ModelChoiceField(
-#         queryset=ExerciseType.objects.filter(
-#             exerciseabbr__in=['grading', 'review']
-#         ),
-#         label='Тип упражнения',
-#         widget=forms.RadioSelect
-#     )
-#     year = forms.ModelChoiceField(
-#         queryset=AcademicYear.objects.all(),
-#         label='Учебный год',
-#         required=True
-#     ) 
-
-#     group = forms.ModelChoiceField(
-#         queryset=Group.objects.none(),
-#         label='Группа',
-#         required=True
-#     )   
-
-#     idstudent = forms.ModelChoiceField(
-#         queryset=Student.objects.none(),
-#         label='Студент, выполняющий упражнение',
-#         required=True
-#     )
-    
-#     # creationdate = forms.DateField(
-#     #     initial=datetime.date.today,
-#     #     label='Дата создания',
-#     #     # widget=forms.DateInput(attrs={'type': 'date', 'readonly': 'readonly'})
-#     #     widget=forms.DateInput(attrs={
-#     #         'type': 'text',  # Меняем на text вместо date
-#     #         'readonly': 'readonly',
-#     #         'class': 'readonly-date',
-#     #         'value': datetime.date.today().strftime('%d.%m.%Y')  # Явно устанавливаем значение
-#     #     })
-#     # )
-
-#     # я поланаю нужно использовать это:
-#     # но надо в шаблоне добавить это поле чтоб ошибок не было
-
-#     creationdate = forms.DateField(
-#         initial=datetime.date.today,
-#          label='Дата создания',
-#          widget=forms.DateInput(attrs={'type': 'date'})
-#     )
-    
-#     deadline = forms.DateField(
-#         label='Срок сдачи',
-#         widget=forms.DateInput(attrs={'type': 'date'})
-#     )
-
-#     # Поле для типа Grading
-#     grading_text = forms.ModelChoiceField(
-#         queryset=Text.objects.all().order_by('idtext')[:10],
-#         label='Текст для поиска ошибок',
-#         required=False,
-#         # widget=forms.HiddenInput()
-#     )
-    
-#     # Поле для типа Review
-#     review_exercisetext = forms.ModelChoiceField(
-#         queryset=ExerciseText.objects.all()[:10],
-#         label='Текст для рецензирования',
-#         required=False,
-#         # widget=forms.HiddenInput()
-#     )
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         if self.data:
-#                 # Для студентов
-#                 if 'year' in self.data:
-#                     try:
-#                         year_id = int(self.data.get('year'))
-#                         self.fields['group'].queryset = Group.objects.filter(idayear=year_id)
-#                     except (ValueError, TypeError):
-#                         self.fields['group'].queryset = Group.objects.all()
-                
-#                 if 'group' in self.data:
-#                     try:
-#                         group_id = int(self.data.get('group'))
-#                         self.fields['idstudent'].queryset = Student.objects.filter(idgroup_id=group_id)
-#                     except (ValueError, TypeError):
-#                         self.fields['idstudent'].queryset = Student.objects.none()
-#                 # вероятно то что ниже уже не нужно и надо поменять поля для текстов на инпут для айди
-#                 # Для текстов оценивания
-#                 if 'grading_text' in self.data:
-#                     try:
-#                         grading_text_id = int(self.data.get('grading_text'))
-#                         self.fields['grading_text'].queryset = Text.objects.filter(idtext=grading_text_id)
-#                     except (ValueError, TypeError):
-#                         self.fields['grading_text'].queryset = Text.objects.none()
-                
-#                 # Для текстов рецензирования
-#                 if 'review_exercisetext' in self.data:
-#                     try:
-#                         review_text_id = int(self.data.get('review_exercisetext'))
-#                         self.fields['review_exercisetext'].queryset = ExerciseText.objects.filter(idexercisetext=review_text_id)
-#                     except (ValueError, TypeError):
-#                         self.fields['review_exercisetext'].queryset = ExerciseText.objects.none()
-        
-#     def clean(self):
-#         cleaned_data = super().clean()
-#         exercise_type = cleaned_data.get('idexercisetype')
-        
-#         if exercise_type:
-#             exercise_abbr = exercise_type.exerciseabbr
-#             if exercise_abbr == 'grading' and not cleaned_data.get('grading_text'):
-#                 self.add_error('grading_text', 'Для типа "Оценивание" необходимо выбрать текст')
-#             elif exercise_abbr == 'review' and not cleaned_data.get('review_exercisetext'):
-#                 self.add_error('review_exercisetext', 'Для типа "Рецензирование" необходимо выбрать текст')
-        
-#         return cleaned_data
-
 class AddExerciseForm(forms.Form):
     idexercisetype = forms.ModelChoiceField(
         queryset=ExerciseType.objects.filter(
@@ -401,7 +286,8 @@ class AddErrorAnnotationForm(forms.ModelForm):
     idreason = forms.ModelChoiceField(
         queryset=Reason.objects.all(),
         label="Причина ошибки",
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        required=False
     )
 
     iderrorlevel = forms.ModelChoiceField(

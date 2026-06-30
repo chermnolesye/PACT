@@ -83,7 +83,7 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    <script>
+    <!-- <script>
         document.addEventListener('DOMContentLoaded', function() {
             function move(seconds) {
                 var elem = document.getElementById("bar");
@@ -98,6 +98,13 @@
                 function frame() {
                     if (width >= 100) {
                         clearInterval(window.progressInterval);
+                        progressInterval = null;
+                        isComplete = true;
+                        
+                        // Закрываем модалку после достижения 100%
+                        setTimeout(function() {
+                            closeProgressModal();
+                        }, 500);
                     } else {
                         width += increment;
                         if (width > 100) width = 100;
@@ -107,11 +114,63 @@
                 }
             }
 
+            function closeProgressModal() {
+                if (progressModal) {
+                    progressModal.style.display = "none";
+                }
+                // Сбрасываем прогресс-бар
+                if (bar) {
+                    bar.style.width = "1%";
+                    bar.innerHTML = "1%";
+                }
+                isComplete = false;
+            }
+
             const form = document.getElementById('load-text');
             form.addEventListener('submit', function (event) {
                 document.getElementById('progressModal').style.display = "flex";
                 move((document.getElementById("id_text").value.split(/\s+/)).length);
             });
         });
-    </script>
+    </script> -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let progressInterval = null;
+        const modal = document.getElementById('progressModal');
+        const bar = document.getElementById('bar');
+        
+        function startProgress(seconds) {
+            let width = 1;
+            const increment = 100 / (seconds * 20); // 20 кадров в секунду
+            
+            if (progressInterval) clearInterval(progressInterval);
+            
+            progressInterval = setInterval(function() {
+                if (width >= 100) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                    // Закрываем модалку
+                    setTimeout(function() {
+                        modal.style.display = "none";
+                        bar.style.width = "1%";
+                        bar.innerHTML = "1%";
+                    }, 500);
+                } else {
+                    width += increment;
+                    if (width > 100) width = 100;
+                    bar.style.width = width + "%";
+                    bar.innerHTML = Math.round(width) + "%";
+                }
+            }, 50);
+        }
+
+        document.getElementById('load-text').addEventListener('submit', function(e) {
+            modal.style.display = "flex";
+            const text = document.getElementById("id_text");
+            const words = text ? text.value.split(/\s+/).length : 0;
+            startProgress(words > 0 ? words : 10);
+        });
+    });
+</script>
 {% endblock %}

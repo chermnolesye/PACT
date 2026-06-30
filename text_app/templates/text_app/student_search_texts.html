@@ -154,6 +154,7 @@
 
 {% block extra_scripts %}
     <script>
+        const DELETE_URL_TEMPLATE = "{% url 'delete_text' 0 %}";
         textIdToDelete = null
         function confirmDelete(el) {
             // exerciseToDelete = exerciseId;
@@ -174,7 +175,8 @@
 
         function deleteText() {
             if (textIdToDelete) {
-                const url = `/text/student_search_texts/delete/${textIdToDelete}/`;
+                // const url = `/text/student_search_texts/delete/${textIdToDelete}/`;
+                const url = DELETE_URL_TEMPLATE.replace('0', textIdToDelete);
                 fetch(url, {
                     method: 'POST',
                     headers: {

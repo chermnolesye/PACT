@@ -134,33 +134,69 @@
                 });
             });
 
-            function move(seconds) {
-                var elem = document.getElementById("bar");
-                var width = 1;
-                var id = setInterval(frame, 1000);
-                const duration = seconds * 1000;
-                const intervalTime = 10;
-                const steps = duration / intervalTime;
-                const increment = 100 / steps; 
-
-                window.progressInterval = setInterval(frame, intervalTime);
-                function frame() {
+            let progressInterval = null;
+            const modal = document.getElementById('progressModal');
+            const bar = document.getElementById('bar');
+            
+            function startProgress(seconds) {
+                let width = 1;
+                const increment = 100 / (seconds * 20); // 20 кадров в секунду
+                
+                if (progressInterval) clearInterval(progressInterval);
+                
+                progressInterval = setInterval(function() {
                     if (width >= 100) {
-                        clearInterval(window.progressInterval);
+                        clearInterval(progressInterval);
+                        progressInterval = null;
+                        // Закрываем модалку
+                        setTimeout(function() {
+                            modal.style.display = "none";
+                            bar.style.width = "1%";
+                            bar.innerHTML = "1%";
+                        }, 500);
                     } else {
                         width += increment;
                         if (width > 100) width = 100;
-                        elem.style.width = width + "%";
-                        elem.innerHTML = Math.round(width) + "%";
+                        bar.style.width = width + "%";
+                        bar.innerHTML = Math.round(width) + "%";
                     }
-                }
+                }, 50);
             }
 
-            const form = document.getElementById('load-text');
-            form.addEventListener('submit', function (event) {
-                document.getElementById('progressModal').style.display = "flex";
-                move((document.getElementById("id_text").value.split(/\s+/)).length);
+            document.getElementById('load-text').addEventListener('submit', function(e) {
+                modal.style.display = "flex";
+                const text = document.getElementById("id_text");
+                const words = text ? text.value.split(/\s+/).length : 0;
+                startProgress(words > 0 ? words : 10);
             });
+
+            // function move(seconds) {
+            //     var elem = document.getElementById("bar");
+            //     var width = 1;
+            //     var id = setInterval(frame, 1000);
+            //     const duration = seconds * 1000;
+            //     const intervalTime = 10;
+            //     const steps = duration / intervalTime;
+            //     const increment = 100 / steps; 
+
+            //     window.progressInterval = setInterval(frame, intervalTime);
+            //     function frame() {
+            //         if (width >= 100) {
+            //             clearInterval(window.progressInterval);
+            //         } else {
+            //             width += increment;
+            //             if (width > 100) width = 100;
+            //             elem.style.width = width + "%";
+            //             elem.innerHTML = Math.round(width) + "%";
+            //         }
+            //     }
+            // }
+
+            // const form = document.getElementById('load-text');
+            // form.addEventListener('submit', function (event) {
+            //     document.getElementById('progressModal').style.display = "flex";
+            //     move((document.getElementById("id_text").value.split(/\s+/)).length);
+            // });
         });
     </script>
 {% endblock %}
